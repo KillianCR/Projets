@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="widht=device, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/style.css">
+        <title>Rental Car Project</title>
+        
+
+    </head>
+<body>
+            
+        <header class="flex flex-column padding">
+
+            <!--Burger menu-->
+        
+            <div class="flex justify-end">
+                <div class="burger-menu" onclick="toggleMenu()" class="flex-column align-center justify-end">
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                </div>
+                <ul class="menu-items"  id="menuItems">
+                    <li><a href="#"></a></li>
+                    <li><a href="#">Notre histoire</a></li>
+                    <li><a href="#">Nos Services</a></li>
+                    <li><a href="#">Contactez-nous</a></li>
+                </ul>
+            </div>
+        
+            <div class="content">
+                <h1>Location de véhicules</h1>
+                <p>Disponible 24h/24h</p>
+            </div>
+        
+            <div id="header_renting_part" class="flex flex-column align-center justify-between">
+                <!--TOP PART-->
+                <div> 
+                    <div>
+                        <div class="welcome"> 
+                            <h1></h1><!-- Added a class for styling -->
+                        </div>
+                            
+                    </div>
+                    
+                    <div>
+                        <div class="rental-info"> <!-- Added a class for styling -->
+                            <p> </p>
+                        </div>
+                    </div>
+                </div>
+        
+                <!--BOTTOM PART (FORM) -->
+                <div>
+                    <form action="#" id="rental_form" class="flex">
+
+                        <div id="pickup_part" class="flex">
+                            <select name="rental selection">
+                                <option value="none">Lieu de l'agence</option>
+                                <option value="Paris">Paris</option>
+                                <option value="Madrid">Madrid</option>
+                                <option value="Lisbona">Lisbona</option>
+                                <option value="Casablanca">Casablanca</option>
+                            </select>
+                            <input type="date" placeholder="Date de début">
+                            <input type="date" placeholder="Date de fin">
+
+                        </div>
+
+                        <div id="submit_part">
+                            <input type="submit" placeholder="Validate search">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </header>
+    </body>
+
+    <main class="flex flex-column align-center padding justify-center">
+
+        <!-- FIRST PART FILTER-->
+        <div id="results" class="flex justify-between">
+            <p><span>4&nbsp</span>Resultats :</p>
+
+            <div id="filter">
+                <form action="#">
+                    <select name="filter">
+                        <option value="Order price">Ordre de prix</option>
+                        <option value="Small cars">Petit véhicule</option>
+                        <option value="Large cars">Véhicule familiale</option>
+                        <option value="Luxury cars">Véhicule de</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+        <br>
+        
+
+        <!-- CARS-->
+        <!-- CARS 1-->
+
+        <div class="car_description flex"> 
+            <!-- Left part-->
+            <div class="flex align-center arrow-container">
+                <!-- Left arrow -->
+                <div class="arrow arrow_left"></div>
+                
+                <!-- Center the image -->
+                <div class="image-container">
+                    <img src="img/peugeot-208-5d-blau-2020.png" alt=""></div>
+                <!-- Right arrow -->
+                <div class="arrow arrow_right"></div>
+            </div>
+            
+
+
+            <!-- Right part-->
+            <div class="container car_details">
+                <div class="element">
+                    <h3>Peugeot 208</h3>
+                    <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Et facere impedit beatae at. Saepe molestiae praesentium voluptas culpa deleniti. Pariatur accusamus voluptas magni doloribus adipisci dolorum. Magnam odio optio neque?</p>
+                    <p>999€ - Agence de Paris</p>
+                    <button class="center-button">Réserver maintenant</button> 
+                </div>
+            </div>
+        </div>
+        <!-- CARS 1-->
+        <!-- CARS 2-->
+        <div class="car_description flex"> 
+            <!-- Left part-->
+            <div class="flex align-center arrow-container">
+                <!-- Left arrow -->
+                <div class="arrow arrow_left"></div>
+                
+                <!-- Center the image -->
+                <div class="image-container">
+                    <img src="img/audi-a1-sportback-gelb-2019.png" alt=""></div>
+                <!-- Right arrow -->
+                <div class="arrow arrow_right"></div>
+            </div>
+            
+
+
+            <!-- Right part-->
+            <div class="container car_details">
+                <div class="element">
+                    <h3>Audi A1 Sportback</h3>
+                    <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Et facere impedit beatae at. Saepe molestiae praesentium voluptas culpa deleniti. Pariatur accusamus voluptas magni doloribus adipisci dolorum. Magnam odio optio neque?</p>
+                    <p>999€ - Agence de Paris</p>
+                    <button class="center-button">Réserver maintenant</button>
+                </div>
+            </div>
+        </div>
+        <!-- CARS 2-->
+        <!-- CARS 3-->
+        <div class="car_description flex"> 
+            <!-- Left part-->
+            <div class="flex align-center arrow-container">
+                <!-- Left arrow -->
+                <div class="arrow arrow_left"></div>
+                
+                <!-- Center the image -->
+                <div class="image-container">
+                    <img src="img/volvo-ex30-suv-white-2024.png" alt=""></div>
+                <!-- Right arrow -->
+                <div class="arrow arrow_right"></div>
+            </div>
+            
+
+
+            <!-- Right part-->
+            <div class="container car_details">
+                <div class="element">
+                    <h3>Volvo EX30</h3>
+                    <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Et facere impedit beatae at. Saepe molestiae praesentium voluptas culpa deleniti. Pariatur accusamus voluptas magni doloribus adipisci dolorum. Magnam odio optio neque?</p>
+                    <p>999€ - Agence de Paris</p>
+                    <button class="center-button">Réserver maintenant</button>
+                </div>
+            </div>
+        </div>
+        <!-- CARS 3-->
+        <!-- CARS 4-->
+        <div class="car_description flex"> 
+            <!-- Left part-->
+            <div class="flex align-center arrow-container">
+                <!-- Left arrow -->
+                <div class="arrow arrow_left"></div>
+                
+                <!-- Center the image -->
+                <div class="image-container">
+                    <img src="img/bmw-4-grand-coupe-black-2021.png" alt=""></div>
+                <!-- Right arrow -->
+                <div class="arrow arrow_right"></div>
+            </div>
+            
+
+
+            <!-- Right part-->
+            <div class="container car_details">
+                <div class="element">
+                    <h3>BMW Série 4 Gran Coupé</h3>
+                    <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Et facere impedit beatae at. Saepe molestiae praesentium voluptas culpa deleniti. Pariatur accusamus voluptas magni doloribus adipisci dolorum. Magnam odio optio neque?</p>
+                    <p>999€ - Agence de Paris</p>
+                    <button class="center-button">Réserver maintenant</button>
+                </div>
+            </div>
+        </div>
+        <!-- CARS 4-->
+
+
+
+
+    </main>
+
+
+    <footer class="flex justify-center">
+     
+        <ul>
+            <li><p>Notre agence</p></li>
+            <li><p>Notre adresse</p></li>
+            <li><p>Numéro de téléphone</p></li>
+            <li><p>Contactez-nous</p></li>
+        </ul>
+    </footer>
+
+</body>
+</html>
