@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page de connexion</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="align-center">
+
+    <div>
+        <img class="logo" src="LogoMydesyn.png" alt="">
+    </div>
+    <div class="card">
+        <div class="flex justify-center">
+            <h3>Se connecter</h3>
+        </div>
+        <div class="padding" >
+            <input placeholder="Nom d'utilisateur" class="fontsize" type="text" id="login">
+        </div>
+        <div  class="padding">
+            <input placeholder="Mot de passe"  class="fontsize" type="password" id="pass">
+        </div>
+
+        <div class="padding justify-center">
+            <button class="connexion padding-co" id="conect" onclick="connexion()" type="submit">Connexion</button>
+        </div>
+
+        
+        
+    </div>
+    
+    
+   
+    
+<script>
+
+function connexion() {
+
+    let supprimer = document.getElementById("newtitle");
+    if (supprimer != undefined) {
+        supprimer.parentNode.removeChild(supprimer);
+    }
+
+    let email = document.getElementById("login").value;
+    let pass = document.getElementById("pass").value;
+
+    if (email === "a" && pass === "a") {
+    
+    
+    
+        let input =
+    document.createElement("p");
+    input.className = "connecter";
+    input.id = "newtitle";
+    input.innerText = "Vous êtes connecté";
+    
+
+    let title = document.getElementById("conect");
+    title.parentNode.insertBefore(input,title.nextSibling);
+
+        } else {
+
+
+        if (email != "a"){
+
+            let input =
+        document.createElement("p");
+        input.className = "logfalse";
+        input.id = "newtitle";
+        input.innerText = "Identifiant incorrect";
+
+        let title = document.getElementById("login");
+        title.parentNode.insertBefore(input,title.nextSibling);
+
+            
+        } else {
+
+            if (pass != "a"){
+
+            let input =
+        document.createElement("p");
+        input.className = "logfalse";
+        input.id = "newtitle";
+        input.innerText = "Mot de passe incorrect";
+
+        let title = document.getElementById("pass");
+        title.parentNode.insertBefore(input,title.nextSibling);
+
+        
+
+        }        
+                                   
+        
+
+     }
+
+}
+}
+   
+
+
+
+</script>
+
+
+</body>
+</html>
