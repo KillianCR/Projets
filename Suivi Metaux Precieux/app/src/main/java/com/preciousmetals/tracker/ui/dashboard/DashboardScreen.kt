@@ -24,9 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,8 +40,10 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.HoldingValuation
+import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.MetalBadge
+import com.preciousmetals.tracker.ui.components.MetalPriceTicker
 import com.preciousmetals.tracker.ui.components.PieChartView
 import com.preciousmetals.tracker.ui.components.PieSlice
 import com.preciousmetals.tracker.ui.components.StatCard
@@ -84,6 +83,15 @@ fun DashboardScreen(
             TopAppBar(
                 title = { Text("Mon portefeuille") },
                 actions = {
+                    val loaded = uiState as? DashboardUiState.Loaded
+                    if (loaded != null) {
+                        CompactCurrencyToggle(
+                            currency = loaded.currency,
+                            onToggle = {
+                                viewModel.setCurrency(if (loaded.currency == Currency.EUR) Currency.USD else Currency.EUR)
+                            },
+                        )
+                    }
                     IconButton(onClick = { viewModel.refresh() }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Actualiser les cours")
                     }
@@ -104,7 +112,6 @@ fun DashboardScreen(
 
             is DashboardUiState.Loaded -> DashboardContent(
                 state = state,
-                onCurrencyChange = viewModel::setCurrency,
                 onEditHolding = onEditHolding,
                 onDeleteHolding = viewModel::deleteHolding,
                 modifier = Modifier.padding(padding),
@@ -114,9 +121,24 @@ fun DashboardScreen(
 }
 
 @Composable
+private fun CompactCurrencyToggle(currency: Currency, onToggle: () -> Unit) {
+    Surface(
+        onClick = onToggle,
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = Modifier.padding(end = 4.dp),
+    ) {
+        Text(
+            text = currency.code,
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+        )
+    }
+}
+
+@Composable
 private fun DashboardContent(
     state: DashboardUiState.Loaded,
-    onCurrencyChange: (Currency) -> Unit,
     onEditHolding: (Long) -> Unit,
     onDeleteHolding: (com.preciousmetals.tracker.domain.model.Holding) -> Unit,
     modifier: Modifier = Modifier,
@@ -130,15 +152,12 @@ private fun DashboardContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                Currency.entries.forEachIndexed { index, currency ->
-                    SegmentedButton(
-                        selected = state.currency == currency,
-                        onClick = { onCurrencyChange(currency) },
-                        shape = SegmentedButtonDefaults.itemShape(index, Currency.entries.size),
-                    ) { Text(currency.code) }
-                }
-            }
+            MetalPriceTicker(
+                metals = Metal.entries,
+                pricesUsdPerGram = state.livePricesUsdPerGram,
+                currency = state.currency,
+                usdToEurRate = state.usdToEurRate,
+            )
         }
 
         if (state.refreshError != null) {
