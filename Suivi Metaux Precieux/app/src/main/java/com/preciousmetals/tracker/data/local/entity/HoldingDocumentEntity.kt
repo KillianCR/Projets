@@ -1,10 +1,11 @@
 package com.preciousmetals.tracker.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /** A document (invoice, certificate of authenticity, insurance attestation…) attached to a holding. */
-@Entity(tableName = "holding_documents")
+@Entity(tableName = "holding_documents", indices = [Index("holdingId")])
 data class HoldingDocumentEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val holdingId: Long,
