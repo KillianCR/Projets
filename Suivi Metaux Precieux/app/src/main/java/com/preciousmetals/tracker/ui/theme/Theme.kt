@@ -11,9 +11,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 private val DarkColors = darkColorScheme(
-    primary = BrandGoldDark,
-    onPrimary = OnBrandGold,
+    primary = AccentBlueDark,
+    onPrimary = OnAccentBlueDark,
     secondary = BrandGoldDark,
+    onSecondary = OnBrandGold,
     background = BackgroundDark,
     onBackground = OnBackgroundDark,
     surface = SurfaceDark,
@@ -28,9 +29,10 @@ private val DarkColors = darkColorScheme(
 )
 
 private val LightColors = lightColorScheme(
-    primary = BrandGoldLight,
-    onPrimary = Color.White,
+    primary = AccentBlueLight,
+    onPrimary = OnAccentBlueLight,
     secondary = BrandGoldLight,
+    onSecondary = Color.White,
     background = BackgroundLight,
     onBackground = OnBackgroundLight,
     surface = SurfaceLight,
@@ -58,10 +60,11 @@ private val AppShapes = Shapes(
 )
 
 /**
- * The app's branded theme — a deliberate dark-first fintech look built and validated with the
- * dataviz color skill, not the device's Material You wallpaper palette. No dynamic-color option:
- * a randomly-tinted "gold" button next to hand-picked per-metal chart colors would undercut the
- * very palette this was designed around.
+ * The app's branded theme — a deliberate dark-first fintech look, styled after the neobank
+ * reference brief (Revolut/N26/Monzo/Chime): charcoal surfaces, an electric-blue primary/CTA
+ * accent, and gold reserved as the secondary accent tied to the "Or" identity rather than
+ * competing with every button on screen. No dynamic-color option: the device's Material You
+ * wallpaper palette would undercut this deliberately chosen one.
  */
 @Composable
 fun SuiviMetauxTheme(

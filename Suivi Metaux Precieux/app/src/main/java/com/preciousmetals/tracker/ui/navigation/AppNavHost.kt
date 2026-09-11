@@ -1,5 +1,10 @@
 package com.preciousmetals.tracker.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
@@ -65,6 +70,10 @@ fun AppNavHost() {
             navController = navController,
             startDestination = Destinations.DASHBOARD,
             modifier = Modifier.padding(innerPadding),
+            enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 } },
+            exitTransition = { fadeOut(tween(180)) },
+            popEnterTransition = { fadeIn(tween(220)) },
+            popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
         ) {
             composable(Destinations.DASHBOARD) {
                 DashboardScreen(

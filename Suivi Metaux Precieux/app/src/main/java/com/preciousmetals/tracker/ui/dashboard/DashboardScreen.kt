@@ -1,6 +1,7 @@
 package com.preciousmetals.tracker.ui.dashboard
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,6 +27,8 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,6 +38,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -56,6 +60,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -162,6 +168,9 @@ private fun DashboardContent(
     val summary = state.summary
     fun money(usd: Double) = formatMoney(usd.usdTo(state.currency, state.usdToEurRate), state.currency)
 
+    var amountsHidden by rememberSaveable { mutableStateOf(false) }
+    fun displayMoney(usd: Double) = if (amountsHidden) "••••••" else money(usd)
+
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var sortOption by rememberSaveable { mutableStateOf(HoldingSortOption.DATE_DESC) }
 
@@ -193,10 +202,18 @@ private fun DashboardContent(
                 currency = state.currency,
                 onCurrencyChange = onCurrencyChange,
                 onRefresh = onRefresh,
+                amountsHidden = amountsHidden,
+                onToggleAmountsHidden = { amountsHidden = !amountsHidden },
             )
         }
 
-        item { BalanceHero(totalUsd = summary.totalValueUsd, money = ::money) }
+        item {
+            BalanceHero(
+                totalUsd = summary.totalValueUsd,
+                money = ::money,
+                amountsHidden = amountsHidden,
+            )
+        }
 
         item {
             QuickActionsRow(
@@ -228,21 +245,28 @@ private fun DashboardContent(
                 gainUsd >= 0 -> positiveColor()
                 else -> negativeColor()
             }
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+            ) {
                 Row(
                     modifier = Modifier.padding(16.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column {
                         Text("Plus-value", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(gainUsd?.let { money(it) } ?: "—", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text(
+                            gainUsd?.let { displayMoney(it) } ?: "—",
+                            style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             gainPercent?.let { formatPercent(it) } ?: "—",
                             color = color,
                             fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                         )
                     }
                 }
@@ -266,7 +290,10 @@ private fun DashboardContent(
 
         if (summary.byMetal.isNotEmpty()) {
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Répartition par métal", style = MaterialTheme.typography.titleMedium)
                         AllocationBarView(
@@ -314,7 +341,7 @@ private fun DashboardContent(
             items(filteredValuations, key = { it.holding.id }) { valuation ->
                 HoldingRow(
                     valuation = valuation,
-                    money = ::money,
+                    money = ::displayMoney,
                     onClick = { onEditHolding(valuation.holding.id) },
                     onDelete = { onDeleteHolding(valuation.holding) },
                 )
@@ -430,7 +457,10 @@ private fun DashboardHeader(
     currency: Currency,
     onCurrencyChange: (Currency) -> Unit,
     onRefresh: () -> Unit,
+    amountsHidden: Boolean,
+    onToggleAmountsHidden: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -444,6 +474,15 @@ private fun DashboardHeader(
             CompactCurrencyToggle(currency = currency, onToggle = {
                 onCurrencyChange(if (currency == Currency.EUR) Currency.USD else Currency.EUR)
             })
+            IconButton(onClick = {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onToggleAmountsHidden()
+            }) {
+                Icon(
+                    if (amountsHidden) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                    contentDescription = if (amountsHidden) "Afficher les montants" else "Masquer les montants",
+                )
+            }
             IconButton(onClick = onRefresh) {
                 Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours")
             }
@@ -470,15 +509,22 @@ private fun CompactCurrencyToggle(currency: Currency, onToggle: () -> Unit) {
 }
 
 @Composable
-private fun BalanceHero(totalUsd: Double, money: (Double) -> String) {
+private fun BalanceHero(totalUsd: Double, money: (Double) -> String, amountsHidden: Boolean) {
+    // A brief count-up (rather than snapping) whenever the total changes — on first load it
+    // animates up from zero, closer to the "odometer" feel neobank balance screens go for.
+    val animatedTotal by animateFloatAsState(
+        targetValue = totalUsd.toFloat(),
+        animationSpec = tween(durationMillis = 700),
+        label = "balanceCountUp",
+    )
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text("Valeur totale", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
-            money(totalUsd),
-            style = MaterialTheme.typography.displayMedium,
+            if (amountsHidden) "••••••" else money(animatedTotal.toDouble()),
+            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
             modifier = Modifier.padding(top = 4.dp),
         )
     }
@@ -540,6 +586,7 @@ private fun HoldingRow(
 ) {
     val holding = valuation.holding
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    val haptics = LocalHapticFeedback.current
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -547,6 +594,7 @@ private fun HoldingRow(
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         modifier = Modifier
             .fillMaxWidth()
             .graphicsLayer { scaleX = scale; scaleY = scale }
@@ -577,9 +625,13 @@ private fun HoldingRow(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     if (valuation.hasLivePrice) money(valuation.currentValueUsd) else "…",
+                    style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
                 )
-                IconButton(onClick = { showDeleteConfirm = true }) {
+                IconButton(onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    showDeleteConfirm = true
+                }) {
                     Icon(Icons.Outlined.DeleteOutline, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error)
                 }
             }
