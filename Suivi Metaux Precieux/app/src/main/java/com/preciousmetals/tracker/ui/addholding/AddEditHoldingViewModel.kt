@@ -173,7 +173,15 @@ class AddEditHoldingViewModel(
             val pricePaidUsd = if (state.valuationMode == ValuationMode.MANUAL) {
                 state.pricePaidEurText.replace(',', '.').toDouble() / rate
             } else {
-                null
+                // Freeze the auto-estimated cost basis at save time instead of leaving it null
+                // (which would make PortfolioRepository re-derive it from the cached historical
+                // price on every read). For a purchase dated today, that cached row is still
+                // being overwritten by every price refresh throughout the day, so cost basis
+                // and current value would always resolve to the same row — a gain/loss stuck at
+                // exactly 0% no matter how much the live price actually moves. Freezing it here
+                // makes it behave exactly like a manual entry from this point on.
+                priceRepository.getNearestHistoricalPriceUsdPerGram(state.metal, state.purchaseDate)
+                    ?.let { pricePerGramUsd -> pricePerGramUsd * grams }
             }
             val holding = Holding(
                 id = holdingId ?: 0,
