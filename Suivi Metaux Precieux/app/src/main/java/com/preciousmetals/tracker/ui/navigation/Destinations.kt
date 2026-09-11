@@ -18,5 +18,3 @@ object Destinations {
     fun editHolding(holdingId: Long): String = "holding?holdingId=$holdingId"
     fun historyForMetal(metal: Metal): String = "history/${metal.name}"
 }
-
-data class BottomTab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)

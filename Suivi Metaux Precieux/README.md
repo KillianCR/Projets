@@ -12,9 +12,11 @@ plus-value, historique des cours, alertes de prix.
   Le prix d'achat peut être saisi manuellement, ou calculé automatiquement à partir du cours
   historique mis en cache (voir "Historique des cours" ci-dessous).
 - **Cours en direct** : Or, Argent, Platine, Palladium. Un bandeau défilant sous le titre du
-  tableau de bord affiche le logo et le prix/g de chaque métal ; toucher un métal ouvre son
-  graphique d'historique. Affichage en EUR ou USD, bascule discrète en haut à droite.
-- **Historique des cours** : graphique par métal, sur 7 / 30 / 90 / 365 jours, avec ~5 ans de
+  tableau de bord affiche le logo, le prix/g et une mini-courbe (7 jours) de chaque métal ;
+  toucher un métal ouvre son graphique d'historique. Affichage en EUR ou USD, bascule discrète
+  en haut à droite.
+- **Historique des cours** : vrai graphique interactif par métal (courbe lissée, dégradé,
+  grille, axes, infobulle au toucher/glisser), sur 7 / 30 / 90 / 365 jours, avec ~5 ans de
   profondeur grâce au rechargement automatique décrit ci-dessous.
 - **Répartition du portefeuille** : graphique en anneau par métal.
 - **Alertes de prix** : notification quand un cours dépasse ou descend sous un seuil défini.
@@ -41,8 +43,18 @@ app/src/main/java/com/preciousmetals/tracker/
 
 Pas de framework d'injection de dépendances (Hilt/Dagger) : `AppContainer` construit et
 partage les dépendances, exposé via un `CompositionLocal` (`LocalAppContainer`). Pas de
-bibliothèque de graphiques externe : les graphiques (anneau, courbe) sont dessinés directement
-avec `Canvas` en Compose.
+bibliothèque de graphiques externe : les graphiques (anneau, courbe, sparkline) sont dessinés
+directement avec `Canvas` en Compose, avec dégradé, grille et infobulle interactive.
+
+## Design
+
+Look fintech sombre (dark-first), inspiré d'une référence visuelle fournie par l'utilisateur :
+solde en gros chiffres, actions rapides en pilules, barre de navigation flottante arrondie
+(icône + pilule colorée sur l'onglet actif), cartes arrondies. Palette entièrement recalculée
+et validée avec le skill dataviz de Claude (bandes de luminosité/chroma OKLCH, séparation CVD
+Delta E, contraste WCAG) plutôt que choisie à l'œil — voir `ui/theme/Color.kt` pour le détail
+et la méthode. Icônes unifiées sur la famille "Outlined" de Material Icons (seul le bouton
+d'ajout garde un remplissage, pour l'emphase).
 
 ## Sources de données (gratuites, sans compte ni clé API)
 

@@ -5,20 +5,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.preciousmetals.tracker.domain.model.Metal
+import com.preciousmetals.tracker.ui.theme.brandColor
 
 /** A small coin-style "logo" for a metal: a tinted circle with a monetary glyph, no external asset needed. */
 @Composable
 fun MetalLogo(metal: Metal, modifier: Modifier = Modifier, size: Dp = 40.dp) {
-    val color = Color(metal.colorHex)
+    val color = metal.brandColor()
     Box(
         modifier = modifier
             .size(size)
@@ -26,10 +26,10 @@ fun MetalLogo(metal: Metal, modifier: Modifier = Modifier, size: Dp = 40.dp) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.Filled.MonetizationOn,
+            imageVector = Icons.Outlined.MonetizationOn,
             contentDescription = metal.displayNameFr,
             tint = color,
-            modifier = Modifier.size(size * 0.6f),
+            modifier = Modifier.size(size * 0.55f),
         )
     }
 }

@@ -6,16 +6,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.preciousmetals.tracker.domain.model.Metal
+import com.preciousmetals.tracker.ui.theme.brandColor
 
 @Composable
 fun MetalBadge(metal: Metal, modifier: Modifier = Modifier, size: Dp = 12.dp) {
     Box(
         modifier = modifier
             .size(size)
-            .background(color = Color(metal.colorHex), shape = CircleShape)
+            .background(color = metal.brandColor(), shape = CircleShape)
     )
 }

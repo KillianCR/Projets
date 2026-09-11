@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -98,11 +98,11 @@ fun AddEditHoldingScreen(
                 actions = {
                     if (state.isEditing) {
                         IconButton(onClick = { showDeleteConfirm = true }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Supprimer")
+                            Icon(Icons.Outlined.DeleteOutline, contentDescription = "Supprimer")
                         }
                     }
                     IconButton(onClick = { viewModel.save() }) {
-                        Icon(Icons.Filled.Check, contentDescription = "Enregistrer")
+                        Icon(Icons.Outlined.Check, contentDescription = "Enregistrer")
                     }
                 }
             )
@@ -152,7 +152,7 @@ fun AddEditHoldingScreen(
 
             item {
                 OutlinedButton(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Filled.CalendarMonth, contentDescription = null)
+                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
                     Text("  Date d'achat : ${state.purchaseDate.formatFr()}")
                 }
             }
@@ -184,7 +184,7 @@ fun AddEditHoldingScreen(
                             )
                         )
                     }) {
-                        Icon(Icons.Filled.PhotoCamera, contentDescription = null)
+                        Icon(Icons.Outlined.PhotoCamera, contentDescription = null)
                         Text("  Photo (optionnel)")
                     }
                 }

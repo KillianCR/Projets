@@ -1,47 +1,59 @@
 package com.preciousmetals.tracker.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-
-private val LightColors = lightColorScheme(
-    primary = GoldPrimary,
-    secondary = GoldSecondary,
-    background = BackgroundLight,
-    surface = SurfaceLight,
-)
+import androidx.compose.ui.graphics.Color
 
 private val DarkColors = darkColorScheme(
-    primary = GoldPrimaryDark,
-    secondary = GoldSecondary,
+    primary = BrandGoldDark,
+    onPrimary = OnBrandGold,
+    secondary = BrandGoldDark,
     background = BackgroundDark,
+    onBackground = OnBackgroundDark,
     surface = SurfaceDark,
+    onSurface = OnBackgroundDark,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineDark,
+    error = NegativeRedDark,
+    errorContainer = SurfaceVariantDark,
+    onErrorContainer = NegativeRedDark,
 )
 
+private val LightColors = lightColorScheme(
+    primary = BrandGoldLight,
+    onPrimary = Color.White,
+    secondary = BrandGoldLight,
+    background = BackgroundLight,
+    onBackground = OnBackgroundLight,
+    surface = SurfaceLight,
+    onSurface = OnBackgroundLight,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineLight,
+    error = NegativeRedLight,
+    errorContainer = Color(0xFFFBEAE8),
+    onErrorContainer = NegativeRedLight,
+)
+
+/**
+ * The app's branded theme — a deliberate dark-first fintech look built and validated with the
+ * dataviz color skill, not the device's Material You wallpaper palette. No dynamic-color option:
+ * a randomly-tinted "gold" button next to hand-picked per-metal chart colors would undercut the
+ * very palette this was designed around.
+ */
 @Composable
 fun SuiviMetauxTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-
-        darkTheme -> DarkColors
-        else -> LightColors
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = if (darkTheme) DarkColors else LightColors,
         typography = AppTypography,
         content = content,
     )

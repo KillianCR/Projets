@@ -2,15 +2,11 @@ package com.preciousmetals.tracker.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShowChart
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,10 +25,10 @@ import com.preciousmetals.tracker.ui.history.PriceHistoryScreen
 import com.preciousmetals.tracker.ui.settings.SettingsScreen
 
 private val bottomTabs = listOf(
-    BottomTab(Destinations.DASHBOARD, "Portefeuille", Icons.Filled.Dashboard),
-    BottomTab(Destinations.HISTORY, "Historique", Icons.Filled.ShowChart),
-    BottomTab(Destinations.ALERTS, "Alertes", Icons.Filled.Notifications),
-    BottomTab(Destinations.SETTINGS, "Réglages", Icons.Filled.Settings),
+    BottomTab(Destinations.DASHBOARD, "Portefeuille", Icons.Outlined.AccountBalanceWallet),
+    BottomTab(Destinations.HISTORY, "Historique", Icons.AutoMirrored.Outlined.ShowChart),
+    BottomTab(Destinations.ALERTS, "Alertes", Icons.Outlined.Notifications),
+    BottomTab(Destinations.SETTINGS, "Réglages", Icons.Outlined.Settings),
 )
 
 @Composable
@@ -46,26 +42,22 @@ fun AppNavHost() {
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
-                    bottomTabs.forEach { tab ->
-                        val isHistoryTab = tab.route == Destinations.HISTORY
-                        NavigationBarItem(
-                            selected = currentRoute == tab.route ||
-                                (isHistoryTab && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN),
-                            onClick = {
-                                navController.navigate(tab.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(tab.icon, contentDescription = tab.label) },
-                            label = { Text(tab.label) },
-                        )
-                    }
-                }
+                FloatingBottomNav(
+                    tabs = bottomTabs,
+                    isSelected = { tab ->
+                        currentRoute == tab.route ||
+                            (tab.route == Destinations.HISTORY && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN)
+                    },
+                    onSelect = { tab ->
+                        navController.navigate(tab.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                )
             }
         },
     ) { innerPadding ->

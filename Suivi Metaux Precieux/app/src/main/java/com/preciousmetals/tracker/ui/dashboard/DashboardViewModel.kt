@@ -10,6 +10,7 @@ import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.Holding
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PortfolioSummary
+import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -25,23 +26,45 @@ class DashboardViewModel(
 
     private val isRefreshing = MutableStateFlow(false)
     private val refreshError = MutableStateFlow<String?>(null)
+
     private data class RefreshState(val isRefreshing: Boolean, val error: String?)
+    private data class PortfolioAndPrices(
+        val summary: PortfolioSummary,
+        val livePrices: Map<Metal, Double?>,
+        val sparklines: Map<Metal, List<Double>>,
+    )
+    private data class DisplayPrefs(val currency: Currency, val rate: Double, val refresh: RefreshState)
+
     private val refreshState = combine(isRefreshing, refreshError, ::RefreshState)
 
-    val uiState = combine(
+    private val portfolioAndPrices = combine(
         portfolioRepository.observePortfolio(),
         priceRepository.observeAllLatestPricesUsdPerGram(),
+        priceRepository.observeAllHistoryUsdPerGram(LocalDate.now().minusDays(7)),
+    ) { summary, livePrices, history ->
+        PortfolioAndPrices(
+            summary = summary,
+            livePrices = livePrices,
+            sparklines = history.mapValues { (_, points) -> points.map { it.priceUsdPerGram } },
+        )
+    }
+
+    private val displayPrefs = combine(
         userPreferences.displayCurrency,
         priceRepository.usdToEurRate,
         refreshState,
-    ) { summary: PortfolioSummary, livePrices: Map<Metal, Double?>, currency: Currency, rate: Double, refresh: RefreshState ->
+        ::DisplayPrefs,
+    )
+
+    val uiState = combine(portfolioAndPrices, displayPrefs) { pp, prefs ->
         DashboardUiState.Loaded(
-            summary = summary,
-            livePricesUsdPerGram = livePrices,
-            currency = currency,
-            usdToEurRate = rate,
-            isRefreshing = refresh.isRefreshing,
-            refreshError = refresh.error,
+            summary = pp.summary,
+            livePricesUsdPerGram = pp.livePrices,
+            sparklineByMetal = pp.sparklines,
+            currency = prefs.currency,
+            usdToEurRate = prefs.rate,
+            isRefreshing = prefs.refresh.isRefreshing,
+            refreshError = prefs.refresh.error,
         )
     }.stateIn(
         scope = viewModelScope,

@@ -11,6 +11,8 @@ sealed interface DashboardUiState {
         val summary: PortfolioSummary,
         /** Latest spot price per metal, USD/gram, null while a metal's price hasn't loaded yet. */
         val livePricesUsdPerGram: Map<Metal, Double?>,
+        /** Last ~7 days of price/gram per metal, for the ticker sparklines. */
+        val sparklineByMetal: Map<Metal, List<Double>>,
         val currency: Currency,
         val usdToEurRate: Double,
         val isRefreshing: Boolean,

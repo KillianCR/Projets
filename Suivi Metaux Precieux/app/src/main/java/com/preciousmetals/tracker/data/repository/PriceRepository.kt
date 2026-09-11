@@ -50,6 +50,14 @@ class PriceRepository(
             entities.map { PricePoint(LocalDate.ofEpochDay(it.dateEpochDay), it.priceUsdPerOunce / GRAMS_PER_TROY_OUNCE) }
         }
 
+    /** Map of every tracked metal to its recent price history (USD/gram), for compact sparklines. */
+    fun observeAllHistoryUsdPerGram(sinceDate: LocalDate): Flow<Map<Metal, List<PricePoint>>> {
+        val perMetalFlows = Metal.entries.map { metal ->
+            observeHistoryUsdPerGram(metal, sinceDate).map { metal to it }
+        }
+        return combine(perMetalFlows) { pairs -> pairs.toMap() }
+    }
+
     /** Nearest cached sample at or before [date], or null if no cached price reaches back that far. */
     suspend fun getNearestHistoricalPriceUsdPerGram(metal: Metal, date: LocalDate): Double? =
         priceHistoryDao.getNearestOnOrBefore(metal.name, date.toEpochDay())
