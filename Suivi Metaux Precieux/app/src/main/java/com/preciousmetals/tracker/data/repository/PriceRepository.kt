@@ -81,6 +81,7 @@ class PriceRepository(
         val today = LocalDate.now().toEpochDay()
 
         val failedMetals = mutableListOf<Metal>()
+        var firstFailureDetail: String? = null
         for (metal in Metal.entries) {
             runCatching { goldApiService.getSpotPrice(metal.apiSymbol) }
                 .onSuccess { dto ->
@@ -93,7 +94,12 @@ class PriceRepository(
                         )
                     )
                 }
-                .onFailure { failedMetals += metal }
+                .onFailure { error ->
+                    failedMetals += metal
+                    if (firstFailureDetail == null) {
+                        firstFailureDetail = "${error::class.simpleName}: ${error.message}"
+                    }
+                }
         }
 
         runCatching { exchangeRateApiService.getLatest(from = "USD", to = "EUR") }
@@ -104,7 +110,8 @@ class PriceRepository(
         return if (failedMetals.isEmpty()) {
             Result.success(Unit)
         } else {
-            Result.failure(IOException("Échec pour : ${failedMetals.joinToString { it.displayNameFr }}"))
+            val names = failedMetals.joinToString { it.displayNameFr }
+            Result.failure(IOException("Échec pour : $names ($firstFailureDetail)"))
         }
     }
 
