@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Suivi Métaux</string>
+    <string name="notification_channel_alerts">Alertes de cours</string>
+    <string name="notification_channel_alerts_desc">Notifications quand un cours atteint le seuil défini</string>
+</resources>

@@ -1,0 +1,183 @@
+package com.preciousmetals.tracker.ui.settings
+
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.preciousmetals.tracker.domain.model.Currency
+import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.util.formatFr
+import com.preciousmetals.tracker.work.WorkScheduler
+import java.time.Instant
+import java.time.ZoneId
+
+private val refreshOptions = listOf(60 to "1 h", 180 to "3 h", 360 to "6 h", 720 to "12 h", 1440 to "24 h")
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(modifier: Modifier = Modifier) {
+    val container = LocalAppContainer.current
+    val context = LocalContext.current
+    val viewModel: SettingsViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                SettingsViewModel(
+                    userPreferences = container.userPreferences,
+                    dataExporter = container.dataExporter,
+                    onRefreshIntervalChanged = { minutes -> WorkScheduler.schedulePeriodicRefresh(context, minutes) },
+                )
+            }
+        }
+    )
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            context.contentResolver.openOutputStream(uri)?.let { viewModel.exportData(it) }
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            context.contentResolver.openInputStream(uri)?.let { viewModel.importData(it) }
+        }
+    }
+
+    Scaffold(
+        modifier = modifier,
+        topBar = { TopAppBar(title = { Text("Réglages") }) },
+    ) { padding ->
+        Column(
+            modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Devise d'affichage", style = MaterialTheme.typography.titleMedium)
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                        Currency.entries.forEachIndexed { index, currency ->
+                            SegmentedButton(
+                                selected = state.currency == currency,
+                                onClick = { viewModel.setCurrency(currency) },
+                                shape = SegmentedButtonDefaults.itemShape(index, Currency.entries.size),
+                            ) { Text(currency.code) }
+                        }
+                    }
+                }
+            }
+
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Fréquence d'actualisation des cours", style = MaterialTheme.typography.titleMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        refreshOptions.forEach { (minutes, label) ->
+                            OutlinedButton(onClick = { viewModel.setRefreshIntervalMinutes(minutes) }) {
+                                Text(if (state.refreshIntervalMinutes == minutes) "✓ $label" else label)
+                            }
+                        }
+                    }
+                    val lastRefresh = state.lastRefreshEpochMillis
+                    if (lastRefresh != null) {
+                        val date = Instant.ofEpochMilli(lastRefresh).atZone(ZoneId.systemDefault()).toLocalDate()
+                        Text(
+                            "Dernière actualisation : ${date.formatFr()}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    }
+                }
+            }
+
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column {
+                        Text("Notifications d'alertes", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Être notifié quand un cours atteint un seuil défini",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = state.notificationsEnabled,
+                        onCheckedChange = { viewModel.setNotificationsEnabled(it) },
+                    )
+                }
+            }
+
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Sauvegarde", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Vos données restent uniquement sur cet appareil. Exportez-les régulièrement " +
+                            "pour les sauvegarder ou les transférer.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { exportLauncher.launch("suivi-metaux-export.json") }) {
+                            Text("Exporter (JSON)")
+                        }
+                        OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json")) }) {
+                            Text("Importer")
+                        }
+                    }
+                }
+            }
+
+            if (state.message != null) {
+                Text(state.message!!, color = MaterialTheme.colorScheme.primary)
+                LaunchedEffect(state.message) {
+                    kotlinx.coroutines.delay(3000)
+                    viewModel.clearMessage()
+                }
+            }
+
+            Text(
+                "Les cours proviennent de gold-api.com (Or, Argent, Platine, Palladium) et le taux de " +
+                    "change EUR/USD de la Banque centrale européenne (via frankfurter.app), sans clé " +
+                    "API requise.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
