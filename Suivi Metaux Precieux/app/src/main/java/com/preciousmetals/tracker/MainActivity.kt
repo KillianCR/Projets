@@ -33,22 +33,11 @@ class MainActivity : FragmentActivity() {
             SuiviMetauxTheme {
                 RequestNotificationPermissionIfNeeded()
                 CompositionLocalProvider(LocalAppContainer provides container) {
-                    // The ember radial gradient is a dark-theme-only look (see redesign report);
-                    // light theme keeps its flat background, never specified by the brief.
-                    if (androidx.compose.foundation.isSystemInDarkTheme()) {
-                        EmberGradientBackground(modifier = Modifier.fillMaxSize()) {
-                            AppLockGate {
-                                AppNavHost()
-                            }
-                        }
-                    } else {
-                        androidx.compose.material3.Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.background,
-                        ) {
-                            AppLockGate {
-                                AppNavHost()
-                            }
+                    // Always the ember gradient, regardless of the device's light/dark setting —
+                    // the app has a single theme (see SuiviMetauxTheme).
+                    EmberGradientBackground(modifier = Modifier.fillMaxSize()) {
+                        AppLockGate {
+                            AppNavHost()
                         }
                     }
                 }

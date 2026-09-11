@@ -1,16 +1,13 @@
 package com.preciousmetals.tracker.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-private val DarkColors = darkColorScheme(
+private val AppColors = darkColorScheme(
     primary = WhiteAccent,
     onPrimary = OnWhiteAccent,
     secondary = BrandGoldDark,
@@ -28,24 +25,6 @@ private val DarkColors = darkColorScheme(
     onErrorContainer = NegativeRedDark,
 )
 
-private val LightColors = lightColorScheme(
-    primary = AccentBlueLight,
-    onPrimary = OnAccentBlueLight,
-    secondary = BrandGoldLight,
-    onSecondary = Color.White,
-    background = BackgroundLight,
-    onBackground = OnBackgroundLight,
-    surface = SurfaceLight,
-    onSurface = OnBackgroundLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = OnSurfaceVariantLight,
-    outline = OutlineLight,
-    outlineVariant = OutlineLight,
-    error = NegativeRedLight,
-    errorContainer = Color(0xFFFBEAE8),
-    onErrorContainer = NegativeRedLight,
-)
-
 /**
  * Rounder than Material3's defaults (12dp medium) to match the pill-heavy rest of the UI
  * (34dp floating nav, 18dp quick actions) — cards and dialogs now share that same soft-rounded
@@ -60,19 +39,16 @@ private val AppShapes = Shapes(
 )
 
 /**
- * The app's branded theme — a dark-first "braise" (ember) look per the redesign report
+ * The app's one and only theme — a "braise" (ember) look per the redesign report
  * (Rapport_de_refonte___Mon_portefeuille): a radial orange-to-black gradient background,
  * translucent glass cards, and every accent unified onto a single white at varying opacities,
- * with gold kept as the secondary accent tied to the "Or" identity. No dynamic-color option:
- * the device's Material You wallpaper palette would undercut this deliberately chosen one.
+ * with gold kept as the secondary accent tied to the "Or" identity. Deliberately ignores the
+ * device's light/dark setting and Material You wallpaper palette — the brand look never changes.
  */
 @Composable
-fun SuiviMetauxTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+fun SuiviMetauxTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
+        colorScheme = AppColors,
         typography = AppTypography,
         shapes = AppShapes,
         content = content,

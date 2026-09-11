@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -107,7 +106,7 @@ fun MetalPriceTicker(
     }
 }
 
-/** A small, visually distinct tile for one price unit (gram or ounce), inside a metal's card. */
+/** One price unit (gram or ounce) inside a metal's card — plain stacked text, no boxed background. */
 @Composable
 private fun PriceUnitTile(
     unitLabel: String,
@@ -115,23 +114,17 @@ private fun PriceUnitTile(
     valueKey: Double?,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.background,
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
-            Text(
-                text = "Prix / $unitLabel",
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                color = TextMuted33Dark,
-            )
-            FlashOnChangeText(
-                text = text,
-                valueKey = valueKey,
-                normalColor = MaterialTheme.colorScheme.onBackground,
-            )
-        }
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = "Prix / $unitLabel",
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+            color = TextMuted33Dark,
+        )
+        FlashOnChangeText(
+            text = text,
+            valueKey = valueKey,
+            normalColor = Color.White,
+        )
     }
 }
 
