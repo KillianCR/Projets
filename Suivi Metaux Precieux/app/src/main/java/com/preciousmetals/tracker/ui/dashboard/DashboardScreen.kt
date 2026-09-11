@@ -394,7 +394,7 @@ private fun SearchAndSortRow(
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Outlined.FilterList,
                         contentDescription = "Trier : ${sortOption.label}",
@@ -498,7 +498,7 @@ private fun CompactCurrencyToggle(currency: Currency, onToggle: () -> Unit) {
         color = MaterialTheme.colorScheme.surfaceVariant,
         modifier = Modifier.padding(end = 4.dp).defaultMinSize(minWidth = 44.dp, minHeight = 44.dp),
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+        Box(contentAlignment = Alignment.Center) {
             Text(
                 text = currency.code,
                 style = MaterialTheme.typography.labelMedium,
