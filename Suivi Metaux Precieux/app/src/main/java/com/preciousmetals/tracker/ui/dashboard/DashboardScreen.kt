@@ -196,7 +196,7 @@ private fun DashboardContent(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {
@@ -448,6 +448,12 @@ private fun EmptyHoldingsState(onAddHolding: () -> Unit) {
     }
 }
 
+/**
+ * Two stacked rows, matching the redesign report: refresh (start) / EUR pill (truly centered,
+ * independent of the icons' widths) / eye (end) on top, then "Bonjour" / "Mon portefeuille" as
+ * its own left-aligned block underneath — not a single inline row with the title squeezed
+ * between the icons, which is what this used to be.
+ */
 @Composable
 private fun DashboardHeader(
     currency: Currency,
@@ -457,41 +463,43 @@ private fun DashboardHeader(
     onToggleAmountsHidden: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onRefresh) {
-            Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours")
-        }
-        Column(modifier = Modifier.weight(1f).padding(start = 4.dp)) {
-            Text("Bonjour", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Mon portefeuille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            CompactCurrencyToggle(currency = currency, onToggle = {
-                onCurrencyChange(if (currency == Currency.EUR) Currency.USD else Currency.EUR)
-            })
-            IconButton(onClick = {
-                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onToggleAmountsHidden()
-            }) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            IconButton(onClick = onRefresh, modifier = Modifier.align(Alignment.CenterStart)) {
+                Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours")
+            }
+            CompactCurrencyToggle(
+                currency = currency,
+                onToggle = { onCurrencyChange(if (currency == Currency.EUR) Currency.USD else Currency.EUR) },
+                modifier = Modifier.align(Alignment.Center),
+            )
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onToggleAmountsHidden()
+                },
+                modifier = Modifier.align(Alignment.CenterEnd),
+            ) {
                 Icon(
                     if (amountsHidden) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = if (amountsHidden) "Afficher les montants" else "Masquer les montants",
                 )
             }
         }
+        Column(modifier = Modifier.padding(start = 12.dp, top = 4.dp)) {
+            Text("Bonjour", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Mon portefeuille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 
 @Composable
-private fun CompactCurrencyToggle(currency: Currency, onToggle: () -> Unit) {
+private fun CompactCurrencyToggle(currency: Currency, onToggle: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onToggle,
         shape = RoundedCornerShape(50),
         color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier.padding(end = 4.dp).defaultMinSize(minWidth = 44.dp, minHeight = 44.dp),
+        modifier = modifier.defaultMinSize(minWidth = 44.dp, minHeight = 44.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
