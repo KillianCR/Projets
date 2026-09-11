@@ -28,3 +28,50 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         )
     }
 }
+
+/**
+ * Adds storage locations (with an optional insurance-reminder date), per-holding documents
+ * (invoices, certificates…), a nullable storageLocationId on holdings, and savings goals.
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE holdings ADD COLUMN storageLocationId INTEGER")
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS storage_locations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                name TEXT NOT NULL,
+                notes TEXT NOT NULL,
+                insuranceReminderEpochDay INTEGER
+            )
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS holding_documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                holdingId INTEGER NOT NULL,
+                uri TEXT NOT NULL,
+                label TEXT NOT NULL,
+                addedAtEpochMillis INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_holding_documents_holdingId ON holding_documents(holdingId)")
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS goals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                label TEXT NOT NULL,
+                metal TEXT,
+                targetType TEXT NOT NULL,
+                targetAmount REAL NOT NULL,
+                createdAtEpochMillis INTEGER NOT NULL
+            )
+            """.trimIndent()
+        )
+    }
+}

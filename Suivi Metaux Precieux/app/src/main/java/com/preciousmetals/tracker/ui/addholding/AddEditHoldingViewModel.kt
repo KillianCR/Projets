@@ -2,26 +2,42 @@ package com.preciousmetals.tracker.ui.addholding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.preciousmetals.tracker.data.repository.HoldingDocumentRepository
 import com.preciousmetals.tracker.data.repository.HoldingRepository
 import com.preciousmetals.tracker.data.repository.PriceRepository
+import com.preciousmetals.tracker.data.repository.StorageLocationRepository
 import com.preciousmetals.tracker.domain.model.Holding
+import com.preciousmetals.tracker.domain.model.HoldingDocument
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.ObjectType
+import com.preciousmetals.tracker.domain.model.StorageLocation
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class AddEditHoldingViewModel(
     private val holdingId: Long?,
     private val holdingRepository: HoldingRepository,
     private val priceRepository: PriceRepository,
+    private val storageLocationRepository: StorageLocationRepository,
+    private val holdingDocumentRepository: HoldingDocumentRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddEditHoldingUiState(isEditing = holdingId != null))
     val uiState: StateFlow<AddEditHoldingUiState> = _uiState.asStateFlow()
+
+    val storageLocations: StateFlow<List<StorageLocation>> = storageLocationRepository.observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val documents: StateFlow<List<HoldingDocument>> = (
+        if (holdingId != null) holdingDocumentRepository.observeForHolding(holdingId) else flowOf(emptyList())
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
         if (holdingId != null) {
@@ -39,6 +55,7 @@ class AddEditHoldingViewModel(
                         label = holding.label,
                         notes = holding.notes,
                         photoUri = holding.photoUri,
+                        storageLocationId = holding.storageLocationId,
                         valuationMode = if (holding.pricePaidUsd != null) ValuationMode.MANUAL else ValuationMode.AUTO,
                         pricePaidEurText = holding.pricePaidUsd?.let { trimNumber(it * rate) } ?: "",
                     )
@@ -84,6 +101,28 @@ class AddEditHoldingViewModel(
 
     fun setPhotoUri(uri: String?) {
         _uiState.value = _uiState.value.copy(photoUri = uri)
+    }
+
+    fun setStorageLocation(id: Long?) {
+        _uiState.value = _uiState.value.copy(storageLocationId = id)
+    }
+
+    fun addDocument(uri: String, label: String) {
+        val id = holdingId ?: return
+        viewModelScope.launch {
+            holdingDocumentRepository.add(
+                HoldingDocument(
+                    holdingId = id,
+                    uri = uri,
+                    label = label,
+                    addedAtEpochMillis = System.currentTimeMillis(),
+                )
+            )
+        }
+    }
+
+    fun deleteDocument(document: HoldingDocument) {
+        viewModelScope.launch { holdingDocumentRepository.delete(document) }
     }
 
     fun setValuationMode(mode: ValuationMode) {
@@ -146,6 +185,7 @@ class AddEditHoldingViewModel(
                 pricePaidUsd = pricePaidUsd,
                 photoUri = state.photoUri,
                 notes = state.notes,
+                storageLocationId = state.storageLocationId,
             )
             holdingRepository.upsert(holding)
             _uiState.value = _uiState.value.copy(isSaving = false, saved = true)

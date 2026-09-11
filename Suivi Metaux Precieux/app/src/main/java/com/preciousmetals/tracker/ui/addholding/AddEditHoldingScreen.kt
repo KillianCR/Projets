@@ -1,5 +1,6 @@
 package com.preciousmetals.tracker.ui.addholding
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -43,12 +46,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
+import com.preciousmetals.tracker.domain.model.HoldingDocument
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.ObjectType
 import com.preciousmetals.tracker.ui.LocalAppContainer
@@ -66,6 +72,7 @@ fun AddEditHoldingScreen(
     modifier: Modifier = Modifier,
 ) {
     val container = LocalAppContainer.current
+    val context = LocalContext.current
     val viewModel: AddEditHoldingViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
@@ -73,11 +80,15 @@ fun AddEditHoldingScreen(
                     holdingId = holdingId,
                     holdingRepository = container.holdingRepository,
                     priceRepository = container.priceRepository,
+                    storageLocationRepository = container.storageLocationRepository,
+                    holdingDocumentRepository = container.holdingDocumentRepository,
                 )
             }
         }
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val storageLocations by viewModel.storageLocations.collectAsStateWithLifecycle()
+    val documents by viewModel.documents.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.saved, state.deleted) {
         if (state.saved || state.deleted) onDone()
@@ -89,6 +100,18 @@ fun AddEditHoldingScreen(
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri -> if (uri != null) viewModel.setPhotoUri(uri.toString()) }
+
+    val documentPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            val label = queryDisplayName(context, uri) ?: "Document"
+            viewModel.addDocument(uri.toString(), label)
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -199,6 +222,55 @@ fun AddEditHoldingScreen(
                 )
             }
 
+            if (storageLocations.isNotEmpty()) {
+                item {
+                    Text("Lieu de stockage", style = MaterialTheme.typography.titleMedium)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 4.dp),
+                    ) {
+                        FilterChip(
+                            selected = state.storageLocationId == null,
+                            onClick = { viewModel.setStorageLocation(null) },
+                            label = { Text("Aucun") },
+                        )
+                        storageLocations.forEach { location ->
+                            FilterChip(
+                                selected = state.storageLocationId == location.id,
+                                onClick = { viewModel.setStorageLocation(location.id) },
+                                label = { Text(location.name) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (state.isEditing) {
+                item {
+                    Text("Documents", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Facture, certificat d'authenticité, attestation d'assurance…",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
+                    )
+                    documents.forEach { document ->
+                        DocumentRow(
+                            document = document,
+                            onOpen = { openDocument(context, document.uri) },
+                            onDelete = { viewModel.deleteDocument(document) },
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = { documentPicker.launch(arrayOf("application/pdf", "image/*")) },
+                        modifier = Modifier.padding(top = if (documents.isEmpty()) 0.dp else 8.dp),
+                    ) {
+                        Icon(Icons.Outlined.UploadFile, contentDescription = null)
+                        Text("  Ajouter un document")
+                    }
+                }
+            }
+
             item {
                 Text("Prix d'achat", style = MaterialTheme.typography.titleMedium)
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -298,3 +370,41 @@ fun AddEditHoldingScreen(
         )
     }
 }
+
+@Composable
+private fun DocumentRow(document: HoldingDocument, onOpen: () -> Unit, onDelete: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+    ) {
+        Icon(Icons.Outlined.Description, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            document.label,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(start = 10.dp).weight(1f),
+        )
+        IconButton(onClick = onOpen) {
+            Icon(Icons.Outlined.UploadFile, contentDescription = "Ouvrir")
+        }
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Outlined.DeleteOutline, contentDescription = "Supprimer le document", tint = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+private fun openDocument(context: android.content.Context, uriString: String) {
+    runCatching {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uriString.toUri(), context.contentResolver.getType(uriString.toUri()))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(intent)
+    }
+}
+
+/** Best-effort display name for a content:// URI (falls back to null on failure or no column). */
+private fun queryDisplayName(context: android.content.Context, uri: android.net.Uri): String? = runCatching {
+    context.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) cursor.getString(0) else null
+    }
+}.getOrNull()

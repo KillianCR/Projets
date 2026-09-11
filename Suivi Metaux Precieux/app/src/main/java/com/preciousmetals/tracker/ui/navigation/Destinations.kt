@@ -6,6 +6,7 @@ object Destinations {
     const val DASHBOARD = "dashboard"
     const val HISTORY = "history"
     const val ALERTS = "alerts"
+    const val TOOLS = "tools"
     const val SETTINGS = "settings"
 
     const val HOLDING_ID_ARG = "holdingId"

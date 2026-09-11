@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
@@ -26,7 +27,9 @@ data class BottomTab(val route: String, val label: String, val icon: ImageVector
 /**
  * A rounded, floating icon-only nav bar (selected item gets a filled brand-color pill behind
  * its icon) rather than the flat, full-bleed Material3 NavigationBar — closer to the reference
- * fintech design than the default component.
+ * fintech design than the default component. Each tab gets an equal-width slot (rather than
+ * sizing pills to content) so a long label on the selected tab can never push the row wider
+ * than the screen, even at 5 tabs on a small phone — it truncates instead.
  */
 @Composable
 fun FloatingBottomNav(
@@ -47,7 +50,9 @@ fun FloatingBottomNav(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 tabs.forEach { tab ->
-                    NavPill(tab = tab, selected = isSelected(tab), onClick = { onSelect(tab) })
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        NavPill(tab = tab, selected = isSelected(tab), onClick = { onSelect(tab) })
+                    }
                 }
             }
         }
@@ -66,7 +71,7 @@ private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit) {
             .background(background)
             .clickable(onClick = onClick)
             .then(
-                if (selected) Modifier.padding(horizontal = 18.dp) else Modifier.size(48.dp)
+                if (selected) Modifier.fillMaxWidth().padding(horizontal = 10.dp) else Modifier.size(48.dp)
             ),
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -79,7 +84,9 @@ private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit) {
                 text = tab.label,
                 color = contentColor,
                 style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(start = 8.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 6.dp),
             )
         }
     }

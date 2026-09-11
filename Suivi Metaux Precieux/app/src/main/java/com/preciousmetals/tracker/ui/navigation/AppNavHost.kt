@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Handyman
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Scaffold
@@ -28,11 +29,13 @@ import com.preciousmetals.tracker.ui.alerts.AlertsScreen
 import com.preciousmetals.tracker.ui.dashboard.DashboardScreen
 import com.preciousmetals.tracker.ui.history.PriceHistoryScreen
 import com.preciousmetals.tracker.ui.settings.SettingsScreen
+import com.preciousmetals.tracker.ui.tools.ToolsScreen
 
 private val bottomTabs = listOf(
     BottomTab(Destinations.DASHBOARD, "Portefeuille", Icons.Outlined.AccountBalanceWallet),
     BottomTab(Destinations.HISTORY, "Historique", Icons.AutoMirrored.Outlined.ShowChart),
     BottomTab(Destinations.ALERTS, "Alertes", Icons.Outlined.Notifications),
+    BottomTab(Destinations.TOOLS, "Outils", Icons.Outlined.Handyman),
     BottomTab(Destinations.SETTINGS, "Réglages", Icons.Outlined.Settings),
 )
 
@@ -95,6 +98,9 @@ fun AppNavHost() {
             }
             composable(Destinations.ALERTS) {
                 AlertsScreen()
+            }
+            composable(Destinations.TOOLS) {
+                ToolsScreen()
             }
             composable(Destinations.SETTINGS) {
                 SettingsScreen()

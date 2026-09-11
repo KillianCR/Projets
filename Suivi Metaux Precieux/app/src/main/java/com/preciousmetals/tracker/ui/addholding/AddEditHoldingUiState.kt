@@ -16,6 +16,7 @@ data class AddEditHoldingUiState(
     val label: String = "",
     val notes: String = "",
     val photoUri: String? = null,
+    val storageLocationId: Long? = null,
     val valuationMode: ValuationMode = ValuationMode.MANUAL,
     /** Price paid, entered in EUR. */
     val pricePaidEurText: String = "",

@@ -19,4 +19,5 @@ data class Holding(
     val pricePaidUsd: Double?,
     val photoUri: String?,
     val notes: String,
+    val storageLocationId: Long? = null,
 )
