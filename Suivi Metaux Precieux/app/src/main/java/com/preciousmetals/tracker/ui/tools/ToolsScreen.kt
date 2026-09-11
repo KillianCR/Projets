@@ -88,6 +88,8 @@ fun ToolsScreen(modifier: Modifier = Modifier) {
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(28.dp),
         ) {
+            item { CalculatorSection(state = state) }
+
             item { DcaSimulatorSection(state = state) }
 
             item {
@@ -134,6 +136,124 @@ fun ToolsScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun ToolSectionTitle(text: String) {
     Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+}
+
+// ---------------------------------------------------------------------------------------------
+// Calculatrice (poids + pureté -> valeur estimée)
+// ---------------------------------------------------------------------------------------------
+
+private data class PurityOption(val label: String, val fraction: Double)
+
+private fun purityOptionsFor(metal: Metal): List<PurityOption> = when (metal) {
+    Metal.GOLD -> listOf(
+        PurityOption("24K (999)", 0.999),
+        PurityOption("22K (916)", 0.916),
+        PurityOption("18K (750)", 0.750),
+        PurityOption("14K (585)", 0.585),
+        PurityOption("9K (375)", 0.375),
+    )
+    Metal.SILVER -> listOf(
+        PurityOption("Fin (999)", 0.999),
+        PurityOption("Sterling (925)", 0.925),
+        PurityOption("800", 0.800),
+    )
+    Metal.PLATINUM, Metal.PALLADIUM -> listOf(
+        PurityOption("999", 0.999),
+        PurityOption("950", 0.950),
+    )
+}
+
+@Composable
+private fun CalculatorSection(state: ToolsUiState) {
+    var metal by remember { mutableStateOf(Metal.GOLD) }
+    val purityOptions = purityOptionsFor(metal)
+    var purity by remember(metal) { mutableStateOf(purityOptions.first()) }
+    var weightText by remember { mutableStateOf("") }
+
+    val pricePerGram = state.livePricesUsdPerGram[metal]?.usdTo(state.currency, state.usdToEurRate)
+    val weight = weightText.replace(',', '.').toDoubleOrNull()
+    val estimatedValue = if (pricePerGram != null && weight != null && weight > 0.0) {
+        pricePerGram * purity.fraction * weight
+    } else {
+        null
+    }
+
+    Column {
+        ToolSectionTitle("Calculatrice")
+        Text(
+            "Estime la valeur d'un objet selon son poids et sa pureté.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Metal.entries.forEach { m ->
+                        FilterChip(
+                            selected = metal == m,
+                            onClick = { metal = m },
+                            label = { Text(m.displayNameFr) },
+                            leadingIcon = { MetalBadge(metal = m) },
+                        )
+                    }
+                }
+
+                Text(
+                    "Pureté",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 14.dp, bottom = 6.dp),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    purityOptions.forEach { option ->
+                        FilterChip(
+                            selected = purity == option,
+                            onClick = { purity = option },
+                            label = { Text(option.label) },
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = weightText,
+                    onValueChange = { weightText = it },
+                    label = { Text("Poids (grammes)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+                )
+
+                androidx.compose.material3.HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(vertical = 16.dp),
+                )
+
+                Text(
+                    "VALEUR ESTIMÉE",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    estimatedValue?.let { formatMoney(it, state.currency) } ?: "—",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+                if (pricePerGram != null) {
+                    Text(
+                        "${formatMoney(pricePerGram * purity.fraction, state.currency)}/g à ${purity.label}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------------

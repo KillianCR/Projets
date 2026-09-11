@@ -7,15 +7,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.TrendingDown
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -35,7 +42,10 @@ import com.preciousmetals.tracker.ui.components.AreaChartView
 import com.preciousmetals.tracker.ui.components.ChartPoint
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.theme.brandColor
+import com.preciousmetals.tracker.ui.theme.negativeColor
+import com.preciousmetals.tracker.ui.theme.positiveColor
 import com.preciousmetals.tracker.util.formatMoney
+import com.preciousmetals.tracker.util.formatPercent
 import com.preciousmetals.tracker.util.usdTo
 
 private val ranges = listOf(7 to "7j", 30 to "30j", 90 to "90j", 365 to "1an")
@@ -130,6 +140,90 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                             "s'étoffe à chaque actualisation des cours.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    MarketStatsCard(stats = current.marketStats)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MarketStatsCard(stats: List<MarketStat>) {
+    Column {
+        Text(
+            "STATISTIQUES DU MARCHÉ",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp),
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                stats.forEachIndexed { index, stat ->
+                    MarketStatRow(stat = stat)
+                    if (index != stats.lastIndex) {
+                        androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MarketStatRow(stat: MarketStat) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+            ) {
+                Icon(
+                    Icons.Outlined.CalendarMonth,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
+            Text(
+                "Performance ${stat.label}",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 12.dp),
+            )
+        }
+        val percent = stat.percentChange
+        if (percent == null) {
+            Text("—", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            val statColor = if (percent >= 0) positiveColor() else negativeColor()
+            Surface(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+                color = statColor.copy(alpha = 0.16f),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                ) {
+                    Icon(
+                        if (percent >= 0) Icons.AutoMirrored.Outlined.TrendingUp else Icons.AutoMirrored.Outlined.TrendingDown,
+                        contentDescription = if (percent >= 0) "En hausse" else "En baisse",
+                        tint = statColor,
+                        modifier = Modifier.padding(end = 4.dp),
+                    )
+                    Text(
+                        formatPercent(percent),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = statColor,
                     )
                 }
             }
