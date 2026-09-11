@@ -409,6 +409,7 @@ private fun SearchAndSortRow(
                             onSortOptionChange(option)
                             sortMenuExpanded = false
                         },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                     )
                 }
             }
@@ -463,10 +464,12 @@ private fun DashboardHeader(
     val haptics = LocalHapticFeedback.current
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column {
+        IconButton(onClick = onRefresh) {
+            Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours")
+        }
+        Column(modifier = Modifier.weight(1f).padding(start = 4.dp)) {
             Text("Bonjour", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("Mon portefeuille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
@@ -482,9 +485,6 @@ private fun DashboardHeader(
                     if (amountsHidden) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = if (amountsHidden) "Afficher les montants" else "Masquer les montants",
                 )
-            }
-            IconButton(onClick = onRefresh) {
-                Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours")
             }
         }
     }
@@ -502,7 +502,7 @@ private fun CompactCurrencyToggle(currency: Currency, onToggle: () -> Unit) {
             Text(
                 text = currency.code,
                 style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(horizontal = 12.dp),
+                modifier = Modifier.padding(horizontal = 6.dp),
             )
         }
     }

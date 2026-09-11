@@ -1,5 +1,7 @@
 package com.preciousmetals.tracker.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,19 +15,29 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.preciousmetals.tracker.domain.model.Currency
+import com.preciousmetals.tracker.domain.model.GRAMS_PER_TROY_OUNCE
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.usdTo
+import kotlinx.coroutines.delay
 
 /**
- * Horizontally scrollable row of one card per tracked metal: logo, live price/gram and a
- * 7-day sparkline. Sits just below the top bar, above the portfolio stats.
+ * Horizontally scrollable row of one card per tracked metal: logo, live price/gram and
+ * price/troy-ounce, a 7-day sparkline, and a brief highlight flash whenever a price ticks to a
+ * new value (so a live update is felt, not just quietly swapped in). Sits just below the top
+ * bar, above the portfolio stats.
  */
 @Composable
 fun MetalPriceTicker(
@@ -60,11 +72,19 @@ fun MetalPriceTicker(
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(top = 8.dp),
                     )
-                    Text(
-                        text = pricePerGram?.let { formatMoney(it.usdTo(currency, usdToEurRate), currency) + "/g" }
-                            ?: "…",
+                    FlashOnChangeText(
+                        text = pricePerGram?.let { formatMoney(it.usdTo(currency, usdToEurRate), currency) + "/g" } ?: "…",
+                        valueKey = pricePerGram,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        normalColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    FlashOnChangeText(
+                        text = pricePerGram
+                            ?.let { formatMoney((it * GRAMS_PER_TROY_OUNCE).usdTo(currency, usdToEurRate), currency) + "/oz" }
+                            ?: "…",
+                        valueKey = pricePerGram,
+                        style = MaterialTheme.typography.labelSmall,
+                        normalColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     val spark = sparklineByMetal[metal].orEmpty()
                     if (spark.size >= 2) {
@@ -79,4 +99,36 @@ fun MetalPriceTicker(
             }
         }
     }
+}
+
+/** A [Text] that briefly flashes to the theme's primary color when [valueKey] changes value. */
+@Composable
+private fun FlashOnChangeText(
+    text: String,
+    valueKey: Double?,
+    style: TextStyle,
+    normalColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val flashColor = MaterialTheme.colorScheme.primary
+    var isFlashing by remember { mutableStateOf(false) }
+    var previousKey by remember { mutableStateOf(valueKey) }
+
+    LaunchedEffect(valueKey) {
+        val changed = previousKey != null && valueKey != null && previousKey != valueKey
+        previousKey = valueKey
+        if (changed) {
+            isFlashing = true
+            delay(700)
+            isFlashing = false
+        }
+    }
+
+    val animatedColor by animateColorAsState(
+        targetValue = if (isFlashing) flashColor else normalColor,
+        animationSpec = tween(durationMillis = 700),
+        label = "priceFlash",
+    )
+
+    Text(text = text, style = style, color = animatedColor, modifier = modifier)
 }
