@@ -42,10 +42,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -110,10 +114,26 @@ fun DashboardScreen(
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Fires a confirmation on every refresh that completes without error — even when the fetched
+    // price turns out identical to before (the free spot-price feed doesn't tick every second),
+    // so tapping refresh always gives feedback instead of looking like it did nothing.
+    var wasRefreshing by remember { mutableStateOf(false) }
+    LaunchedEffect(uiState) {
+        val state = uiState
+        if (state is DashboardUiState.Loaded) {
+            if (wasRefreshing && !state.isRefreshing && state.refreshError == null) {
+                snackbarHostState.showSnackbar("Cours actualisés", duration = SnackbarDuration.Short)
+            }
+            wasRefreshing = state.isRefreshing
+        }
+    }
 
     Scaffold(
         modifier = modifier,
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         when (val state = uiState) {
             is DashboardUiState.Loading -> Box(
