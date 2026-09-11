@@ -78,7 +78,7 @@ class DashboardViewModel(
             isRefreshing.value = true
             val result = priceRepository.refreshAll()
             refreshError.value = result.exceptionOrNull()?.let {
-                "Impossible de récupérer les cours (vérifiez votre connexion)."
+                it.message ?: "Impossible de récupérer les cours (vérifiez votre connexion)."
             }
             isRefreshing.value = false
         }

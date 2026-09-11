@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -186,6 +187,7 @@ private fun DashboardContent(
                 currency = state.currency,
                 onCurrencyChange = onCurrencyChange,
                 onRefresh = onRefresh,
+                isRefreshing = state.isRefreshing,
                 amountsHidden = amountsHidden,
                 onToggleAmountsHidden = { amountsHidden = !amountsHidden },
             )
@@ -454,14 +456,30 @@ private fun DashboardHeader(
     currency: Currency,
     onCurrencyChange: (Currency) -> Unit,
     onRefresh: () -> Unit,
+    isRefreshing: Boolean,
     amountsHidden: Boolean,
     onToggleAmountsHidden: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            IconButton(onClick = onRefresh, modifier = Modifier.align(Alignment.CenterStart)) {
-                Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours", tint = HeaderIconMutedDark)
+            IconButton(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onRefresh()
+                },
+                enabled = !isRefreshing,
+                modifier = Modifier.align(Alignment.CenterStart),
+            ) {
+                if (isRefreshing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = HeaderIconMutedDark,
+                    )
+                } else {
+                    Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours", tint = HeaderIconMutedDark)
+                }
             }
             CompactCurrencyToggle(
                 currency = currency,
