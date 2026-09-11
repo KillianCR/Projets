@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -58,11 +56,9 @@ fun MetalPriceTicker(
         items(metals, key = { it.name }) { metal ->
             val pricePerGram = pricesUsdPerGram[metal]
             val color = metal.brandColor()
-            Card(
-                onClick = { onMetalClick?.invoke(metal) },
-                enabled = onMetalClick != null,
+            GlassCard(
+                onClick = onMetalClick?.let { click -> { click(metal) } },
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 modifier = Modifier.width(156.dp),
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {

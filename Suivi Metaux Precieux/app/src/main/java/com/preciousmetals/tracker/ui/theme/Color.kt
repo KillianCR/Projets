@@ -2,11 +2,8 @@ package com.preciousmetals.tracker.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary/CTA accent — electric blue, neobank-reference brief (Revolut/N26/Monzo/Chime): a
-// trusted, sober financial-app blue rather than the gold itself, which stays a secondary/metal
-// accent below so it keeps doing identity work without competing with every button on screen.
-val AccentBlueDark = Color(0xFF5B8CFF)
-val OnAccentBlueDark = Color(0xFFF2F3F5)
+// Primary/CTA accent for the light theme — the "braise" redesign only specifies a dark palette
+// (see below), so light theme keeps this earlier electric-blue accent unchanged.
 val AccentBlueLight = Color(0xFF3D6FE0)
 val OnAccentBlueLight = Color(0xFFFFFFFF)
 
@@ -16,17 +13,10 @@ val BrandGoldDark = Color(0xFFD4AF37)
 val BrandGoldLight = Color(0xFFB8860B)
 val OnBrandGold = Color(0xFF1B1B1F)
 
-// Dark theme — charcoal, not pure black, per the neobank-reference brief. surface and
-// surfaceVariant are deliberately two DIFFERENT shades (not both the brief's single "card"
-// value): giving two roles the exact same Color makes Material3's contentColorFor() — which
-// matches container colors by exact value — resolve to the wrong role's "on" color (this bit
-// the app once already, see errorContainer below).
-val BackgroundDark = Color(0xFF101114)
-val SurfaceDark = Color(0xFF16171B)
-val SurfaceVariantDark = Color(0xFF1B1D22)
-val OutlineDark = Color(0xFF26282E)
+// Dark theme's shared light text/icon color, used for both onBackground and onSurface (the two
+// roles are intentionally identical here — background and surface are too, see NearBlackEmber
+// below — so there's no contentColorFor() ambiguity to resolve).
 val OnBackgroundDark = Color(0xFFF2F3F5)
-val OnSurfaceVariantDark = Color(0xFF8B8F98)
 
 // Light theme — the brief only specified a dark palette; kept close to the previous warm
 // palette rather than guessing a light neobank scheme that was never asked for.
@@ -47,6 +37,35 @@ val NegativeRedLight = Color(0xFFD93025)
 // surface/surfaceVariant note): contentColorFor() checks errorContainer before surfaceVariant,
 // so reusing another role's value here silently recolors that role's text/icons to error-red.
 val ErrorContainerDark = Color(0xFF3A2020)
+
+// "Braise" redesign — radial ember background + unified white accent (redesign report:
+// Rapport_de_refonte___Mon_portefeuille). The five stops replicate, verbatim, the report's CSS:
+// radial-gradient(circle at 15% 50%, #8a3410 0%, #5c220c 22%, #2c1108 44%, #100907 68%, #070504 100%)
+val EmberOrange = Color(0xFF8A3410)
+val RustBrown = Color(0xFF5C220C)
+val DeepBrown = Color(0xFF2C1108)
+val NearBlackEmber = Color(0xFF100907)
+val BlackEmber = Color(0xFF070504)
+
+// Unified accent — every accentuated color (buttons, icons, emphasized amounts) collapses onto
+// this single white, at varying opacities, instead of mixing yellow/green/white as before.
+val WhiteAccent = Color(0xFFFFFFFF)
+val OnWhiteAccent = Color(0xFF1B1B1F)
+
+// Glass-card surface/border — a translucent white composited over the ember background instead
+// of an opaque fill (report: "Cartes uniformisées"). Distinct alpha values from each other and
+// from every opaque role above, so contentColorFor()'s exact-value matching never collides.
+val GlassSurfaceDark = Color(0x14FFFFFF)
+val GlassOutlineDark = Color(0x1FFFFFFF)
+val OnGlassSurfaceDark = Color(0xFFC7C2BC)
+
+// Metallic gradient stops for the metal logo circles (report: "Logos or / argent").
+val GoldGradientLight = Color(0xFFFFF3C4)
+val GoldGradientMid = Color(0xFFFFD556)
+val GoldGradientDeep = Color(0xFFA6740F)
+val SilverGradientLight = Color(0xFFFFFFFF)
+val SilverGradientMid = Color(0xFFC9CDD2)
+val SilverGradientDeep = Color(0xFF7A8087)
 
 /**
  * Per-metal categorical colors. Gold and Silver now follow the product design brief's exact

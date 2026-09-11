@@ -7,14 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.TrendingDown
-import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -27,10 +25,12 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,12 +42,11 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.AreaChartView
 import com.preciousmetals.tracker.ui.components.ChartPoint
+import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.MetalBadge
+import com.preciousmetals.tracker.ui.components.PercentPill
 import com.preciousmetals.tracker.ui.theme.brandColor
-import com.preciousmetals.tracker.ui.theme.negativeColor
-import com.preciousmetals.tracker.ui.theme.positiveColor
 import com.preciousmetals.tracker.util.formatMoney
-import com.preciousmetals.tracker.util.formatPercent
 import com.preciousmetals.tracker.util.usdTo
 
 private val ranges = listOf(7 to "7j", 30 to "30j", 90 to "90j", 365 to "1an")
@@ -71,7 +70,13 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
 
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Historique des cours") }) },
+        containerColor = Color.Transparent,
+        topBar = {
+            TopAppBar(
+                title = { Text("Historique des cours") },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            )
+        },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -81,8 +86,8 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Metal.entries.forEach { metal ->
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(Metal.entries, key = { it.name }) { metal ->
                     val selected = (state as? PriceHistoryUiState.Loaded)?.metal == metal
                     FilterChip(
                         selected = selected,
@@ -113,7 +118,7 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                 is PriceHistoryUiState.Loaded -> {
                     val color = current.metal.brandColor()
 
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             val perGramCurrent = current.latestPriceUsdPerGram
                             if (perGramCurrent != null) {
@@ -165,10 +170,7 @@ private fun MarketStatsCard(stats: List<MarketStat>) {
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 8.dp, start = 4.dp),
         )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        ) {
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 stats.forEachIndexed { index, stat ->
                     MarketStatRow(stat = stat)
@@ -210,29 +212,7 @@ private fun MarketStatRow(stat: MarketStat) {
         if (percent == null) {
             Text("—", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            val statColor = if (percent >= 0) positiveColor() else negativeColor()
-            Surface(
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
-                color = statColor.copy(alpha = 0.16f),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                ) {
-                    Icon(
-                        if (percent >= 0) Icons.AutoMirrored.Outlined.TrendingUp else Icons.AutoMirrored.Outlined.TrendingDown,
-                        contentDescription = if (percent >= 0) "En hausse" else "En baisse",
-                        tint = statColor,
-                        modifier = Modifier.padding(end = 4.dp),
-                    )
-                    Text(
-                        formatPercent(percent),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = statColor,
-                    )
-                }
-            }
+            PercentPill(percent = percent)
         }
     }
 }

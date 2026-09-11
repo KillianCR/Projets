@@ -11,18 +11,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 private val DarkColors = darkColorScheme(
-    primary = AccentBlueDark,
-    onPrimary = OnAccentBlueDark,
+    primary = WhiteAccent,
+    onPrimary = OnWhiteAccent,
     secondary = BrandGoldDark,
     onSecondary = OnBrandGold,
-    background = BackgroundDark,
+    background = NearBlackEmber,
     onBackground = OnBackgroundDark,
-    surface = SurfaceDark,
+    surface = NearBlackEmber,
     onSurface = OnBackgroundDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = OnSurfaceVariantDark,
-    outline = OutlineDark,
-    outlineVariant = OutlineDark,
+    surfaceVariant = GlassSurfaceDark,
+    onSurfaceVariant = OnGlassSurfaceDark,
+    outline = GlassOutlineDark,
+    outlineVariant = GlassOutlineDark,
     error = NegativeRedDark,
     errorContainer = ErrorContainerDark,
     onErrorContainer = NegativeRedDark,
@@ -60,11 +60,11 @@ private val AppShapes = Shapes(
 )
 
 /**
- * The app's branded theme — a deliberate dark-first fintech look, styled after the neobank
- * reference brief (Revolut/N26/Monzo/Chime): charcoal surfaces, an electric-blue primary/CTA
- * accent, and gold reserved as the secondary accent tied to the "Or" identity rather than
- * competing with every button on screen. No dynamic-color option: the device's Material You
- * wallpaper palette would undercut this deliberately chosen one.
+ * The app's branded theme — a dark-first "braise" (ember) look per the redesign report
+ * (Rapport_de_refonte___Mon_portefeuille): a radial orange-to-black gradient background,
+ * translucent glass cards, and every accent unified onto a single white at varying opacities,
+ * with gold kept as the secondary accent tied to the "Or" identity. No dynamic-color option:
+ * the device's Material You wallpaper palette would undercut this deliberately chosen one.
  */
 @Composable
 fun SuiviMetauxTheme(

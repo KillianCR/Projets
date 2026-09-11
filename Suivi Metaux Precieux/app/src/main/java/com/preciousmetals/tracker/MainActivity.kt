@@ -8,8 +8,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.EmberGradientBackground
 import com.preciousmetals.tracker.ui.lock.AppLockGate
 import com.preciousmetals.tracker.ui.navigation.AppNavHost
 import com.preciousmetals.tracker.ui.theme.SuiviMetauxTheme
@@ -34,9 +33,22 @@ class MainActivity : FragmentActivity() {
             SuiviMetauxTheme {
                 RequestNotificationPermissionIfNeeded()
                 CompositionLocalProvider(LocalAppContainer provides container) {
-                    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                        AppLockGate {
-                            AppNavHost()
+                    // The ember radial gradient is a dark-theme-only look (see redesign report);
+                    // light theme keeps its flat background, never specified by the brief.
+                    if (androidx.compose.foundation.isSystemInDarkTheme()) {
+                        EmberGradientBackground(modifier = Modifier.fillMaxSize()) {
+                            AppLockGate {
+                                AppNavHost()
+                            }
+                        }
+                    } else {
+                        androidx.compose.material3.Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.background,
+                        ) {
+                            AppLockGate {
+                                AppNavHost()
+                            }
                         }
                     }
                 }

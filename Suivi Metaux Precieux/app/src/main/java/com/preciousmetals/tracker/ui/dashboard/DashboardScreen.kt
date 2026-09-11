@@ -30,8 +30,6 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -64,6 +62,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -75,8 +74,10 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.AllocationBarView
 import com.preciousmetals.tracker.ui.components.AllocationSlice
+import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.MetalLogo
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
+import com.preciousmetals.tracker.ui.components.PercentPill
 import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.ui.theme.negativeColor
 import com.preciousmetals.tracker.ui.theme.positiveColor
@@ -114,6 +115,7 @@ fun DashboardScreen(
 
     Scaffold(
         modifier = modifier,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         when (val state = uiState) {
@@ -240,18 +242,11 @@ private fun DashboardContent(
         item {
             val gainUsd = summary.totalGainLossUsd
             val gainPercent = summary.totalGainLossPercent
-            val color = when {
-                gainUsd == null -> MaterialTheme.colorScheme.onSurfaceVariant
-                gainUsd >= 0 -> positiveColor()
-                else -> negativeColor()
-            }
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-            ) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.padding(16.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column {
                         Text("Plus-value", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -261,13 +256,10 @@ private fun DashboardContent(
                             fontWeight = FontWeight.Bold,
                         )
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            gainPercent?.let { formatPercent(it) } ?: "—",
-                            color = color,
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                        )
+                    if (gainPercent != null) {
+                        PercentPill(percent = gainPercent)
+                    } else {
+                        Text("—", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -275,7 +267,13 @@ private fun DashboardContent(
 
         item {
             Column {
-                SectionTitle("Vos métaux")
+                Text(
+                    "VOS MÉTAUX",
+                    style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 4.dp),
+                )
                 MetalPriceTicker(
                     metals = Metal.entries,
                     pricesUsdPerGram = state.livePricesUsdPerGram,
@@ -290,10 +288,7 @@ private fun DashboardContent(
 
         if (summary.byMetal.isNotEmpty()) {
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                ) {
+                GlassCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Répartition par métal", style = MaterialTheme.typography.titleMedium)
                         AllocationBarView(
@@ -471,7 +466,7 @@ private fun DashboardHeader(
         }
         Column(modifier = Modifier.weight(1f).padding(start = 4.dp)) {
             Text("Bonjour", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Mon portefeuille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("Mon portefeuille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             CompactCurrencyToggle(currency = currency, onToggle = {
@@ -521,7 +516,12 @@ private fun BalanceHero(totalUsd: Double, money: (Double) -> String, amountsHidd
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Valeur totale", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            "VALEUR TOTALE",
+            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.4.sp),
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Text(
             if (amountsHidden) "••••••" else money(animatedTotal.toDouble()),
             style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
@@ -537,28 +537,38 @@ private fun QuickActionsRow(onAddHolding: () -> Unit, onMetalClick: () -> Unit) 
             icon = Icons.Outlined.Add,
             label = "Ajouter",
             onClick = onAddHolding,
+            isPrimary = true,
             modifier = Modifier.weight(1f),
         )
         QuickActionButton(
             icon = Icons.AutoMirrored.Outlined.ShowChart,
             label = "Cours",
             onClick = onMetalClick,
+            isPrimary = false,
             modifier = Modifier.weight(1f),
         )
     }
 }
 
+/**
+ * Primary CTA ("Ajouter") is a solid white pill with dark content, secondary ("Cours") a
+ * translucent one with light content — a real primary/secondary distinction rather than two
+ * visually-equal buttons (report: "Cohérence des accents").
+ */
 @Composable
 private fun QuickActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     onClick: () -> Unit,
+    isPrimary: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val containerColor = if (isPrimary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (isPrimary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = containerColor,
         modifier = modifier,
     ) {
         Column(
@@ -566,8 +576,8 @@ private fun QuickActionButton(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.onSurface)
-            Text(label, style = MaterialTheme.typography.labelMedium)
+            Icon(icon, contentDescription = label, tint = contentColor)
+            Text(label, style = MaterialTheme.typography.labelMedium, color = contentColor)
         }
     }
 }
@@ -592,9 +602,7 @@ private fun HoldingRow(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(targetValue = if (isPressed) 0.97f else 1f, label = "holdingRowScale")
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .graphicsLayer { scaleX = scale; scaleY = scale }
