@@ -632,16 +632,18 @@ private fun HoldingRow(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    if (valuation.hasLivePrice) money(valuation.currentValueUsd) else "…",
+                    style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                )
                 val percent = valuation.gainLossPercent
                 if (percent != null) {
                     PercentPill(percent = percent, modifier = Modifier.padding(top = 4.dp))
                 }
             }
-            Text(
-                if (valuation.hasLivePrice) money(valuation.currentValueUsd) else "…",
-                style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold,
-            )
         }
     }
 }

@@ -8,6 +8,7 @@ import com.preciousmetals.tracker.data.remote.GoldApiService
 import com.preciousmetals.tracker.data.remote.YahooFinanceApiService
 import com.preciousmetals.tracker.domain.model.GRAMS_PER_TROY_OUNCE
 import com.preciousmetals.tracker.domain.model.Metal
+import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -68,26 +69,43 @@ class PriceRepository(
 
     val usdToEurRate: Flow<Double> = userPreferences.usdToEurRate
 
-    suspend fun refreshAll(): Result<Unit> = runCatching {
+    /**
+     * Fetches each metal's spot price independently — one metal timing out or erroring no longer
+     * aborts the whole batch (as a single shared `runCatching` around the loop used to: the first
+     * failure threw past every metal after it, so a single flaky request could silently zero out
+     * every other metal's update too). Same independence for the exchange-rate call: it no longer
+     * gets skipped, or made to look like it failed, by an unrelated metal-price error.
+     */
+    suspend fun refreshAll(): Result<Unit> {
         val now = System.currentTimeMillis()
         val today = LocalDate.now().toEpochDay()
 
+        val failedMetals = mutableListOf<Metal>()
         for (metal in Metal.entries) {
-            val dto = goldApiService.getSpotPrice(metal.apiSymbol)
-            priceHistoryDao.insert(
-                PriceHistoryEntity(
-                    metal = metal.name,
-                    priceUsdPerOunce = dto.price,
-                    dateEpochDay = today,
-                    timestampEpochMillis = now,
-                )
-            )
+            runCatching { goldApiService.getSpotPrice(metal.apiSymbol) }
+                .onSuccess { dto ->
+                    priceHistoryDao.insert(
+                        PriceHistoryEntity(
+                            metal = metal.name,
+                            priceUsdPerOunce = dto.price,
+                            dateEpochDay = today,
+                            timestampEpochMillis = now,
+                        )
+                    )
+                }
+                .onFailure { failedMetals += metal }
         }
 
-        val rateDto = exchangeRateApiService.getLatest(from = "USD", to = "EUR")
-        rateDto.rates["EUR"]?.let { userPreferences.setUsdToEurRate(it) }
+        runCatching { exchangeRateApiService.getLatest(from = "USD", to = "EUR") }
+            .onSuccess { rateDto -> rateDto.rates["EUR"]?.let { userPreferences.setUsdToEurRate(it) } }
 
         userPreferences.setLastRefreshEpochMillis(now)
+
+        return if (failedMetals.isEmpty()) {
+            Result.success(Unit)
+        } else {
+            Result.failure(IOException("Échec pour : ${failedMetals.joinToString { it.displayNameFr }}"))
+        }
     }
 
     /**
