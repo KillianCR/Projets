@@ -9,4 +9,5 @@ fun Metal.brandColor(): Color = when (this) {
     Metal.SILVER -> MetalColors.silver
     Metal.PLATINUM -> MetalColors.platinum
     Metal.PALLADIUM -> MetalColors.palladium
+    Metal.COPPER -> MetalColors.copper
 }

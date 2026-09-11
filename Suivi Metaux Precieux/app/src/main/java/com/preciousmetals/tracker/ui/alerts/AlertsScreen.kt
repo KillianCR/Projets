@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -152,7 +153,7 @@ private fun AddAlertDialog(
 ) {
     var metal by remember { mutableStateOf(Metal.GOLD) }
     var direction by remember { mutableStateOf(AlertDirection.ABOVE) }
-    var perOunce by remember { mutableStateOf(true) }
+    var perBigUnit by remember { mutableStateOf(true) }
     var thresholdText by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -160,8 +161,8 @@ private fun AddAlertDialog(
         title = { Text("Nouvelle alerte") },
         text = {
             Column {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Metal.entries.forEach { m ->
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(Metal.entries, key = { it.name }) { m ->
                         FilterChip(
                             selected = metal == m,
                             onClick = { metal = m },
@@ -179,10 +180,10 @@ private fun AddAlertDialog(
                     }
                 }
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                    listOf(true to "Par once", false to "Par gramme").forEachIndexed { index, (value, label) ->
+                    listOf(true to "Par ${metal.bigUnitLabel}", false to "Par gramme").forEachIndexed { index, (value, label) ->
                         SegmentedButton(
-                            selected = perOunce == value,
-                            onClick = { perOunce = value },
+                            selected = perBigUnit == value,
+                            onClick = { perBigUnit = value },
                             shape = SegmentedButtonDefaults.itemShape(index, 2),
                         ) { Text(label) }
                     }
@@ -190,7 +191,7 @@ private fun AddAlertDialog(
                 OutlinedTextField(
                     value = thresholdText,
                     onValueChange = { thresholdText = it },
-                    label = { Text("Seuil (€${if (perOunce) "/once" else "/g"})") },
+                    label = { Text("Seuil (€${if (perBigUnit) "/${metal.bigUnitLabel}" else "/g"})") },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     singleLine = true,
                 )
@@ -200,7 +201,7 @@ private fun AddAlertDialog(
             TextButton(onClick = {
                 val value = thresholdText.replace(',', '.').toDoubleOrNull()
                 if (value != null && value > 0.0) {
-                    onConfirm(metal, direction, value, perOunce)
+                    onConfirm(metal, direction, value, perBigUnit)
                 }
             }) { Text("Créer") }
         },

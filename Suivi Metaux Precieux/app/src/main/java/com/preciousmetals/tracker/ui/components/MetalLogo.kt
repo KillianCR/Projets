@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.theme.BlackEmber
+import com.preciousmetals.tracker.ui.theme.CopperDotDeep
+import com.preciousmetals.tracker.ui.theme.CopperDotLight
 import com.preciousmetals.tracker.ui.theme.GoldGradientDeep
 import com.preciousmetals.tracker.ui.theme.GoldGradientLight
 import com.preciousmetals.tracker.ui.theme.GoldGradientMid
@@ -38,6 +40,7 @@ fun MetalLogo(metal: Metal, modifier: Modifier = Modifier, size: Dp = 40.dp) {
         Metal.SILVER -> listOf(SilverGradientLight, SilverGradientMid, SilverGradientDeep)
         Metal.PLATINUM -> listOf(PlatinumDotLight, PlatinumDotDeep)
         Metal.PALLADIUM -> listOf(PalladiumDotLight, PalladiumDotDeep)
+        Metal.COPPER -> listOf(CopperDotLight, CopperDotDeep)
     }
     Box(
         modifier = modifier

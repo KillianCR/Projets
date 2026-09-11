@@ -11,7 +11,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.preciousmetals.tracker.R
 import com.preciousmetals.tracker.domain.model.AlertDirection
-import com.preciousmetals.tracker.domain.model.GRAMS_PER_TROY_OUNCE
 import com.preciousmetals.tracker.domain.model.PriceAlert
 import java.util.Locale
 
@@ -31,12 +30,18 @@ object NotificationHelper {
         manager.createNotificationChannel(channel)
     }
 
-    fun showAlertTriggered(context: Context, alert: PriceAlert, currentPriceUsdPerGram: Double, currentPriceUsdPerOunce: Double = currentPriceUsdPerGram * GRAMS_PER_TROY_OUNCE) {
+    fun showAlertTriggered(context: Context, alert: PriceAlert, currentPriceUsdPerGram: Double) {
         ensureChannel(context)
 
+        val currentPriceUsdPerBigUnit = currentPriceUsdPerGram * alert.metal.bigUnitGrams
         val directionText = if (alert.direction == AlertDirection.ABOVE) "a dépassé" else "est descendu sous"
         val title = "${alert.metal.displayNameFr} $directionText votre seuil"
-        val text = String.format(Locale.FRENCH, "Cours actuel : %.2f \$/once (%.2f \$/g)", currentPriceUsdPerOunce, currentPriceUsdPerGram)
+        val text = String.format(
+            Locale.FRENCH,
+            "Cours actuel : %.2f \$/${alert.metal.bigUnitLabel} (%.2f \$/g)",
+            currentPriceUsdPerBigUnit,
+            currentPriceUsdPerGram,
+        )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)

@@ -70,6 +70,15 @@ class PriceRepository(
     val usdToEurRate: Flow<Double> = userPreferences.usdToEurRate
 
     /**
+     * [PriceHistoryEntity.priceUsdPerOunce] is really just "price per gram × [GRAMS_PER_TROY_OUNCE]"
+     * — a fixed internal storage scale, not literally a troy-ounce price for every metal. Copper's
+     * feeds quote it in USD/pound ([Metal.apiUnitGrams]), so raw feed prices are rescaled through
+     * grams first; for the four metals actually quoted per troy ounce this is a no-op.
+     */
+    private fun toStoredPriceUsdPerOunce(rawPrice: Double, metal: Metal): Double =
+        (rawPrice / metal.apiUnitGrams) * GRAMS_PER_TROY_OUNCE
+
+    /**
      * Fetches each metal's spot price independently — one metal timing out or erroring no longer
      * aborts the whole batch (as a single shared `runCatching` around the loop used to: the first
      * failure threw past every metal after it, so a single flaky request could silently zero out
@@ -88,7 +97,7 @@ class PriceRepository(
                     priceHistoryDao.insert(
                         PriceHistoryEntity(
                             metal = metal.name,
-                            priceUsdPerOunce = dto.price,
+                            priceUsdPerOunce = toStoredPriceUsdPerOunce(dto.price, metal),
                             dateEpochDay = today,
                             timestampEpochMillis = now,
                         )
@@ -133,7 +142,7 @@ class PriceRepository(
                 priceHistoryDao.insert(
                     PriceHistoryEntity(
                         metal = metal.name,
-                        priceUsdPerOunce = close,
+                        priceUsdPerOunce = toStoredPriceUsdPerOunce(close, metal),
                         dateEpochDay = date.toEpochDay(),
                         timestampEpochMillis = epochSeconds * 1000,
                     )

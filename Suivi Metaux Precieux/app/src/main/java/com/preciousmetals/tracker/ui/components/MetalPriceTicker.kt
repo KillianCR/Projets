@@ -25,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.preciousmetals.tracker.domain.model.Currency
-import com.preciousmetals.tracker.domain.model.GRAMS_PER_TROY_OUNCE
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.theme.GoldGradientMid
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
@@ -84,9 +83,9 @@ fun MetalPriceTicker(
                         valueKey = pricePerGram,
                     )
                     PriceUnitTile(
-                        unitLabel = "once",
+                        unitLabel = metal.bigUnitLabel,
                         text = pricePerGram
-                            ?.let { formatMoney((it * GRAMS_PER_TROY_OUNCE).usdTo(currency, usdToEurRate), currency) }
+                            ?.let { formatMoney((it * metal.bigUnitGrams).usdTo(currency, usdToEurRate), currency) }
                             ?: "…",
                         valueKey = pricePerGram,
                         modifier = Modifier.padding(top = 6.dp),

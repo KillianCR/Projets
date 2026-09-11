@@ -6,7 +6,6 @@ import com.preciousmetals.tracker.data.preferences.UserPreferences
 import com.preciousmetals.tracker.data.repository.AlertRepository
 import com.preciousmetals.tracker.data.repository.PriceRepository
 import com.preciousmetals.tracker.domain.model.AlertDirection
-import com.preciousmetals.tracker.domain.model.GRAMS_PER_TROY_OUNCE
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PriceAlert
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,10 +27,10 @@ class AlertsViewModel(
     ) { alerts, currency, rate -> AlertsUiState(alerts, currency, rate) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AlertsUiState())
 
-    fun addAlert(metal: Metal, direction: AlertDirection, thresholdEur: Double, perOunce: Boolean) {
+    fun addAlert(metal: Metal, direction: AlertDirection, thresholdEur: Double, perBigUnit: Boolean) {
         viewModelScope.launch {
             val rate = priceRepository.usdToEurRate.first()
-            val thresholdEurPerGram = if (perOunce) thresholdEur / GRAMS_PER_TROY_OUNCE else thresholdEur
+            val thresholdEurPerGram = if (perBigUnit) thresholdEur / metal.bigUnitGrams else thresholdEur
             val thresholdUsdPerGram = thresholdEurPerGram / rate
             alertRepository.upsert(
                 PriceAlert(

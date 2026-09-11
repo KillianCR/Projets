@@ -37,7 +37,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.preciousmetals.tracker.domain.model.GRAMS_PER_TROY_OUNCE
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.AreaChartView
@@ -130,12 +129,12 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                         Column(modifier = Modifier.padding(16.dp)) {
                             val perGramCurrent = current.latestPriceUsdPerGram
                             if (perGramCurrent != null) {
-                                val perOunce = perGramCurrent * GRAMS_PER_TROY_OUNCE
+                                val perBigUnit = perGramCurrent * current.metal.bigUnitGrams
                                 Text(
                                     buildAnnotatedString {
-                                        append(formatMoney(perOunce.usdTo(current.currency, current.usdToEurRate), current.currency))
+                                        append(formatMoney(perBigUnit.usdTo(current.currency, current.usdToEurRate), current.currency))
                                         withStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Normal, color = TextMuted44Dark, fontSize = 14.sp)) {
-                                            append(" / once")
+                                            append(" / ${current.metal.bigUnitLabel}")
                                         }
                                     },
                                     style = MaterialTheme.typography.displaySmall.copy(fontSize = 26.sp, letterSpacing = (-0.5).sp),

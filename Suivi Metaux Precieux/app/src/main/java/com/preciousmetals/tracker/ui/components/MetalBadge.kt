@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.preciousmetals.tracker.domain.model.Metal
+import com.preciousmetals.tracker.ui.theme.CopperDotDeep
+import com.preciousmetals.tracker.ui.theme.CopperDotLight
 import com.preciousmetals.tracker.ui.theme.GoldGradientDeep
 import com.preciousmetals.tracker.ui.theme.GoldGradientLight
 import com.preciousmetals.tracker.ui.theme.PalladiumDotDeep
@@ -27,6 +29,7 @@ fun MetalBadge(metal: Metal, modifier: Modifier = Modifier, size: Dp = 12.dp) {
         Metal.SILVER -> SilverGradientLight to SilverGradientDeep
         Metal.PLATINUM -> PlatinumDotLight to PlatinumDotDeep
         Metal.PALLADIUM -> PalladiumDotLight to PalladiumDotDeep
+        Metal.COPPER -> CopperDotLight to CopperDotDeep
     }
     Box(
         modifier = modifier

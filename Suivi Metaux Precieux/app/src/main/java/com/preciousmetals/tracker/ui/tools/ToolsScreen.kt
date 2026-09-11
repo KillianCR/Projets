@@ -178,6 +178,10 @@ private fun purityOptionsFor(metal: Metal): List<PurityOption> = when (metal) {
         PurityOption("999", 0.999),
         PurityOption("950", 0.950),
     )
+    Metal.COPPER -> listOf(
+        PurityOption("Pur (999)", 0.999),
+        PurityOption("Électrolytique (999,9)", 0.9999),
+    )
 }
 
 @Composable

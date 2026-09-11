@@ -81,15 +81,20 @@ val PlatinumDotLight = Color(0xFFCFE0EE)
 val PlatinumDotDeep = Color(0xFF4C7AA0)
 val PalladiumDotLight = Color(0xFFF3C9DD)
 val PalladiumDotDeep = Color(0xFFA45A80)
+val CopperDotLight = Color(0xFFF0B090)
+val CopperDotDeep = Color(0xFFB5651D)
 
 /**
  * Per-metal categorical colors. Gold and Silver follow the product design brief's exact
  * "Accent or" / "Accent argent" values. Platinum/Palladium are from the dataviz-skill validated
- * palette (OKLCH lightness band + chroma floor + CVD separation + contrast vs surface).
+ * palette (OKLCH lightness band + chroma floor + CVD separation + contrast vs surface). Copper
+ * uses its real-world metallic tone ("copper" #B87333), adjusted for contrast against the ember
+ * background — separate enough from Gold/Palladium not to be confused with either.
  */
 object MetalColors {
     val gold = Color(0xFFD4AF37)
     val silver = Color(0xFFC7CBD1)
     val platinum = Color(0xFF2D74CA)
     val palladium = Color(0xFFC05296)
+    val copper = Color(0xFFC87F4A)
 }
