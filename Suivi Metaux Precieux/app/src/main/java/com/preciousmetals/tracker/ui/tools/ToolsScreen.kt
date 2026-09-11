@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.DeleteOutline
@@ -191,8 +193,11 @@ private fun CalculatorSection(state: ToolsUiState) {
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Metal.entries.forEach { m ->
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 0.dp),
+                ) {
+                    items(Metal.entries, key = { it.name }) { m ->
                         FilterChip(
                             selected = metal == m,
                             onClick = { metal = m },
@@ -208,8 +213,11 @@ private fun CalculatorSection(state: ToolsUiState) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 14.dp, bottom = 6.dp),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    purityOptions.forEach { option ->
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 0.dp),
+                ) {
+                    items(purityOptions, key = { it.label }) { option ->
                         FilterChip(
                             selected = purity == option,
                             onClick = { purity = option },
