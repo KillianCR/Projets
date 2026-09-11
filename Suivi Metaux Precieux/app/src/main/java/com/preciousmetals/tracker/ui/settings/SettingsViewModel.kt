@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.preciousmetals.tracker.data.export.DataExporter
 import com.preciousmetals.tracker.data.preferences.UserPreferences
+import com.preciousmetals.tracker.data.repository.PriceRepository
 import com.preciousmetals.tracker.domain.model.Currency
 import java.io.InputStream
 import java.io.OutputStream
@@ -16,10 +17,12 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val userPreferences: UserPreferences,
     private val dataExporter: DataExporter,
+    private val priceRepository: PriceRepository,
     private val onRefreshIntervalChanged: (Int) -> Unit,
 ) : ViewModel() {
 
     private val message = MutableStateFlow<String?>(null)
+    private val isBackfilling = MutableStateFlow(false)
 
     val uiState = combine(
         userPreferences.displayCurrency,
@@ -27,8 +30,17 @@ class SettingsViewModel(
         userPreferences.notificationsEnabled,
         userPreferences.lastRefreshEpochMillis,
         message,
-    ) { currency, interval, notifications, lastRefresh, msg ->
-        SettingsUiState(currency, interval, notifications, lastRefresh, msg)
+        isBackfilling,
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
+        SettingsUiState(
+            currency = values[0] as Currency,
+            refreshIntervalMinutes = values[1] as Int,
+            notificationsEnabled = values[2] as Boolean,
+            lastRefreshEpochMillis = values[3] as Long?,
+            message = values[4] as String?,
+            isBackfillingHistory = values[5] as Boolean,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
     fun setCurrency(currency: Currency) {
@@ -64,5 +76,20 @@ class SettingsViewModel(
 
     fun clearMessage() {
         message.value = null
+    }
+
+    fun backfillHistory() {
+        viewModelScope.launch {
+            isBackfilling.value = true
+            priceRepository.backfillHistoricalPrices()
+                .onSuccess {
+                    userPreferences.setHistoricalBackfillDone(true)
+                    message.value = "Historique des cours (5 ans) mis à jour."
+                }
+                .onFailure {
+                    message.value = "Échec du rechargement de l'historique (réessayez plus tard)."
+                }
+            isBackfilling.value = false
+        }
     }
 }

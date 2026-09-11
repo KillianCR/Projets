@@ -17,9 +17,10 @@ import kotlinx.coroutines.flow.stateIn
 class PriceHistoryViewModel(
     private val priceRepository: PriceRepository,
     private val userPreferences: UserPreferences,
+    initialMetal: Metal = Metal.GOLD,
 ) : ViewModel() {
 
-    private val selectedMetal = MutableStateFlow(Metal.GOLD)
+    private val selectedMetal = MutableStateFlow(initialMetal)
     private val selectedRangeDays = MutableStateFlow(30)
 
     val uiState = combine(selectedMetal, selectedRangeDays) { metal, days -> metal to days }

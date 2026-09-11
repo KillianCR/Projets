@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.preciousmetals.tracker.data.export.DataExporter
 import com.preciousmetals.tracker.data.local.AppDatabase
+import com.preciousmetals.tracker.data.local.MIGRATION_1_2
 import com.preciousmetals.tracker.data.preferences.UserPreferences
 import com.preciousmetals.tracker.data.remote.NetworkModule
 import com.preciousmetals.tracker.data.repository.AlertRepository
@@ -19,13 +20,16 @@ class AppContainer(context: Context) {
         appContext,
         AppDatabase::class.java,
         AppDatabase.DATABASE_NAME,
-    ).build()
+    )
+        .addMigrations(MIGRATION_1_2)
+        .build()
 
     val userPreferences = UserPreferences(appContext)
 
     val priceRepository = PriceRepository(
         goldApiService = NetworkModule.goldApiService,
         exchangeRateApiService = NetworkModule.exchangeRateApiService,
+        yahooFinanceApiService = NetworkModule.yahooFinanceApiService,
         priceHistoryDao = database.priceHistoryDao(),
         userPreferences = userPreferences,
     )

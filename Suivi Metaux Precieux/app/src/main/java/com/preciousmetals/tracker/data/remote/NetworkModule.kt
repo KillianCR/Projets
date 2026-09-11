@@ -20,6 +20,18 @@ object NetworkModule {
     private fun okHttpClient(): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            // Yahoo Finance's public chart endpoint rejects requests without a browser-like
+            // User-Agent (HTTP 429); harmless to send to the other, simpler feeds too.
+            val request = chain.request().newBuilder()
+                .header(
+                    "User-Agent",
+                    "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) " +
+                        "Chrome/120.0.0.0 Mobile Safari/537.36",
+                )
+                .build()
+            chain.proceed(request)
+        }
         .addInterceptor(
             HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
         )
@@ -39,5 +51,9 @@ object NetworkModule {
 
     val exchangeRateApiService: ExchangeRateApiService by lazy {
         retrofit(ExchangeRateApiService.BASE_URL).create()
+    }
+
+    val yahooFinanceApiService: YahooFinanceApiService by lazy {
+        retrofit(YahooFinanceApiService.BASE_URL).create()
     }
 }

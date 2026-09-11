@@ -60,6 +60,7 @@ import com.preciousmetals.tracker.util.usdTo
 fun DashboardScreen(
     onAddHolding: () -> Unit,
     onEditHolding: (Long) -> Unit,
+    onMetalClick: (Metal) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val container = LocalAppContainer.current
@@ -114,6 +115,7 @@ fun DashboardScreen(
                 state = state,
                 onEditHolding = onEditHolding,
                 onDeleteHolding = viewModel::deleteHolding,
+                onMetalClick = onMetalClick,
                 modifier = Modifier.padding(padding),
             )
         }
@@ -141,6 +143,7 @@ private fun DashboardContent(
     state: DashboardUiState.Loaded,
     onEditHolding: (Long) -> Unit,
     onDeleteHolding: (com.preciousmetals.tracker.domain.model.Holding) -> Unit,
+    onMetalClick: (Metal) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val summary = state.summary
@@ -157,6 +160,7 @@ private fun DashboardContent(
                 pricesUsdPerGram = state.livePricesUsdPerGram,
                 currency = state.currency,
                 usdToEurRate = state.usdToEurRate,
+                onMetalClick = onMetalClick,
             )
         }
 

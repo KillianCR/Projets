@@ -25,5 +25,16 @@ class SuiviMetauxApp : Application() {
             val intervalMinutes = container.userPreferences.refreshIntervalMinutes.first()
             WorkScheduler.schedulePeriodicRefresh(this@SuiviMetauxApp, intervalMinutes)
         }
+
+        applicationScope.launch {
+            if (!container.userPreferences.historicalBackfillDone.first()) {
+                val result = container.priceRepository.backfillHistoricalPrices()
+                // Best-effort: on failure (e.g. transient rate limiting), leave the flag unset
+                // so it's retried on a later launch instead of surfacing an error to the user.
+                if (result.isSuccess) {
+                    container.userPreferences.setHistoricalBackfillDone(true)
+                }
+            }
+        }
     }
 }

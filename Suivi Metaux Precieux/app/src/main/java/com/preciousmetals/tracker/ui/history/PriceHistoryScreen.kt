@@ -39,7 +39,7 @@ private val ranges = listOf(7 to "7j", 30 to "30j", 90 to "90j", 365 to "1an")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PriceHistoryScreen(modifier: Modifier = Modifier) {
+fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = null) {
     val container = LocalAppContainer.current
     val viewModel: PriceHistoryViewModel = viewModel(
         factory = viewModelFactory {
@@ -47,6 +47,7 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier) {
                 PriceHistoryViewModel(
                     priceRepository = container.priceRepository,
                     userPreferences = container.userPreferences,
+                    initialMetal = initialMetal ?: Metal.GOLD,
                 )
             }
         }

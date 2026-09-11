@@ -25,6 +25,7 @@ class UserPreferences(private val context: Context) {
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val USD_TO_EUR_RATE = doublePreferencesKey("usd_to_eur_rate")
         val LAST_REFRESH_EPOCH_MILLIS = longPreferencesKey("last_refresh_epoch_millis")
+        val HISTORICAL_BACKFILL_DONE = booleanPreferencesKey("historical_backfill_done")
     }
 
     val displayCurrency: Flow<Currency> = context.dataStore.data.map { prefs ->
@@ -66,5 +67,13 @@ class UserPreferences(private val context: Context) {
 
     suspend fun setLastRefreshEpochMillis(epochMillis: Long) {
         context.dataStore.edit { it[Keys.LAST_REFRESH_EPOCH_MILLIS] = epochMillis }
+    }
+
+    val historicalBackfillDone: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.HISTORICAL_BACKFILL_DONE] ?: false
+    }
+
+    suspend fun setHistoricalBackfillDone(done: Boolean) {
+        context.dataStore.edit { it[Keys.HISTORICAL_BACKFILL_DONE] = done }
     }
 }

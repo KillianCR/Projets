@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -36,6 +37,7 @@ import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.work.WorkScheduler
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.delay
 
 private val refreshOptions = listOf(60 to "1 h", 180 to "3 h", 360 to "6 h", 720 to "12 h", 1440 to "24 h")
 
@@ -50,6 +52,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 SettingsViewModel(
                     userPreferences = container.userPreferences,
                     dataExporter = container.dataExporter,
+                    priceRepository = container.priceRepository,
                     onRefreshIntervalChanged = { minutes -> WorkScheduler.schedulePeriodicRefresh(context, minutes) },
                 )
             }
@@ -144,6 +147,27 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Historique des cours", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Recharge ~5 ans de cours quotidiens (source gratuite Yahoo Finance, sans " +
+                            "compte) pour permettre le calcul automatique du prix d'achat même sur " +
+                            "un achat ancien. Se fait normalement tout seul au premier lancement.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                    )
+                    if (state.isBackfillingHistory) {
+                        CircularProgressIndicator(modifier = Modifier.padding(4.dp))
+                    } else {
+                        OutlinedButton(onClick = { viewModel.backfillHistory() }) {
+                            Text("Recharger l'historique")
+                        }
+                    }
+                }
+            }
+
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text("Sauvegarde", style = MaterialTheme.typography.titleMedium)
                     Text(
                         "Vos données restent uniquement sur cet appareil. Exportez-les régulièrement " +
@@ -172,9 +196,9 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             }
 
             Text(
-                "Les cours proviennent de gold-api.com (Or, Argent, Platine, Palladium) et le taux de " +
-                    "change EUR/USD de la Banque centrale européenne (via frankfurter.app), sans clé " +
-                    "API requise.",
+                "Les cours en direct proviennent de gold-api.com et le taux de change EUR/USD de la " +
+                    "Banque centrale européenne (frankfurter.app) ; l'historique, de Yahoo Finance. " +
+                    "Trois sources gratuites, sans compte ni clé API.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

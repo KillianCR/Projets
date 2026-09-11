@@ -30,6 +30,7 @@ fun MetalPriceTicker(
     currency: Currency,
     usdToEurRate: Double,
     modifier: Modifier = Modifier,
+    onMetalClick: ((Metal) -> Unit)? = null,
 ) {
     LazyRow(
         modifier = modifier,
@@ -38,7 +39,11 @@ fun MetalPriceTicker(
     ) {
         items(metals, key = { it.name }) { metal ->
             val pricePerGram = pricesUsdPerGram[metal]
-            Card(modifier = Modifier.width(104.dp)) {
+            Card(
+                onClick = { onMetalClick?.invoke(metal) },
+                enabled = onMetalClick != null,
+                modifier = Modifier.width(104.dp),
+            ) {
                 Column(
                     modifier = Modifier.padding(10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,

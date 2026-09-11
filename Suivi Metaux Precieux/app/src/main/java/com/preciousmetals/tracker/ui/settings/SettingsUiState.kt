@@ -8,4 +8,5 @@ data class SettingsUiState(
     val notificationsEnabled: Boolean = true,
     val lastRefreshEpochMillis: Long? = null,
     val message: String? = null,
+    val isBackfillingHistory: Boolean = false,
 )

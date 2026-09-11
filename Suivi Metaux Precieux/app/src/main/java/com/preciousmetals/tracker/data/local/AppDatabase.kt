@@ -11,7 +11,7 @@ import com.preciousmetals.tracker.data.local.entity.PriceHistoryEntity
 
 @Database(
     entities = [HoldingEntity::class, PriceHistoryEntity::class, PriceAlertEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {

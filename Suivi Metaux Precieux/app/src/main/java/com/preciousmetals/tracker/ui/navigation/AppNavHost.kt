@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.addholding.AddEditHoldingScreen
 import com.preciousmetals.tracker.ui.alerts.AlertsScreen
 import com.preciousmetals.tracker.ui.dashboard.DashboardScreen
@@ -39,15 +40,18 @@ fun AppNavHost() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val showBottomBar = bottomTabs.any { it.route == currentRoute }
+    val showBottomBar = bottomTabs.any { it.route == currentRoute } ||
+        currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN
 
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
                     bottomTabs.forEach { tab ->
+                        val isHistoryTab = tab.route == Destinations.HISTORY
                         NavigationBarItem(
-                            selected = currentRoute == tab.route,
+                            selected = currentRoute == tab.route ||
+                                (isHistoryTab && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN),
                             onClick = {
                                 navController.navigate(tab.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
@@ -74,10 +78,19 @@ fun AppNavHost() {
                 DashboardScreen(
                     onAddHolding = { navController.navigate(Destinations.addHolding()) },
                     onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                    onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
                 )
             }
             composable(Destinations.HISTORY) {
                 PriceHistoryScreen()
+            }
+            composable(
+                route = Destinations.HISTORY_FOR_METAL_PATTERN,
+                arguments = listOf(navArgument(Destinations.HISTORY_METAL_ARG) { type = NavType.StringType }),
+            ) { entry ->
+                val metal = entry.arguments?.getString(Destinations.HISTORY_METAL_ARG)
+                    ?.let { name -> runCatching { Metal.valueOf(name) }.getOrNull() }
+                PriceHistoryScreen(initialMetal = metal)
             }
             composable(Destinations.ALERTS) {
                 AlertsScreen()

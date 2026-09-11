@@ -10,10 +10,12 @@ plus-value, historique des cours, alertes de prix.
   d'achat, et photo optionnelle.
 - **Valorisation** : valeur actuelle et plus-value (%) calculées à partir du cours en direct.
   Le prix d'achat peut être saisi manuellement, ou calculé automatiquement à partir du cours
-  historique mis en cache (voir limite ci-dessous).
-- **Cours en direct** : Or, Argent, Platine, Palladium, affichables en EUR ou USD (bascule dans
-  le tableau de bord et les réglages).
-- **Historique des cours** : graphique par métal, sur 7 / 30 / 90 / 365 jours.
+  historique mis en cache (voir "Historique des cours" ci-dessous).
+- **Cours en direct** : Or, Argent, Platine, Palladium. Un bandeau défilant sous le titre du
+  tableau de bord affiche le logo et le prix/g de chaque métal ; toucher un métal ouvre son
+  graphique d'historique. Affichage en EUR ou USD, bascule discrète en haut à droite.
+- **Historique des cours** : graphique par métal, sur 7 / 30 / 90 / 365 jours, avec ~5 ans de
+  profondeur grâce au rechargement automatique décrit ci-dessous.
 - **Répartition du portefeuille** : graphique en anneau par métal.
 - **Alertes de prix** : notification quand un cours dépasse ou descend sous un seuil défini.
 - **Sauvegarde** : export / import des avoirs au format JSON (aucune donnée envoyée en ligne,
@@ -42,28 +44,43 @@ partage les dépendances, exposé via un `CompositionLocal` (`LocalAppContainer`
 bibliothèque de graphiques externe : les graphiques (anneau, courbe) sont dessinés directement
 avec `Canvas` en Compose.
 
-## Sources de données (gratuites, sans clé API)
+## Sources de données (gratuites, sans compte ni clé API)
 
 - **Cours en direct** : [gold-api.com](https://gold-api.com) — Or/Argent/Platine/Palladium en
   USD, pas de clé requise.
 - **Taux de change USD → EUR** : [frankfurter.app](https://www.frankfurter.app) (Banque
   centrale européenne), pas de clé requise.
+- **Historique des cours** : flux public (non officiel) de graphiques de
+  [Yahoo Finance](https://finance.yahoo.com), utilisé pour un rechargement ponctuel d'environ
+  5 ans de cours quotidiens par métal (contrats à terme GC=F, SI=F, PL=F, PA=F comme proxy du
+  cours au comptant). Pas de clé, pas de compte.
 
-### Limite connue : calcul automatique du prix d'achat
+Ces trois API "gratuites" (metalpriceapi.com, unirateapi.com, metal-sentinel.com, l'API
+Commodity d'API Ninjas…) demandent toutes une inscription pour obtenir une clé, même sur leur
+offre gratuite. Le flux Yahoo Finance évite complètement cette étape, au prix d'être non
+documenté officiellement : Google/Yahoo peuvent le modifier ou limiter le débit sans préavis, en
+particulier depuis une IP partagée (datacenter, VPN). C'est pourquoi le rechargement de
+l'historique est **best-effort** :
 
-Il n'existe pas d'API gratuite et sans clé fournissant l'historique des cours des métaux
-précieux. L'application construit donc son propre historique localement, à chaque
-rafraîchissement (par défaut toutes les 6 h, réglable). Résultat :
+- Il se lance automatiquement une fois, au premier démarrage de l'app.
+- En cas d'échec (ex. limitation temporaire), rien ne s'affiche à l'utilisateur : l'app
+  réessaiera au prochain lancement, et un bouton "Recharger l'historique" dans Réglages permet
+  de relancer la récupération manuellement à tout moment.
+- Que le rechargement réussisse ou non, la saisie manuelle du prix payé ("Prix payé") reste
+  toujours disponible pour valoriser un achat.
 
-- Pour un achat effectué **après** l'installation de l'app, le calcul automatique du prix
-  d'achat (option "Calcul auto") fonctionne dès que l'historique atteint cette date.
-- Pour un achat **antérieur** à l'installation, aucun cours historique n'est disponible : il
-  faut saisir le prix réellement payé (option "Prix payé"). L'écran d'ajout d'un avoir explique
-  ce point et bascule automatiquement l'utilisateur vers cette option si besoin.
+### Calcul automatique du prix d'achat
+
+- Pour un achat couvert par l'historique (5 dernières années environ, ou toute date après
+  l'installation de l'app grâce au cache local qui se construit à chaque rafraîchissement),
+  le calcul automatique du prix d'achat (option "Calcul auto") fonctionne directement.
+- Pour un achat plus ancien, ou si le rechargement de l'historique a échoué, il faut saisir le
+  prix réellement payé (option "Prix payé"). L'écran d'ajout d'un avoir explique ce point et
+  bascule automatiquement l'utilisateur vers cette option si besoin.
 
 Pour aller plus loin, `PriceRepository` peut être étendu avec un fournisseur d'historique tiers
-(ex. metals-api.com, metalpriceapi.com) nécessitant une clé API, sans changer le reste de
-l'application.
+avec clé API (ex. metalpriceapi.com) pour une source plus officielle et fiable, sans changer le
+reste de l'application.
 
 ## Compiler le projet
 

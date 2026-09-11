@@ -233,9 +233,9 @@ fun AddEditHoldingScreen(
                                     "Estimation basée sur le cours du ${state.purchaseDate.formatFr()} : " +
                                         String.format("%.2f €", state.historicalPreviewEur)
                                 state.historicalPreviewUnavailable ->
-                                    "Cours historique indisponible pour cette date (l'app ne peut retenir " +
-                                        "l'historique qu'à partir de son installation). Basculez sur \"Prix payé\" " +
-                                        "pour saisir le montant manuellement."
+                                    "Cours historique indisponible pour cette date (l'app conserve environ " +
+                                        "5 ans d'historique). Basculez sur \"Prix payé\" pour saisir le " +
+                                        "montant manuellement, ou réessayez plus tard depuis Réglages."
                                 else -> "Calcul en cours…"
                             },
                             modifier = Modifier.padding(12.dp),
