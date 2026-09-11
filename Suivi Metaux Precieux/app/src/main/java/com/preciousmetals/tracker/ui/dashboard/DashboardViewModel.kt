@@ -94,4 +94,9 @@ class DashboardViewModel(
     fun deleteHolding(holding: Holding) {
         viewModelScope.launch { holdingRepository.delete(holding) }
     }
+
+    /** Re-inserts a just-deleted [holding] at its original id, for the "Annuler" snackbar action. */
+    fun restoreHolding(holding: Holding) {
+        viewModelScope.launch { holdingRepository.upsert(holding) }
+    }
 }

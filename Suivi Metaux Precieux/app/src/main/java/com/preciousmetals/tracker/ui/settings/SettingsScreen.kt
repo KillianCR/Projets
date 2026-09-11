@@ -2,8 +2,11 @@ package com.preciousmetals.tracker.ui.settings
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +26,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,7 +45,7 @@ import kotlinx.coroutines.delay
 
 private val refreshOptions = listOf(60 to "1 h", 180 to "3 h", 360 to "6 h", 720 to "12 h", 1440 to "24 h")
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier) {
     val container = LocalAppContainer.current
@@ -73,6 +77,19 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         if (uri != null) {
             context.contentResolver.openInputStream(uri)?.let { viewModel.importData(it) }
         }
+    }
+    val exportCsvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv"),
+    ) { uri ->
+        if (uri != null) {
+            context.contentResolver.openOutputStream(uri)?.let { viewModel.exportDataCsv(it) }
+        }
+    }
+
+    val biometricAvailable = remember(context) {
+        BiometricManager.from(context).canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        ) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
     Scaffold(
@@ -146,6 +163,33 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             }
 
             Card(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Verrouillage biométrique", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            if (biometricAvailable) {
+                                "Empreinte, visage ou code de l'appareil requis à l'ouverture de l'app"
+                            } else {
+                                "Configurez une empreinte, un visage ou un code sur cet appareil pour " +
+                                    "activer cette option"
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = state.appLockEnabled,
+                        enabled = biometricAvailable,
+                        onCheckedChange = { viewModel.setAppLockEnabled(it) },
+                    )
+                }
+            }
+
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Historique des cours", style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -176,9 +220,15 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         OutlinedButton(onClick = { exportLauncher.launch("suivi-metaux-export.json") }) {
                             Text("Exporter (JSON)")
+                        }
+                        OutlinedButton(onClick = { exportCsvLauncher.launch("suivi-metaux-export.csv") }) {
+                            Text("Exporter (CSV)")
                         }
                         OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json")) }) {
                             Text("Importer")

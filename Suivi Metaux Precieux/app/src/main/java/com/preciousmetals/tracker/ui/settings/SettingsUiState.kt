@@ -9,4 +9,5 @@ data class SettingsUiState(
     val lastRefreshEpochMillis: Long? = null,
     val message: String? = null,
     val isBackfillingHistory: Boolean = false,
+    val appLockEnabled: Boolean = false,
 )

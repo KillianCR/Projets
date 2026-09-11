@@ -1,11 +1,16 @@
 package com.preciousmetals.tracker.ui.dashboard
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,22 +20,41 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,6 +62,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.Currency
+import com.preciousmetals.tracker.domain.model.Holding
 import com.preciousmetals.tracker.domain.model.HoldingValuation
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
@@ -53,6 +78,7 @@ import com.preciousmetals.tracker.util.formatGrams
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.formatPercent
 import com.preciousmetals.tracker.util.usdTo
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,8 +102,13 @@ fun DashboardScreen(
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    Scaffold(modifier = modifier) { padding ->
+    Scaffold(
+        modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { padding ->
         when (val state = uiState) {
             is DashboardUiState.Loading -> Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
@@ -90,12 +121,30 @@ fun DashboardScreen(
                 onRefresh = viewModel::refresh,
                 onAddHolding = onAddHolding,
                 onEditHolding = onEditHolding,
-                onDeleteHolding = viewModel::deleteHolding,
+                onDeleteHolding = { holding ->
+                    viewModel.deleteHolding(holding)
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = "Avoir supprimé",
+                            actionLabel = "Annuler",
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            viewModel.restoreHolding(holding)
+                        }
+                    }
+                },
                 onMetalClick = onMetalClick,
                 modifier = Modifier.padding(padding),
             )
         }
     }
+}
+
+private enum class HoldingSortOption(val label: String) {
+    DATE_DESC("Plus récent"),
+    VALUE_DESC("Valeur"),
+    GAIN_DESC("Plus-value"),
 }
 
 @Composable
@@ -105,12 +154,33 @@ private fun DashboardContent(
     onRefresh: () -> Unit,
     onAddHolding: () -> Unit,
     onEditHolding: (Long) -> Unit,
-    onDeleteHolding: (com.preciousmetals.tracker.domain.model.Holding) -> Unit,
+    onDeleteHolding: (Holding) -> Unit,
     onMetalClick: (Metal) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val summary = state.summary
     fun money(usd: Double) = formatMoney(usd.usdTo(state.currency, state.usdToEurRate), state.currency)
+
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var sortOption by rememberSaveable { mutableStateOf(HoldingSortOption.DATE_DESC) }
+
+    val filteredValuations = remember(summary.valuations, searchQuery, sortOption) {
+        val filtered = if (searchQuery.isBlank()) {
+            summary.valuations
+        } else {
+            summary.valuations.filter { valuation ->
+                val holding = valuation.holding
+                holding.label.contains(searchQuery, ignoreCase = true) ||
+                    holding.metal.displayNameFr.contains(searchQuery, ignoreCase = true) ||
+                    holding.objectType.displayNameFr.contains(searchQuery, ignoreCase = true)
+            }
+        }
+        when (sortOption) {
+            HoldingSortOption.DATE_DESC -> filtered.sortedByDescending { it.holding.purchaseDate }
+            HoldingSortOption.VALUE_DESC -> filtered.sortedByDescending { it.currentValueUsd }
+            HoldingSortOption.GAIN_DESC -> filtered.sortedByDescending { it.gainLossPercent ?: Double.NEGATIVE_INFINITY }
+        }
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -209,19 +279,37 @@ private fun DashboardContent(
         }
 
         item {
-            SectionTitle("Vos avoirs (${summary.valuations.size})")
+            val countLabel = if (filteredValuations.size != summary.valuations.size) {
+                "Vos avoirs (${filteredValuations.size} / ${summary.valuations.size})"
+            } else {
+                "Vos avoirs (${summary.valuations.size})"
+            }
+            SectionTitle(countLabel)
+        }
+
+        if (summary.valuations.size > 1) {
+            item {
+                SearchAndSortRow(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    sortOption = sortOption,
+                    onSortOptionChange = { sortOption = it },
+                )
+            }
         }
 
         if (summary.valuations.isEmpty()) {
+            item { EmptyHoldingsState(onAddHolding = onAddHolding) }
+        } else if (filteredValuations.isEmpty()) {
             item {
                 Text(
-                    "Aucun avoir pour le moment. Appuyez sur \"Ajouter\" pour ajouter votre premier " +
-                        "lingot, pièce ou bijou.",
+                    "Aucun avoir ne correspond à \"$searchQuery\".",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp),
                 )
             }
         } else {
-            items(summary.valuations, key = { it.holding.id }) { valuation ->
+            items(filteredValuations, key = { it.holding.id }) { valuation ->
                 HoldingRow(
                     valuation = valuation,
                     money = ::money,
@@ -229,6 +317,97 @@ private fun DashboardContent(
                     onDelete = { onDeleteHolding(valuation.holding) },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun SearchAndSortRow(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    sortOption: HoldingSortOption,
+    onSortOptionChange: (HoldingSortOption) -> Unit,
+) {
+    var sortMenuExpanded by remember { mutableStateOf(false) }
+
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.weight(1f),
+            placeholder = { Text("Rechercher un avoir") },
+            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        Icon(Icons.Outlined.Close, contentDescription = "Effacer la recherche")
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+        )
+        Box {
+            Surface(
+                onClick = { sortMenuExpanded = true },
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        Icons.Outlined.FilterList,
+                        contentDescription = "Trier : ${sortOption.label}",
+                    )
+                }
+            }
+            DropdownMenu(expanded = sortMenuExpanded, onDismissRequest = { sortMenuExpanded = false }) {
+                HoldingSortOption.entries.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.label) },
+                        onClick = {
+                            onSortOptionChange(option)
+                            sortMenuExpanded = false
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyHoldingsState(onAddHolding: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+        ) {
+            Icon(
+                Icons.Outlined.AccountBalanceWallet,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(20.dp),
+            )
+        }
+        Text(
+            "Aucun avoir pour le moment",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 16.dp),
+        )
+        Text(
+            "Ajoutez votre premier lingot, pièce ou bijou pour commencer à suivre sa valeur.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+        TextButton(onClick = onAddHolding, modifier = Modifier.padding(top = 8.dp)) {
+            Icon(Icons.Outlined.Add, contentDescription = null)
+            Text("  Ajouter un avoir")
         }
     }
 }
@@ -265,13 +444,15 @@ private fun CompactCurrencyToggle(currency: Currency, onToggle: () -> Unit) {
         onClick = onToggle,
         shape = RoundedCornerShape(50),
         color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier.padding(end = 4.dp),
+        modifier = Modifier.padding(end = 4.dp).defaultMinSize(minWidth = 44.dp, minHeight = 44.dp),
     ) {
-        Text(
-            text = currency.code,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-        )
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = currency.code,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(horizontal = 12.dp),
+            )
+        }
     }
 }
 
@@ -345,9 +526,18 @@ private fun HoldingRow(
     onDelete: () -> Unit,
 ) {
     val holding = valuation.holding
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(targetValue = if (isPressed) 0.97f else 1f, label = "holdingRowScale")
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(14.dp).fillMaxWidth(),
@@ -376,10 +566,27 @@ private fun HoldingRow(
                     if (valuation.hasLivePrice) money(valuation.currentValueUsd) else "…",
                     fontWeight = FontWeight.SemiBold,
                 )
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { showDeleteConfirm = true }) {
                     Icon(Icons.Outlined.DeleteOutline, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error)
                 }
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Supprimer cet avoir ?") },
+            text = { Text("\"${holding.label.ifBlank { holding.metal.displayNameFr }}\" sera supprimé. Vous pourrez l'annuler juste après.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    onDelete()
+                }) { Text("Supprimer") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("Annuler") }
+            },
+        )
     }
 }

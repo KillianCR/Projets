@@ -7,7 +7,9 @@ plus-value, historique des cours, alertes de prix.
 ## Fonctionnalités
 
 - **Portefeuille** : ajout d'avoirs (lingot, pièce, bijou, autre) avec poids en grammes, date
-  d'achat, et photo optionnelle.
+  d'achat, et photo optionnelle. Recherche (nom, métal, type) et tri (récent / valeur /
+  plus-value) dès que le portefeuille compte plusieurs avoirs. Suppression avec confirmation et
+  "Annuler" via un snackbar (aucune suppression accidentelle irréversible).
 - **Valorisation** : valeur actuelle et plus-value (%) calculées à partir du cours en direct.
   Le prix d'achat peut être saisi manuellement, ou calculé automatiquement à partir du cours
   historique mis en cache (voir "Historique des cours" ci-dessous).
@@ -20,8 +22,14 @@ plus-value, historique des cours, alertes de prix.
   profondeur grâce au rechargement automatique décrit ci-dessous.
 - **Répartition du portefeuille** : graphique en anneau par métal.
 - **Alertes de prix** : notification quand un cours dépasse ou descend sous un seuil défini.
-- **Sauvegarde** : export / import des avoirs au format JSON (aucune donnée envoyée en ligne,
-  tout reste sur l'appareil).
+- **Widget écran d'accueil** : cours de l'or, l'argent, le platine et le palladium (prix/g et
+  variation vs veille) directement sur l'écran d'accueil, sans ouvrir l'app ; se rafraîchit avec
+  chaque actualisation en arrière-plan. Toucher le widget ouvre l'application.
+- **Verrouillage biométrique** (optionnel, dans Réglages) : empreinte, visage ou code de
+  l'appareil requis à l'ouverture et à chaque retour au premier plan, pour protéger la
+  valorisation de votre patrimoine en cas de téléphone déverrouillé laissé sans surveillance.
+- **Sauvegarde** : export des avoirs en JSON (réimportable) ou CSV (pour tableur), et import
+  JSON. Aucune donnée envoyée en ligne, tout reste sur l'appareil.
 
 ## Architecture
 
@@ -35,8 +43,11 @@ app/src/main/java/com/preciousmetals/tracker/
 │   ├── repository/       agrège local + remote (PriceRepository, HoldingRepository, …)
 │   └── export/           export/import JSON
 ├── work/                 WorkManager : rafraîchissement périodique + vérification des alertes
+│                         (déclenche aussi le rafraîchissement du widget)
 ├── ui/                   un package par écran (dashboard, addholding, history, alerts, settings)
-│                         + theme, navigation, composants partagés (graphiques maison en Canvas)
+│                         + theme, navigation, composants partagés (graphiques maison en Canvas),
+│                         lock (verrouillage biométrique via AppLockGate)
+├── widget/               widget écran d'accueil (Jetpack Glance) affichant les 4 cours
 ├── AppContainer.kt       conteneur d'injection de dépendances "fait main" (pas de Hilt)
 └── MainActivity.kt / SuiviMetauxApp.kt
 ```
@@ -108,6 +119,6 @@ Aucune clé API à configurer : l'application fonctionne dès l'installation.
 
 ## Prochaines pistes (non implémentées)
 
-- Widget écran d'accueil affichant le cours de l'or.
 - Fournisseur d'historique tiers avec clé API optionnelle (voir ci-dessus).
 - Sauvegarde automatique chiffrée (Google Drive) en plus de l'export manuel.
+- Widget configurable (choix des métaux affichés, taille).

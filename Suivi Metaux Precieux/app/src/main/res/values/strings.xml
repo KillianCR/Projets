@@ -3,4 +3,5 @@
     <string name="app_name">Suivi Métaux</string>
     <string name="notification_channel_alerts">Alertes de cours</string>
     <string name="notification_channel_alerts_desc">Notifications quand un cours atteint le seuil défini</string>
+    <string name="widget_spot_price_label">Cours des métaux</string>
 </resources>

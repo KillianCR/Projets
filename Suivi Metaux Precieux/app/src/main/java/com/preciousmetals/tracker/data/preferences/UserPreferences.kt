@@ -26,6 +26,7 @@ class UserPreferences(private val context: Context) {
         val USD_TO_EUR_RATE = doublePreferencesKey("usd_to_eur_rate")
         val LAST_REFRESH_EPOCH_MILLIS = longPreferencesKey("last_refresh_epoch_millis")
         val HISTORICAL_BACKFILL_DONE = booleanPreferencesKey("historical_backfill_done")
+        val APP_LOCK_ENABLED = booleanPreferencesKey("app_lock_enabled")
     }
 
     val displayCurrency: Flow<Currency> = context.dataStore.data.map { prefs ->
@@ -75,5 +76,14 @@ class UserPreferences(private val context: Context) {
 
     suspend fun setHistoricalBackfillDone(done: Boolean) {
         context.dataStore.edit { it[Keys.HISTORICAL_BACKFILL_DONE] = done }
+    }
+
+    /** Whether the app should require biometric/device-credential auth on open and on resume. */
+    val appLockEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.APP_LOCK_ENABLED] ?: false
+    }
+
+    suspend fun setAppLockEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.APP_LOCK_ENABLED] = enabled }
     }
 }

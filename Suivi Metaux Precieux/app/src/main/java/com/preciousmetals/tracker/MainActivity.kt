@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,11 +15,17 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.lock.AppLockGate
 import com.preciousmetals.tracker.ui.navigation.AppNavHost
 import com.preciousmetals.tracker.ui.theme.SuiviMetauxTheme
 
-class MainActivity : ComponentActivity() {
+/**
+ * A [FragmentActivity] (not the usual bare `ComponentActivity`) because [AppLockGate] drives a
+ * [androidx.biometric.BiometricPrompt], which requires one.
+ */
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val container = (application as SuiviMetauxApp).container
@@ -30,7 +35,9 @@ class MainActivity : ComponentActivity() {
                 RequestNotificationPermissionIfNeeded()
                 CompositionLocalProvider(LocalAppContainer provides container) {
                     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                        AppNavHost()
+                        AppLockGate {
+                            AppNavHost()
+                        }
                     }
                 }
             }

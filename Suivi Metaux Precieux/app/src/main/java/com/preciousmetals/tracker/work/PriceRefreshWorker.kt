@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.preciousmetals.tracker.SuiviMetauxApp
 import com.preciousmetals.tracker.domain.model.AlertDirection
+import com.preciousmetals.tracker.widget.SpotPriceWidget
 import kotlinx.coroutines.flow.first
 
 /** Periodically refreshes spot prices (building the local history cache) and checks price alerts. */
@@ -20,6 +21,8 @@ class PriceRefreshWorker(
         if (refreshResult.isFailure) {
             return if (runAttemptCount < 3) Result.retry() else Result.failure()
         }
+
+        SpotPriceWidget.refreshAllInstances(applicationContext)
 
         val notificationsEnabled = container.userPreferences.notificationsEnabled.first()
         if (notificationsEnabled) {

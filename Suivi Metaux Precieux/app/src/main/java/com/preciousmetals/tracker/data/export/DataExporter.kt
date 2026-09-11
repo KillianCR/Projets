@@ -75,4 +75,28 @@ class DataExporter(private val holdingRepository: HoldingRepository) {
         payload.holdings.forEach { dto -> holdingRepository.upsert(dto.toDomain()) }
         return payload.holdings.size
     }
+
+    /**
+     * Export-only CSV alternative to [exportToStream], for opening the portfolio in a spreadsheet
+     * (Excel, Google Sheets…). Import stays JSON-only — [ExportPayload] is the app's one
+     * round-trippable format.
+     */
+    suspend fun exportToCsvStream(outputStream: OutputStream) {
+        val holdings = holdingRepository.getAllOnce()
+        val csv = buildString {
+            append("metal,objectType,grams,purchaseDate,label,pricePaidUsd,notes\n")
+            holdings.forEach { holding ->
+                append(csvField(holding.metal.name)).append(',')
+                append(csvField(holding.objectType.name)).append(',')
+                append(holding.grams).append(',')
+                append(holding.purchaseDate.toString()).append(',')
+                append(csvField(holding.label)).append(',')
+                append(holding.pricePaidUsd?.toString().orEmpty()).append(',')
+                append(csvField(holding.notes)).append('\n')
+            }
+        }
+        outputStream.use { it.write(csv.toByteArray(Charsets.UTF_8)) }
+    }
+
+    private fun csvField(value: String): String = "\"${value.replace("\"", "\"\"")}\""
 }

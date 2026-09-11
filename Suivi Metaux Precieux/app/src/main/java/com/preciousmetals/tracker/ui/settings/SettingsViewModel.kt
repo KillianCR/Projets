@@ -31,6 +31,7 @@ class SettingsViewModel(
         userPreferences.lastRefreshEpochMillis,
         message,
         isBackfilling,
+        userPreferences.appLockEnabled,
     ) { values ->
         @Suppress("UNCHECKED_CAST")
         SettingsUiState(
@@ -40,6 +41,7 @@ class SettingsViewModel(
             lastRefreshEpochMillis = values[3] as Long?,
             message = values[4] as String?,
             isBackfillingHistory = values[5] as Boolean,
+            appLockEnabled = values[6] as Boolean,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
@@ -64,6 +66,18 @@ class SettingsViewModel(
                 .onSuccess { message.value = "Export réussi." }
                 .onFailure { message.value = "Échec de l'export : ${it.message}" }
         }
+    }
+
+    fun exportDataCsv(outputStream: OutputStream) {
+        viewModelScope.launch {
+            runCatching { dataExporter.exportToCsvStream(outputStream) }
+                .onSuccess { message.value = "Export CSV réussi." }
+                .onFailure { message.value = "Échec de l'export CSV : ${it.message}" }
+        }
+    }
+
+    fun setAppLockEnabled(enabled: Boolean) {
+        viewModelScope.launch { userPreferences.setAppLockEnabled(enabled) }
     }
 
     fun importData(inputStream: InputStream) {
