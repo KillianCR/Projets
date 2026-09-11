@@ -30,6 +30,12 @@ val NegativeRedDark = Color(0xFFFF6B6B)
 val PositiveGreenLight = Color(0xFF1E8E3E)
 val NegativeRedLight = Color(0xFFD93025)
 
+// Dark error container — deliberately distinct from SurfaceVariantDark. Material3's
+// contentColorFor() matches container colors by exact value and checks errorContainer before
+// surfaceVariant, so reusing the same Color for both silently turned every default-colored
+// surfaceVariant surface (cards, pills) into error-red text/icons app-wide.
+val ErrorContainerDark = Color(0xFF3A2020)
+
 /**
  * Per-metal categorical colors. Validated with the dataviz skill's palette checker
  * (OKLCH lightness band + chroma floor + CVD adjacent/normal-vision separation +

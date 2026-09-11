@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -66,10 +67,10 @@ import com.preciousmetals.tracker.domain.model.Holding
 import com.preciousmetals.tracker.domain.model.HoldingValuation
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.AllocationBarView
+import com.preciousmetals.tracker.ui.components.AllocationSlice
 import com.preciousmetals.tracker.ui.components.MetalLogo
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
-import com.preciousmetals.tracker.ui.components.PieChartView
-import com.preciousmetals.tracker.ui.components.PieSlice
 import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.ui.theme.negativeColor
 import com.preciousmetals.tracker.ui.theme.positiveColor
@@ -268,10 +269,11 @@ private fun DashboardContent(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Répartition par métal", style = MaterialTheme.typography.titleMedium)
-                        PieChartView(
+                        AllocationBarView(
                             slices = summary.byMetal.map { (metal, value) ->
-                                PieSlice(metal.displayNameFr, value, metal.brandColor())
-                            }
+                                AllocationSlice(metal.displayNameFr, value, metal.brandColor())
+                            },
+                            modifier = Modifier.padding(top = 14.dp),
                         )
                     }
                 }
@@ -330,28 +332,39 @@ private fun SearchAndSortRow(
 ) {
     var sortMenuExpanded by remember { mutableStateOf(false) }
 
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    )
+
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Rechercher un avoir") },
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+            placeholder = { Text("Rechercher un avoir", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = {
                 if (query.isNotEmpty()) {
                     IconButton(onClick = { onQueryChange("") }) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Effacer la recherche")
+                        Icon(Icons.Outlined.Close, contentDescription = "Effacer la recherche", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             },
             singleLine = true,
             shape = RoundedCornerShape(16.dp),
+            colors = fieldColors,
         )
         Box {
             Surface(
                 onClick = { sortMenuExpanded = true },
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {

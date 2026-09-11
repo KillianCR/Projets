@@ -20,7 +20,7 @@ private val DarkColors = darkColorScheme(
     outline = OutlineDark,
     outlineVariant = OutlineDark,
     error = NegativeRedDark,
-    errorContainer = SurfaceVariantDark,
+    errorContainer = ErrorContainerDark,
     onErrorContainer = NegativeRedDark,
 )
 
