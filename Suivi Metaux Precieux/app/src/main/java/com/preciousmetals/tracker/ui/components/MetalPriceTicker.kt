@@ -24,13 +24,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.GRAMS_PER_TROY_OUNCE
 import com.preciousmetals.tracker.domain.model.Metal
+import com.preciousmetals.tracker.ui.theme.GoldGradientMid
+import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.usdTo
 import kotlinx.coroutines.delay
+
+/** The mockup's exact sparkline stroke for gold/silver; platinum/palladium keep the categorical brandColor (unaddressed by the mockup). */
+private fun sparklineColor(metal: Metal, brandColor: Color): Color = when (metal) {
+    Metal.GOLD -> GoldGradientMid
+    Metal.SILVER -> Color.White
+    else -> brandColor
+}
 
 /**
  * Horizontally scrollable row of one card per tracked metal: logo, live price/gram and
@@ -86,7 +96,7 @@ fun MetalPriceTicker(
                     if (spark.size >= 2) {
                         Sparkline(
                             values = spark,
-                            lineColor = color,
+                            lineColor = sparklineColor(metal, color),
                             height = 28.dp,
                             modifier = Modifier.padding(top = 8.dp),
                         )
@@ -113,8 +123,8 @@ private fun PriceUnitTile(
         Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
             Text(
                 text = "Prix / $unitLabel",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                color = TextMuted33Dark,
             )
             FlashOnChangeText(
                 text = text,

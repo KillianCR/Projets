@@ -11,17 +11,14 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -31,8 +28,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -43,8 +43,13 @@ import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.AreaChartView
 import com.preciousmetals.tracker.ui.components.ChartPoint
 import com.preciousmetals.tracker.ui.components.GlassCard
+import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.PercentPill
+import com.preciousmetals.tracker.ui.theme.IconTileSurfaceDark
+import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted67Dark
 import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.usdTo
@@ -89,23 +94,26 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(Metal.entries, key = { it.name }) { metal ->
                     val selected = (state as? PriceHistoryUiState.Loaded)?.metal == metal
-                    FilterChip(
+                    GlassChip(
                         selected = selected,
                         onClick = { viewModel.selectMetal(metal) },
-                        label = { Text(metal.displayNameFr) },
-                        leadingIcon = { MetalBadge(metal = metal) },
+                        label = metal.displayNameFr,
+                        leadingContent = { MetalBadge(metal = metal) },
                     )
                 }
             }
 
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                ranges.forEachIndexed { index, (days, label) ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ranges.forEach { (days, label) ->
                     val selected = (state as? PriceHistoryUiState.Loaded)?.rangeDays == days
-                    SegmentedButton(
+                    GlassChip(
                         selected = selected,
                         onClick = { viewModel.selectRange(days) },
-                        shape = SegmentedButtonDefaults.itemShape(index, ranges.size),
-                    ) { Text(label) }
+                        label = label,
+                        shape = RoundedCornerShape(14.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 9.dp),
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
 
@@ -124,14 +132,20 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                             if (perGramCurrent != null) {
                                 val perOunce = perGramCurrent * GRAMS_PER_TROY_OUNCE
                                 Text(
-                                    formatMoney(perOunce.usdTo(current.currency, current.usdToEurRate), current.currency) + " / once",
-                                    style = MaterialTheme.typography.displaySmall,
+                                    buildAnnotatedString {
+                                        append(formatMoney(perOunce.usdTo(current.currency, current.usdToEurRate), current.currency))
+                                        withStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Normal, color = TextMuted44Dark, fontSize = 14.sp)) {
+                                            append(" / once")
+                                        }
+                                    },
+                                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 26.sp, letterSpacing = (-0.5).sp),
                                     fontWeight = FontWeight.Bold,
                                 )
                                 Text(
                                     formatMoney(perGramCurrent.usdTo(current.currency, current.usdToEurRate), current.currency) + " / gramme",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                                    color = TextMuted44Dark,
+                                    modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
                                 )
                             }
 
@@ -149,8 +163,8 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                     Text(
                         "Touchez ou glissez sur le graphique pour inspecter un point. L'historique " +
                             "s'étoffe à chaque actualisation des cours.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp, lineHeight = 19.sp),
+                        color = TextMuted33Dark,
                     )
 
                     MarketStatsCard(stats = current.marketStats)
@@ -165,10 +179,10 @@ private fun MarketStatsCard(stats: List<MarketStat>) {
     Column {
         Text(
             "STATISTIQUES DU MARCHÉ",
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp),
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp, letterSpacing = 0.5.sp),
+            fontWeight = FontWeight.SemiBold,
+            color = TextMuted44Dark,
+            modifier = Modifier.padding(bottom = 12.dp, start = 4.dp),
         )
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -192,13 +206,13 @@ private fun MarketStatRow(stat: MarketStat) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(10.dp),
+                color = IconTileSurfaceDark,
             ) {
                 Icon(
                     Icons.Outlined.CalendarMonth,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = TextMuted67Dark,
                     modifier = Modifier.padding(8.dp),
                 )
             }

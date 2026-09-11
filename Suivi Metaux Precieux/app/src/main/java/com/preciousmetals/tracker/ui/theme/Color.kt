@@ -50,7 +50,9 @@ val BlackEmber = Color(0xFF070504)
 // Unified accent — every accentuated color (buttons, icons, emphasized amounts) collapses onto
 // this single white, at varying opacities, instead of mixing yellow/green/white as before.
 val WhiteAccent = Color(0xFFFFFFFF)
-val OnWhiteAccent = Color(0xFF1B1B1F)
+// Exact dark text color the "écrans-app.html" mockup puts on every solid-white surface (the
+// primary CTA, a selected chip/pill, the selected nav item) — used verbatim, not approximated.
+val OnWhiteAccent = Color(0xFF1A0F08)
 
 // Glass-card surface/border — a translucent white composited over the ember background instead
 // of an opaque fill (report: "Cartes uniformisées"). Distinct alpha values from each other and
@@ -59,6 +61,28 @@ val GlassSurfaceDark = Color(0x14FFFFFF)
 val GlassOutlineDark = Color(0x1FFFFFFF)
 val OnGlassSurfaceDark = Color(0xFFC7C2BC)
 
+// Exact surface/border/text values from the "écrans-app.html" mockup (Portefeuille/Historique/
+// Outils reference) — copied verbatim (#rrggbbaa -> Compose's 0xAARRGGBB) rather than reusing the
+// nearby-but-different GlassSurfaceDark/GlassOutlineDark above, since the mockup deliberately uses
+// different opacities for cards vs. chips vs. pills vs. inputs.
+val CardSurfaceDark = Color(0x0AFFFFFF) // #ffffff0a — card fill
+val CardBorderDark = Color(0x1AFFFFFF) // #ffffff1a — card border
+val ChipSurfaceDark = Color(0x0DFFFFFF) // #ffffff0d — unselected chip/segment fill
+val ChipBorderDark = Color(0x22FFFFFF) // #ffffff22 — unselected chip/segment border
+val PillSurfaceDark = Color(0x14FFFFFF) // #ffffff14 — percent badge fill
+val EurPillSurfaceDark = Color(0x0FFFFFFF) // #ffffff0f — currency pill fill
+val EurPillBorderDark = Color(0x26FFFFFF) // #ffffff26 — currency pill / input field border
+val InputSurfaceDark = Color(0x0DFFFFFF) // #ffffff0d — text field fill
+val IconTileSurfaceDark = Color(0x10FFFFFF) // #ffffff10 — small icon tile fill
+val NavDividerDark = Color(0x14FFFFFF) // #ffffff14 — bottom nav top border
+val HeaderIconMutedDark = Color(0x88FFFFFF) // #ffffff88 — refresh/eye icons
+val TextMuted80Dark = Color(0xCCFFFFFF) // #ffffffcc
+val TextMuted67Dark = Color(0xAAFFFFFF) // #ffffffaa
+val TextMuted56Dark = Color(0x90FFFFFF) // #ffffff90
+val TextMuted44Dark = Color(0x70FFFFFF) // #ffffff70
+val TextMuted38Dark = Color(0x60FFFFFF) // #ffffff60
+val TextMuted33Dark = Color(0x55FFFFFF) // #ffffff55
+
 // Metallic gradient stops for the metal logo circles (report: "Logos or / argent").
 val GoldGradientLight = Color(0xFFFFF3C4)
 val GoldGradientMid = Color(0xFFFFD556)
@@ -66,6 +90,14 @@ val GoldGradientDeep = Color(0xFFA6740F)
 val SilverGradientLight = Color(0xFFFFFFFF)
 val SilverGradientMid = Color(0xFFC9CDD2)
 val SilverGradientDeep = Color(0xFF7A8087)
+
+// The mockup's 2-stop gradients for the small per-metal dots (filter-chip leading icon) — lighter
+// and more pastel than MetalColors' flat platinum/palladium, which stay unchanged elsewhere
+// (chart lines, allocation bars) since the mockup only specifies these for the dot.
+val PlatinumDotLight = Color(0xFFCFE0EE)
+val PlatinumDotDeep = Color(0xFF4C7AA0)
+val PalladiumDotLight = Color(0xFFF3C9DD)
+val PalladiumDotDeep = Color(0xFFA45A80)
 
 /**
  * Per-metal categorical colors. Gold and Silver now follow the product design brief's exact

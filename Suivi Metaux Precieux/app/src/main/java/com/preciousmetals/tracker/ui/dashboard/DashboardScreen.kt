@@ -25,6 +25,8 @@ import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Visibility
@@ -78,6 +80,16 @@ import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.MetalLogo
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
 import com.preciousmetals.tracker.ui.components.PercentPill
+import com.preciousmetals.tracker.ui.theme.HeaderIconMutedDark
+import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted56Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted80Dark
+import com.preciousmetals.tracker.ui.theme.EurPillBorderDark
+import com.preciousmetals.tracker.ui.theme.EurPillSurfaceDark
+import com.preciousmetals.tracker.ui.theme.ChipBorderDark
+import com.preciousmetals.tracker.ui.theme.ChipSurfaceDark
 import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.ui.theme.negativeColor
 import com.preciousmetals.tracker.ui.theme.positiveColor
@@ -249,11 +261,11 @@ private fun DashboardContent(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column {
-                        Text("Plus-value", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Plus-value", style = MaterialTheme.typography.labelMedium, color = TextMuted38Dark)
                         Text(
                             gainUsd?.let { displayMoney(it) } ?: "—",
-                            style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp, fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                     if (gainPercent != null) {
@@ -269,9 +281,9 @@ private fun DashboardContent(
             Column {
                 Text(
                     "VOS MÉTAUX",
-                    style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp, letterSpacing = 0.4.sp),
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextMuted56Dark,
                     modifier = Modifier.padding(start = 4.dp),
                 )
                 MetalPriceTicker(
@@ -288,15 +300,29 @@ private fun DashboardContent(
 
         if (summary.byMetal.isNotEmpty()) {
             item {
-                GlassCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Répartition par métal", style = MaterialTheme.typography.titleMedium)
-                        AllocationBarView(
-                            slices = summary.byMetal.map { (metal, value) ->
-                                AllocationSlice(metal.displayNameFr, value, metal.brandColor())
-                            },
-                            modifier = Modifier.padding(top = 14.dp),
-                        )
+                var expanded by rememberSaveable { mutableStateOf(false) }
+                GlassCard(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Répartition par métal", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            Icon(
+                                if (expanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                                contentDescription = if (expanded) "Réduire" else "Développer",
+                                tint = TextMuted38Dark,
+                            )
+                        }
+                        if (expanded) {
+                            AllocationBarView(
+                                slices = summary.byMetal.map { (metal, value) ->
+                                    AllocationSlice(metal.displayNameFr, value, metal.brandColor())
+                                },
+                                modifier = Modifier.padding(top = 14.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -466,7 +492,7 @@ private fun DashboardHeader(
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(modifier = Modifier.fillMaxWidth()) {
             IconButton(onClick = onRefresh, modifier = Modifier.align(Alignment.CenterStart)) {
-                Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours")
+                Icon(Icons.Outlined.Refresh, contentDescription = "Actualiser les cours", tint = HeaderIconMutedDark)
             }
             CompactCurrencyToggle(
                 currency = currency,
@@ -483,11 +509,12 @@ private fun DashboardHeader(
                 Icon(
                     if (amountsHidden) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                     contentDescription = if (amountsHidden) "Afficher les montants" else "Masquer les montants",
+                    tint = HeaderIconMutedDark,
                 )
             }
         }
         Column(modifier = Modifier.padding(start = 12.dp, top = 4.dp)) {
-            Text("Bonjour", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Bonjour", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp), color = TextMuted44Dark)
             Text("Mon portefeuille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
         }
     }
@@ -498,14 +525,16 @@ private fun CompactCurrencyToggle(currency: Currency, onToggle: () -> Unit, modi
     Surface(
         onClick = onToggle,
         shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = EurPillSurfaceDark,
+        border = androidx.compose.foundation.BorderStroke(1.dp, EurPillBorderDark),
         modifier = modifier.defaultMinSize(minWidth = 44.dp, minHeight = 44.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = currency.code,
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(horizontal = 6.dp),
+                style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp, letterSpacing = 0.5.sp),
+                color = TextMuted80Dark,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
             )
         }
     }
@@ -526,14 +555,14 @@ private fun BalanceHero(totalUsd: Double, money: (Double) -> String, amountsHidd
     ) {
         Text(
             "VALEUR TOTALE",
-            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.4.sp),
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp, letterSpacing = 1.sp),
+            fontWeight = FontWeight.Normal,
+            color = TextMuted38Dark,
         )
         Text(
             if (amountsHidden) "••••••" else money(animatedTotal.toDouble()),
-            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
-            modifier = Modifier.padding(top = 4.dp),
+            style = MaterialTheme.typography.displayMedium.copy(fontSize = 46.sp, letterSpacing = (-1.2).sp, fontFeatureSettings = "tnum"),
+            modifier = Modifier.padding(top = 8.dp),
         )
     }
 }
@@ -571,12 +600,13 @@ private fun QuickActionButton(
     isPrimary: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val containerColor = if (isPrimary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-    val contentColor = if (isPrimary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    val containerColor = if (isPrimary) MaterialTheme.colorScheme.primary else ChipSurfaceDark
+    val contentColor = if (isPrimary) MaterialTheme.colorScheme.onPrimary else androidx.compose.ui.graphics.Color.White
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
         color = containerColor,
+        border = if (isPrimary) null else androidx.compose.foundation.BorderStroke(1.dp, ChipBorderDark),
         modifier = modifier,
     ) {
         Column(

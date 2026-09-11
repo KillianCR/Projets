@@ -15,14 +15,15 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -50,7 +52,13 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.StorageLocation
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.GlassCard
+import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.MetalBadge
+import com.preciousmetals.tracker.ui.theme.EurPillBorderDark
+import com.preciousmetals.tracker.ui.theme.InputSurfaceDark
+import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
 import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.util.formatGrams
 import com.preciousmetals.tracker.util.formatMoney
@@ -191,22 +199,22 @@ private fun CalculatorSection(state: ToolsUiState) {
         ToolSectionTitle("Calculatrice")
         Text(
             "Estime la valeur d'un objet selon son poids et sa pureté.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 19.sp),
+            color = TextMuted44Dark,
+            modifier = Modifier.padding(top = 4.dp, bottom = 14.dp),
         )
         GlassCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(18.dp)) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(horizontal = 0.dp),
                 ) {
                     items(Metal.entries, key = { it.name }) { m ->
-                        FilterChip(
+                        GlassChip(
                             selected = metal == m,
                             onClick = { metal = m },
-                            label = { Text(m.displayNameFr) },
-                            leadingIcon = { MetalBadge(metal = m) },
+                            label = m.displayNameFr,
+                            leadingContent = { MetalBadge(metal = m) },
                         )
                     }
                 }
@@ -214,18 +222,20 @@ private fun CalculatorSection(state: ToolsUiState) {
                 Text(
                     "Pureté",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 14.dp, bottom = 6.dp),
+                    color = TextMuted44Dark,
+                    modifier = Modifier.padding(top = 18.dp, bottom = 10.dp),
                 )
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(horizontal = 0.dp),
                 ) {
                     items(purityOptions, key = { it.label }) { option ->
-                        FilterChip(
+                        GlassChip(
                             selected = purity == option,
                             onClick = { purity = option },
-                            label = { Text(option.label) },
+                            label = option.label,
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                         )
                     }
                 }
@@ -233,9 +243,11 @@ private fun CalculatorSection(state: ToolsUiState) {
                 OutlinedTextField(
                     value = weightText,
                     onValueChange = { weightText = it },
-                    label = { Text("Poids (grammes)") },
+                    placeholder = { Text("Poids (grammes)") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = inputFieldColors(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
                 )
 
                 androidx.compose.material3.HorizontalDivider(
@@ -245,28 +257,41 @@ private fun CalculatorSection(state: ToolsUiState) {
 
                 Text(
                     "VALEUR ESTIMÉE",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp, letterSpacing = 0.5.sp),
+                    color = TextMuted38Dark,
                 )
                 Text(
                     estimatedValue?.let { formatMoney(it, state.currency) } ?: "—",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
-                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.headlineMedium.copy(fontSize = 30.sp, letterSpacing = (-0.5).sp, fontFeatureSettings = "tnum"),
+                    color = Color.White,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    modifier = Modifier.padding(top = 2.dp),
+                    modifier = Modifier.padding(top = 8.dp),
                 )
                 if (pricePerGram != null) {
                     Text(
                         "${formatMoney(pricePerGram * purity.fraction, state.currency)}/g à ${purity.label}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                        color = TextMuted33Dark,
+                        modifier = Modifier.padding(top = 10.dp),
                     )
                 }
             }
         }
     }
 }
+
+/** The mockup's filled-translucent text field look (bg #ffffff0d, border #ffffff26) instead of Material3's default outline style. */
+@Composable
+private fun inputFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = InputSurfaceDark,
+    unfocusedContainerColor = InputSurfaceDark,
+    focusedBorderColor = EurPillBorderDark,
+    unfocusedBorderColor = EurPillBorderDark,
+    focusedTextColor = Color.White,
+    unfocusedTextColor = Color.White,
+    focusedPlaceholderColor = TextMuted44Dark,
+    unfocusedPlaceholderColor = TextMuted44Dark,
+)
 
 // ---------------------------------------------------------------------------------------------
 // Simulateur DCA (achat programmé)
@@ -293,34 +318,38 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
         ToolSectionTitle("Simulateur d'achat programmé (DCA)")
         Text(
             "Combien de temps pour atteindre un objectif de poids en investissant un montant fixe chaque mois.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 19.sp),
+            color = TextMuted44Dark,
+            modifier = Modifier.padding(top = 4.dp, bottom = 14.dp),
         )
         GlassCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(18.dp)) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(Metal.entries, key = { it.name }) { m ->
-                        FilterChip(
+                        GlassChip(
                             selected = metal == m,
                             onClick = { metal = m },
-                            label = { Text(m.displayNameFr) },
-                            leadingIcon = { MetalBadge(metal = m) },
+                            label = m.displayNameFr,
+                            leadingContent = { MetalBadge(metal = m) },
                         )
                     }
                 }
                 OutlinedTextField(
                     value = monthlyAmountText,
                     onValueChange = { monthlyAmountText = it },
-                    label = { Text("Montant mensuel (${state.currency.symbol})") },
+                    placeholder = { Text("Montant mensuel (${state.currency.symbol})") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = inputFieldColors(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                 )
                 OutlinedTextField(
                     value = targetGramsText,
                     onValueChange = { targetGramsText = it },
-                    label = { Text("Objectif de poids (grammes)") },
+                    placeholder = { Text("Objectif de poids (grammes)") },
                     singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = inputFieldColors(),
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 )
                 if (monthsNeeded != null) {
@@ -333,16 +362,16 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
                     }
                     Text(
                         "≈ $durationText pour atteindre ${formatGrams(targetGrams!!)} de ${metal.displayNameFr.lowercase()}, à cours constant (${formatMoney(pricePerGram!!, state.currency)}/g).",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 12.dp),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                        color = Color.White,
+                        modifier = Modifier.padding(top = 14.dp),
                     )
                 } else if (monthlyAmountText.isNotBlank() || targetGramsText.isNotBlank()) {
                     Text(
                         "Renseignez un montant et un objectif de poids valides.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 12.dp),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                        color = TextMuted44Dark,
+                        modifier = Modifier.padding(top = 14.dp),
                     )
                 }
             }
@@ -454,7 +483,7 @@ private fun AddGoalDialog(
                 if (targetType == GoalTargetType.WEIGHT_GRAMS) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 12.dp)) {
                         items(Metal.entries, key = { it.name }) { m ->
-                            FilterChip(selected = metal == m, onClick = { metal = m }, label = { Text(m.displayNameFr) })
+                            GlassChip(selected = metal == m, onClick = { metal = m }, label = m.displayNameFr)
                         }
                     }
                 }
