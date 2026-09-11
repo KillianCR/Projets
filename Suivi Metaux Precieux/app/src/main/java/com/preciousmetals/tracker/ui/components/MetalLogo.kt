@@ -4,9 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.MonetizationOn
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,47 +19,30 @@ import com.preciousmetals.tracker.ui.theme.BlackEmber
 import com.preciousmetals.tracker.ui.theme.GoldGradientDeep
 import com.preciousmetals.tracker.ui.theme.GoldGradientLight
 import com.preciousmetals.tracker.ui.theme.GoldGradientMid
+import com.preciousmetals.tracker.ui.theme.PalladiumDotDeep
+import com.preciousmetals.tracker.ui.theme.PalladiumDotLight
+import com.preciousmetals.tracker.ui.theme.PlatinumDotDeep
+import com.preciousmetals.tracker.ui.theme.PlatinumDotLight
 import com.preciousmetals.tracker.ui.theme.SilverGradientDeep
 import com.preciousmetals.tracker.ui.theme.SilverGradientLight
 import com.preciousmetals.tracker.ui.theme.SilverGradientMid
-import com.preciousmetals.tracker.ui.theme.brandColor
 
 /**
- * A small coin-style "logo" for a metal, no external asset needed. Or/Argent get a realistic
- * metallic-sheen gradient circle with a dark "$" glyph (report: "Logos or / argent" — replacing
- * the previous flat tinted pastilles); Platine/Palladium keep the flat tinted-icon treatment,
- * which the redesign report never addressed.
+ * A small coin-style "logo" for a metal, no external asset needed: a metallic-sheen gradient
+ * circle with a dark "$" glyph, same gradient stops used for each metal's chip dot (MetalBadge).
  */
 @Composable
 fun MetalLogo(metal: Metal, modifier: Modifier = Modifier, size: Dp = 40.dp) {
-    when (metal) {
-        Metal.GOLD -> MetallicLogo(size, modifier, GoldGradientLight, GoldGradientMid, GoldGradientDeep)
-        Metal.SILVER -> MetallicLogo(size, modifier, SilverGradientLight, SilverGradientMid, SilverGradientDeep)
-        Metal.PLATINUM, Metal.PALLADIUM -> {
-            val color = metal.brandColor()
-            Box(
-                modifier = modifier
-                    .size(size)
-                    .background(color.copy(alpha = 0.18f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.MonetizationOn,
-                    contentDescription = metal.displayNameFr,
-                    tint = color,
-                    modifier = Modifier.size(size * 0.55f),
-                )
-            }
-        }
+    val colors = when (metal) {
+        Metal.GOLD -> listOf(GoldGradientLight, GoldGradientMid, GoldGradientDeep)
+        Metal.SILVER -> listOf(SilverGradientLight, SilverGradientMid, SilverGradientDeep)
+        Metal.PLATINUM -> listOf(PlatinumDotLight, PlatinumDotDeep)
+        Metal.PALLADIUM -> listOf(PalladiumDotLight, PalladiumDotDeep)
     }
-}
-
-@Composable
-private fun MetallicLogo(size: Dp, modifier: Modifier, light: androidx.compose.ui.graphics.Color, mid: androidx.compose.ui.graphics.Color, deep: androidx.compose.ui.graphics.Color) {
     Box(
         modifier = modifier
             .size(size)
-            .background(Brush.linearGradient(listOf(light, mid, deep)), CircleShape),
+            .background(Brush.linearGradient(colors), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Text(

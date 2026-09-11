@@ -3,11 +3,9 @@ package com.preciousmetals.tracker.ui.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.preciousmetals.tracker.data.preferences.UserPreferences
-import com.preciousmetals.tracker.data.repository.HoldingRepository
 import com.preciousmetals.tracker.data.repository.PortfolioRepository
 import com.preciousmetals.tracker.data.repository.PriceRepository
 import com.preciousmetals.tracker.domain.model.Currency
-import com.preciousmetals.tracker.domain.model.Holding
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PortfolioSummary
 import java.time.LocalDate
@@ -21,7 +19,6 @@ class DashboardViewModel(
     private val portfolioRepository: PortfolioRepository,
     private val priceRepository: PriceRepository,
     private val userPreferences: UserPreferences,
-    private val holdingRepository: HoldingRepository,
 ) : ViewModel() {
 
     private val isRefreshing = MutableStateFlow(false)
@@ -89,14 +86,5 @@ class DashboardViewModel(
 
     fun setCurrency(currency: Currency) {
         viewModelScope.launch { userPreferences.setDisplayCurrency(currency) }
-    }
-
-    fun deleteHolding(holding: Holding) {
-        viewModelScope.launch { holdingRepository.delete(holding) }
-    }
-
-    /** Re-inserts a just-deleted [holding] at its original id, for the "Annuler" snackbar action. */
-    fun restoreHolding(holding: Holding) {
-        viewModelScope.launch { holdingRepository.upsert(holding) }
     }
 }

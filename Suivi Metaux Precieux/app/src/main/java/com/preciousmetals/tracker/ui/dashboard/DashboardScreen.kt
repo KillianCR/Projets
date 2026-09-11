@@ -23,7 +23,6 @@ import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
@@ -31,7 +30,6 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -43,10 +41,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,7 +48,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -70,7 +63,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.Currency
-import com.preciousmetals.tracker.domain.model.Holding
 import com.preciousmetals.tracker.domain.model.HoldingValuation
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
@@ -91,14 +83,10 @@ import com.preciousmetals.tracker.ui.theme.EurPillSurfaceDark
 import com.preciousmetals.tracker.ui.theme.ChipBorderDark
 import com.preciousmetals.tracker.ui.theme.ChipSurfaceDark
 import com.preciousmetals.tracker.ui.theme.brandColor
-import com.preciousmetals.tracker.ui.theme.negativeColor
-import com.preciousmetals.tracker.ui.theme.positiveColor
 import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.util.formatGrams
 import com.preciousmetals.tracker.util.formatMoney
-import com.preciousmetals.tracker.util.formatPercent
 import com.preciousmetals.tracker.util.usdTo
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,19 +104,15 @@ fun DashboardScreen(
                     portfolioRepository = container.portfolioRepository,
                     priceRepository = container.priceRepository,
                     userPreferences = container.userPreferences,
-                    holdingRepository = container.holdingRepository,
                 )
             }
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         modifier = modifier,
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         when (val state = uiState) {
             is DashboardUiState.Loading -> Box(
@@ -142,19 +126,6 @@ fun DashboardScreen(
                 onRefresh = viewModel::refresh,
                 onAddHolding = onAddHolding,
                 onEditHolding = onEditHolding,
-                onDeleteHolding = { holding ->
-                    viewModel.deleteHolding(holding)
-                    scope.launch {
-                        val result = snackbarHostState.showSnackbar(
-                            message = "Avoir supprimé",
-                            actionLabel = "Annuler",
-                            duration = SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            viewModel.restoreHolding(holding)
-                        }
-                    }
-                },
                 onMetalClick = onMetalClick,
                 modifier = Modifier.padding(padding),
             )
@@ -175,7 +146,6 @@ private fun DashboardContent(
     onRefresh: () -> Unit,
     onAddHolding: () -> Unit,
     onEditHolding: (Long) -> Unit,
-    onDeleteHolding: (Holding) -> Unit,
     onMetalClick: (Metal) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -364,7 +334,6 @@ private fun DashboardContent(
                     valuation = valuation,
                     money = ::displayMoney,
                     onClick = { onEditHolding(valuation.holding.id) },
-                    onDelete = { onDeleteHolding(valuation.holding) },
                 )
             }
         }
@@ -625,16 +594,17 @@ private fun SectionTitle(text: String) {
     Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
 }
 
+/**
+ * Deletion lives on the holding's own edit page (its own confirm dialog), not here — a trash icon
+ * on every row was redundant with that.
+ */
 @Composable
 private fun HoldingRow(
     valuation: HoldingValuation,
     money: (Double) -> String,
     onClick: () -> Unit,
-    onDelete: () -> Unit,
 ) {
     val holding = valuation.holding
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-    val haptics = LocalHapticFeedback.current
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -652,7 +622,11 @@ private fun HoldingRow(
         ) {
             MetalLogo(metal = holding.metal, size = 40.dp)
             Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-                Text(holding.label.ifBlank { holding.metal.displayNameFr }, fontWeight = FontWeight.SemiBold)
+                Text(
+                    holding.label.ifBlank { holding.metal.displayNameFr },
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
                 Text(
                     "${holding.objectType.displayNameFr} · ${formatGrams(holding.grams)} · ${holding.purchaseDate.formatFr()}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -660,44 +634,14 @@ private fun HoldingRow(
                 )
                 val percent = valuation.gainLossPercent
                 if (percent != null) {
-                    Text(
-                        formatPercent(percent),
-                        color = if (percent >= 0) positiveColor() else negativeColor(),
-                        fontWeight = FontWeight.Medium,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                    PercentPill(percent = percent, modifier = Modifier.padding(top = 4.dp))
                 }
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    if (valuation.hasLivePrice) money(valuation.currentValueUsd) else "…",
-                    style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                )
-                IconButton(onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    showDeleteConfirm = true
-                }) {
-                    Icon(Icons.Outlined.DeleteOutline, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error)
-                }
-            }
+            Text(
+                if (valuation.hasLivePrice) money(valuation.currentValueUsd) else "…",
+                style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+            )
         }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Supprimer cet avoir ?") },
-            text = { Text("\"${holding.label.ifBlank { holding.metal.displayNameFr }}\" sera supprimé. Vous pourrez l'annuler juste après.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm = false
-                    onDelete()
-                }) { Text("Supprimer") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Annuler") }
-            },
-        )
     }
 }
