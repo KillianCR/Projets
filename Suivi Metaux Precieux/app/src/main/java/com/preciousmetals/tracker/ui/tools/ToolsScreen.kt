@@ -54,6 +54,7 @@ import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.MetalBadge
+import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.EurPillBorderDark
 import com.preciousmetals.tracker.ui.theme.InputSurfaceDark
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
@@ -102,7 +103,9 @@ fun ToolsScreen(modifier: Modifier = Modifier) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.padding(padding).fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+            contentPadding = PaddingValues(
+                start = 20.dp, end = 20.dp, top = 16.dp, bottom = bottomNavContentPadding(),
+            ),
             verticalArrangement = Arrangement.spacedBy(28.dp),
         ) {
             item { CalculatorSection(state = state) }

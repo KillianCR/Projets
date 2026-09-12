@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.work.WorkScheduler
 import java.time.Instant
@@ -105,7 +106,11 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         },
     ) { padding ->
         Column(
-            modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .padding(bottom = bottomNavContentPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {

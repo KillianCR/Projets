@@ -45,6 +45,7 @@ import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.PercentPill
+import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.IconTileSurfaceDark
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
@@ -87,7 +88,8 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                 .padding(padding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .padding(bottom = bottomNavContentPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

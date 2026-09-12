@@ -77,6 +77,7 @@ import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.MetalLogo
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
 import com.preciousmetals.tracker.ui.components.PercentPill
+import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.HeaderIconMutedDark
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
@@ -207,7 +208,7 @@ private fun DashboardContent(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 16.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = bottomNavContentPadding()),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {

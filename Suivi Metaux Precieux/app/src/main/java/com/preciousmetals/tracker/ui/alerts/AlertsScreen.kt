@@ -49,6 +49,7 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PriceAlert
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.MetalBadge
+import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.usdTo
 
@@ -80,7 +81,10 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                modifier = Modifier.padding(bottom = bottomNavContentPadding()),
+            ) {
                 Icon(Icons.Filled.Add, contentDescription = "Ajouter une alerte")
             }
         },
@@ -96,7 +100,9 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
         } else {
             LazyColumn(
                 modifier = Modifier.padding(padding).fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomNavContentPadding(),
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(state.alerts, key = { it.id }) { alert ->

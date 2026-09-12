@@ -5,6 +5,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -48,80 +51,82 @@ fun AppNavHost() {
     val showBottomBar = bottomTabs.any { it.route == currentRoute } ||
         currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        bottomBar = {
-            if (showBottomBar) {
-                FloatingBottomNav(
-                    tabs = bottomTabs,
-                    isSelected = { tab ->
-                        currentRoute == tab.route ||
-                            (tab.route == Destinations.HISTORY && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN)
-                    },
-                    onSelect = { tab ->
-                        navController.navigate(tab.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = Color.Transparent,
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = Destinations.DASHBOARD,
+                modifier = Modifier.padding(innerPadding),
+                enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 } },
+                exitTransition = { fadeOut(tween(180)) },
+                popEnterTransition = { fadeIn(tween(220)) },
+                popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
+            ) {
+                composable(Destinations.DASHBOARD) {
+                    DashboardScreen(
+                        onAddHolding = { navController.navigate(Destinations.addHolding()) },
+                        onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                        onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
+                    )
+                }
+                composable(Destinations.HISTORY) {
+                    PriceHistoryScreen()
+                }
+                composable(
+                    route = Destinations.HISTORY_FOR_METAL_PATTERN,
+                    arguments = listOf(navArgument(Destinations.HISTORY_METAL_ARG) { type = NavType.StringType }),
+                ) { entry ->
+                    val metal = entry.arguments?.getString(Destinations.HISTORY_METAL_ARG)
+                        ?.let { name -> runCatching { Metal.valueOf(name) }.getOrNull() }
+                    PriceHistoryScreen(initialMetal = metal)
+                }
+                composable(Destinations.ALERTS) {
+                    AlertsScreen()
+                }
+                composable(Destinations.TOOLS) {
+                    ToolsScreen()
+                }
+                composable(Destinations.SETTINGS) {
+                    SettingsScreen()
+                }
+                composable(
+                    route = Destinations.ADD_EDIT_HOLDING_PATTERN,
+                    arguments = listOf(
+                        navArgument(Destinations.HOLDING_ID_ARG) {
+                            type = NavType.LongType
+                            defaultValue = -1L
                         }
-                    },
-                )
+                    ),
+                ) { entry ->
+                    val holdingId = entry.arguments?.getLong(Destinations.HOLDING_ID_ARG) ?: -1L
+                    AddEditHoldingScreen(
+                        holdingId = holdingId.takeIf { it >= 0L },
+                        onDone = { navController.popBackStack() },
+                    )
+                }
             }
-        },
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Destinations.DASHBOARD,
-            modifier = Modifier.padding(innerPadding),
-            enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 } },
-            exitTransition = { fadeOut(tween(180)) },
-            popEnterTransition = { fadeIn(tween(220)) },
-            popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
-        ) {
-            composable(Destinations.DASHBOARD) {
-                DashboardScreen(
-                    onAddHolding = { navController.navigate(Destinations.addHolding()) },
-                    onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
-                    onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
-                )
-            }
-            composable(Destinations.HISTORY) {
-                PriceHistoryScreen()
-            }
-            composable(
-                route = Destinations.HISTORY_FOR_METAL_PATTERN,
-                arguments = listOf(navArgument(Destinations.HISTORY_METAL_ARG) { type = NavType.StringType }),
-            ) { entry ->
-                val metal = entry.arguments?.getString(Destinations.HISTORY_METAL_ARG)
-                    ?.let { name -> runCatching { Metal.valueOf(name) }.getOrNull() }
-                PriceHistoryScreen(initialMetal = metal)
-            }
-            composable(Destinations.ALERTS) {
-                AlertsScreen()
-            }
-            composable(Destinations.TOOLS) {
-                ToolsScreen()
-            }
-            composable(Destinations.SETTINGS) {
-                SettingsScreen()
-            }
-            composable(
-                route = Destinations.ADD_EDIT_HOLDING_PATTERN,
-                arguments = listOf(
-                    navArgument(Destinations.HOLDING_ID_ARG) {
-                        type = NavType.LongType
-                        defaultValue = -1L
+        }
+
+        if (showBottomBar) {
+            FloatingBottomNav(
+                tabs = bottomTabs,
+                isSelected = { tab ->
+                    currentRoute == tab.route ||
+                        (tab.route == Destinations.HISTORY && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN)
+                },
+                onSelect = { tab ->
+                    navController.navigate(tab.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
                     }
-                ),
-            ) { entry ->
-                val holdingId = entry.arguments?.getLong(Destinations.HOLDING_ID_ARG) ?: -1L
-                AddEditHoldingScreen(
-                    holdingId = holdingId.takeIf { it >= 0L },
-                    onDone = { navController.popBackStack() },
-                )
-            }
+                },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
     }
 }
