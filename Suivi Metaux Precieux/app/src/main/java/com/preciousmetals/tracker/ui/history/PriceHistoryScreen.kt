@@ -54,7 +54,7 @@ import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.usdTo
 
-private val ranges = listOf(7 to "7j", 30 to "30j", 90 to "90j", 365 to "1an")
+private val ranges = listOf(7 to "7j", 30 to "30j", 90 to "90j", 365 to "1an", 1825 to "5ans")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

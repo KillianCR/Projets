@@ -56,9 +56,9 @@ class PriceHistoryViewModel(
         selectedRangeDays.value = days
     }
 
-    /** Performance vs 1 week/1 month/3 months/1 year ago, from the cached daily-close history. */
+    /** Performance vs 1 week/1 month/3 months/1 year/5 years ago, from the cached daily-close history. */
     private suspend fun marketStats(metal: Metal, latest: Double?): List<MarketStat> {
-        val lookbacks = listOf(7 to "1S", 30 to "1M", 90 to "3M", 365 to "1A")
+        val lookbacks = listOf(7 to "1S", 30 to "1M", 90 to "3M", 365 to "1A", 1825 to "5A")
         return lookbacks.map { (daysAgo, label) ->
             val percentChange = if (latest != null) {
                 val past = priceRepository.getNearestHistoricalPriceUsdPerGram(metal, LocalDate.now().minusDays(daysAgo.toLong()))
