@@ -61,6 +61,7 @@ import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
 import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.util.formatGrams
 import com.preciousmetals.tracker.util.formatMoney
+import com.preciousmetals.tracker.util.formatWeight
 import com.preciousmetals.tracker.util.usdTo
 import java.time.Instant
 import java.time.LocalDate
@@ -69,7 +70,7 @@ import kotlin.math.ceil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ToolsScreen(modifier: Modifier = Modifier) {
+fun ToolsScreen(onLocationClick: (Long) -> Unit, modifier: Modifier = Modifier) {
     val container = LocalAppContainer.current
     val viewModel: ToolsViewModel = viewModel(
         factory = viewModelFactory {
@@ -123,6 +124,7 @@ fun ToolsScreen(modifier: Modifier = Modifier) {
                     state = state,
                     onAddClick = { showAddLocationDialog = true },
                     onDelete = viewModel::deleteStorageLocation,
+                    onClick = { location -> onLocationClick(location.id) },
                 )
             }
         }
@@ -193,9 +195,10 @@ private fun CalculatorSection(state: ToolsUiState) {
     var weightText by remember { mutableStateOf("") }
 
     val pricePerGram = state.livePricesUsdPerGram[metal]?.usdTo(state.currency, state.usdToEurRate)
-    val weight = weightText.replace(',', '.').toDoubleOrNull()
-    val estimatedValue = if (pricePerGram != null && weight != null && weight > 0.0) {
-        pricePerGram * purity.fraction * weight
+    val enteredWeight = weightText.replace(',', '.').toDoubleOrNull()
+    val weightGrams = enteredWeight?.times(metal.smallUnitGrams)
+    val estimatedValue = if (pricePerGram != null && weightGrams != null && weightGrams > 0.0) {
+        pricePerGram * purity.fraction * weightGrams
     } else {
         null
     }
@@ -248,7 +251,7 @@ private fun CalculatorSection(state: ToolsUiState) {
                 OutlinedTextField(
                     value = weightText,
                     onValueChange = { weightText = it },
-                    placeholder = { Text("Poids (grammes)") },
+                    placeholder = { Text("Poids (${metal.smallUnitLabel}s)") },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = glassInputFieldColors(),
@@ -273,8 +276,9 @@ private fun CalculatorSection(state: ToolsUiState) {
                     modifier = Modifier.padding(top = 8.dp),
                 )
                 if (pricePerGram != null) {
+                    val unitSuffix = if (metal.smallUnitLabel == "kilo") "kg" else "g"
                     Text(
-                        "${formatMoney(pricePerGram * purity.fraction, state.currency)}/g à ${purity.label}",
+                        "${formatMoney(pricePerGram * purity.fraction * metal.smallUnitGrams, state.currency)}/$unitSuffix à ${purity.label}",
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                         color = TextMuted33Dark,
                         modifier = Modifier.padding(top = 10.dp),
@@ -297,7 +301,7 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
 
     val pricePerGram = state.livePricesUsdPerGram[metal]?.usdTo(state.currency, state.usdToEurRate)
     val monthlyAmount = monthlyAmountText.replace(',', '.').toDoubleOrNull()
-    val targetGrams = targetGramsText.replace(',', '.').toDoubleOrNull()
+    val targetGrams = targetGramsText.replace(',', '.').toDoubleOrNull()?.times(metal.smallUnitGrams)
 
     val monthsNeeded = if (pricePerGram != null && pricePerGram > 0.0 && monthlyAmount != null && monthlyAmount > 0.0 && targetGrams != null && targetGrams > 0.0) {
         val gramsPerMonth = monthlyAmount / pricePerGram
@@ -338,7 +342,7 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
                 OutlinedTextField(
                     value = targetGramsText,
                     onValueChange = { targetGramsText = it },
-                    placeholder = { Text("Objectif de poids (grammes)") },
+                    placeholder = { Text("Objectif de poids (${metal.smallUnitLabel}s)") },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = glassInputFieldColors(),
@@ -352,8 +356,9 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
                         years > 0 -> "$years an(s)"
                         else -> "$monthsNeeded mois"
                     }
+                    val unitSuffix = if (metal.smallUnitLabel == "kilo") "kg" else "g"
                     Text(
-                        "≈ $durationText pour atteindre ${formatGrams(targetGrams!!)} de ${metal.displayNameFr.lowercase()}, à cours constant (${formatMoney(pricePerGram!!, state.currency)}/g).",
+                        "≈ $durationText pour atteindre ${formatWeight(targetGrams!!, metal)} de ${metal.displayNameFr.lowercase()}, à cours constant (${formatMoney(pricePerGram!! * metal.smallUnitGrams, state.currency)}/$unitSuffix).",
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                         color = Color.White,
                         modifier = Modifier.padding(top = 14.dp),
@@ -505,7 +510,12 @@ private fun AddGoalDialog(
 // ---------------------------------------------------------------------------------------------
 
 @Composable
-private fun StorageLocationsSection(state: ToolsUiState, onAddClick: () -> Unit, onDelete: (StorageLocation) -> Unit) {
+private fun StorageLocationsSection(
+    state: ToolsUiState,
+    onAddClick: () -> Unit,
+    onDelete: (StorageLocation) -> Unit,
+    onClick: (StorageLocation) -> Unit,
+) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -528,6 +538,7 @@ private fun StorageLocationsSection(state: ToolsUiState, onAddClick: () -> Unit,
                         location = location,
                         holdingCount = state.holdingCountByLocationId[location.id] ?: 0,
                         onDelete = { onDelete(location) },
+                        onClick = { onClick(location) },
                     )
                 }
             }
@@ -536,9 +547,9 @@ private fun StorageLocationsSection(state: ToolsUiState, onAddClick: () -> Unit,
 }
 
 @Composable
-private fun StorageLocationCard(location: StorageLocation, holdingCount: Int, onDelete: () -> Unit) {
+private fun StorageLocationCard(location: StorageLocation, holdingCount: Int, onDelete: () -> Unit, onClick: () -> Unit) {
     val reminderSoon = location.insuranceReminderDate?.let { it.isBefore(LocalDate.now().plusDays(30)) } == true
-    GlassCard(modifier = Modifier.fillMaxWidth()) {
+    GlassCard(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

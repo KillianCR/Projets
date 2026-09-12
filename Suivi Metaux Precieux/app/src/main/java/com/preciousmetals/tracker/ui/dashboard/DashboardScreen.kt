@@ -2,10 +2,6 @@ package com.preciousmetals.tracker.ui.dashboard
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,7 +33,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -58,7 +53,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -69,13 +63,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.Currency
-import com.preciousmetals.tracker.domain.model.HoldingValuation
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.AllocationBarView
 import com.preciousmetals.tracker.ui.components.AllocationSlice
 import com.preciousmetals.tracker.ui.components.GlassCard
-import com.preciousmetals.tracker.ui.components.MetalLogo
+import com.preciousmetals.tracker.ui.components.HoldingRow
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
 import com.preciousmetals.tracker.ui.components.PercentPill
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
@@ -663,56 +656,3 @@ private fun SectionTitle(text: String) {
     Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
 }
 
-/**
- * Deletion lives on the holding's own edit page (its own confirm dialog), not here — a trash icon
- * on every row was redundant with that.
- */
-@Composable
-private fun HoldingRow(
-    valuation: HoldingValuation,
-    money: (Double) -> String,
-    onClick: () -> Unit,
-) {
-    val holding = valuation.holding
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(targetValue = if (isPressed) 0.97f else 1f, label = "holdingRowScale")
-
-    GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            MetalLogo(metal = holding.metal, size = 40.dp)
-            Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-                Text(
-                    holding.label.ifBlank { holding.metal.displayNameFr },
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    "${holding.objectType.displayNameFr} · ${formatWeight(holding.grams, holding.metal)} · ${holding.purchaseDate.formatFr()}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    if (valuation.hasLivePrice) money(valuation.currentValueUsd) else "…",
-                    style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                )
-                val percent = valuation.gainLossPercent
-                if (percent != null) {
-                    PercentPill(percent = percent, modifier = Modifier.padding(top = 4.dp))
-                }
-            }
-        }
-    }
-}

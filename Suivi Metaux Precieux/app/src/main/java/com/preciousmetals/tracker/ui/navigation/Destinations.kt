@@ -15,7 +15,11 @@ object Destinations {
     const val HISTORY_METAL_ARG = "metal"
     const val HISTORY_FOR_METAL_PATTERN = "history/{$HISTORY_METAL_ARG}"
 
+    const val LOCATION_ID_ARG = "locationId"
+    const val LOCATION_DETAIL_PATTERN = "location/{$LOCATION_ID_ARG}"
+
     fun addHolding(): String = "holding"
     fun editHolding(holdingId: Long): String = "holding?holdingId=$holdingId"
     fun historyForMetal(metal: Metal): String = "history/${metal.name}"
+    fun locationDetail(locationId: Long): String = "location/$locationId"
 }

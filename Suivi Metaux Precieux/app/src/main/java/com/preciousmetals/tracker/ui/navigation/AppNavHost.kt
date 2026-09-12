@@ -32,6 +32,7 @@ import com.preciousmetals.tracker.ui.addholding.AddEditHoldingScreen
 import com.preciousmetals.tracker.ui.alerts.AlertsScreen
 import com.preciousmetals.tracker.ui.dashboard.DashboardScreen
 import com.preciousmetals.tracker.ui.history.PriceHistoryScreen
+import com.preciousmetals.tracker.ui.locationdetail.LocationDetailScreen
 import com.preciousmetals.tracker.ui.settings.SettingsScreen
 import com.preciousmetals.tracker.ui.tools.ToolsScreen
 
@@ -49,7 +50,8 @@ fun AppNavHost() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val showBottomBar = bottomTabs.any { it.route == currentRoute } ||
-        currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN
+        currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN ||
+        currentRoute == Destinations.LOCATION_DETAIL_PATTERN
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -86,10 +88,22 @@ fun AppNavHost() {
                     AlertsScreen()
                 }
                 composable(Destinations.TOOLS) {
-                    ToolsScreen()
+                    ToolsScreen(
+                        onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
+                    )
                 }
                 composable(Destinations.SETTINGS) {
                     SettingsScreen()
+                }
+                composable(
+                    route = Destinations.LOCATION_DETAIL_PATTERN,
+                    arguments = listOf(navArgument(Destinations.LOCATION_ID_ARG) { type = NavType.LongType }),
+                ) { entry ->
+                    val locationId = entry.arguments?.getLong(Destinations.LOCATION_ID_ARG) ?: -1L
+                    LocationDetailScreen(
+                        locationId = locationId,
+                        onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                    )
                 }
                 composable(
                     route = Destinations.ADD_EDIT_HOLDING_PATTERN,
@@ -114,17 +128,21 @@ fun AppNavHost() {
                 tabs = bottomTabs,
                 isSelected = { tab ->
                     currentRoute == tab.route ||
-                        (tab.route == Destinations.HISTORY && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN)
+                        (tab.route == Destinations.HISTORY && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN) ||
+                        (tab.route == Destinations.TOOLS && currentRoute == Destinations.LOCATION_DETAIL_PATTERN)
                 },
                 onSelect = { tab ->
-                    // From the per-metal history screen specifically, navigate(tab.route) with
+                    // From an argument-route detail screen (per-metal history, a storage
+                    // location's detail), navigate(tab.route) with
                     // popUpTo(startDestinationId){saveState=true}+restoreState was silently a
                     // no-op (confirmed: the tap reached this handler with the right route, no
                     // exception, but the back stack never changed) — a real bug in that
                     // save/restore combo when the current entry is an argument route. Popping it
                     // directly first (a plain popBackStack, no save/restore involved) sidesteps
-                    // it, landing back on Dashboard before the normal tab-switch runs.
-                    if (currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN) {
+                    // it, landing back on the previous tab before the normal tab-switch runs.
+                    if (currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN ||
+                        currentRoute == Destinations.LOCATION_DETAIL_PATTERN
+                    ) {
                         navController.popBackStack()
                     }
                     navController.navigate(tab.route) {
