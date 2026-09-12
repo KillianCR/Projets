@@ -141,7 +141,8 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                                     fontWeight = FontWeight.Bold,
                                 )
                                 Text(
-                                    formatMoney(perGramCurrent.usdTo(current.currency, current.usdToEurRate), current.currency) + " / gramme",
+                                    formatMoney((perGramCurrent * current.metal.smallUnitGrams).usdTo(current.currency, current.usdToEurRate), current.currency) +
+                                        " / ${current.metal.smallUnitLabel}",
                                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                                     color = TextMuted44Dark,
                                     modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),

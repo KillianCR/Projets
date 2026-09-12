@@ -30,7 +30,7 @@ class AlertsViewModel(
     fun addAlert(metal: Metal, direction: AlertDirection, thresholdEur: Double, perBigUnit: Boolean) {
         viewModelScope.launch {
             val rate = priceRepository.usdToEurRate.first()
-            val thresholdEurPerGram = if (perBigUnit) thresholdEur / metal.bigUnitGrams else thresholdEur
+            val thresholdEurPerGram = thresholdEur / (if (perBigUnit) metal.bigUnitGrams else metal.smallUnitGrams)
             val thresholdUsdPerGram = thresholdEurPerGram / rate
             alertRepository.upsert(
                 PriceAlert(

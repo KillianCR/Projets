@@ -103,9 +103,9 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
                     AlertRow(
                         alert = alert,
                         currencyLabel = formatMoney(
-                            alert.thresholdUsdPerGram.usdTo(state.currency, state.usdToEurRate),
+                            (alert.thresholdUsdPerGram * alert.metal.smallUnitGrams).usdTo(state.currency, state.usdToEurRate),
                             state.currency,
-                        ) + "/g",
+                        ) + "/" + (if (alert.metal.smallUnitLabel == "kilo") "kg" else "g"),
                         onToggle = { viewModel.toggleAlert(alert) },
                         onDelete = { viewModel.deleteAlert(alert) },
                     )
@@ -180,7 +180,7 @@ private fun AddAlertDialog(
                     }
                 }
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                    listOf(true to "Par ${metal.bigUnitLabel}", false to "Par gramme").forEachIndexed { index, (value, label) ->
+                    listOf(true to "Par ${metal.bigUnitLabel}", false to "Par ${metal.smallUnitLabel}").forEachIndexed { index, (value, label) ->
                         SegmentedButton(
                             selected = perBigUnit == value,
                             onClick = { perBigUnit = value },
@@ -191,7 +191,7 @@ private fun AddAlertDialog(
                 OutlinedTextField(
                     value = thresholdText,
                     onValueChange = { thresholdText = it },
-                    label = { Text("Seuil (€${if (perBigUnit) "/${metal.bigUnitLabel}" else "/g"})") },
+                    label = { Text("Seuil (€/${if (perBigUnit) metal.bigUnitLabel else metal.smallUnitLabel})") },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     singleLine = true,
                 )

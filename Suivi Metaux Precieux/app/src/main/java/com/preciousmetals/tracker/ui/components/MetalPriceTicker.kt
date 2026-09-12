@@ -78,8 +78,10 @@ fun MetalPriceTicker(
                         modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
                     )
                     PriceUnitTile(
-                        unitLabel = "gramme",
-                        text = pricePerGram?.let { formatMoney(it.usdTo(currency, usdToEurRate), currency) } ?: "…",
+                        unitLabel = metal.smallUnitLabel,
+                        text = pricePerGram
+                            ?.let { formatMoney((it * metal.smallUnitGrams).usdTo(currency, usdToEurRate), currency) }
+                            ?: "…",
                         valueKey = pricePerGram,
                     )
                     PriceUnitTile(

@@ -140,11 +140,13 @@ class PriceRepository(
     /**
      * One-time backfill of ~5 years of daily closes per metal, from Yahoo Finance's free,
      * keyless (but unofficial) chart feed. Safe to call repeatedly: rows are keyed by
-     * (metal, day) and overwritten, not duplicated. See the class doc for the reliability
-     * caveat — callers should treat failure as "try again later", not a fatal error.
+     * (metal, day) and overwritten, not duplicated. [metals] defaults to every tracked metal, but
+     * can be narrowed — e.g. to catch up just a newly-added metal on an install that already
+     * finished the full backfill long ago. See the class doc for the reliability caveat —
+     * callers should treat failure as "try again later", not a fatal error.
      */
-    suspend fun backfillHistoricalPrices(): Result<Unit> = runCatching {
-        for (metal in Metal.entries) {
+    suspend fun backfillHistoricalPrices(metals: List<Metal> = Metal.entries): Result<Unit> = runCatching {
+        for (metal in metals) {
             val response = yahooFinanceApiService.getChart(metal.yahooSymbol, range = "5y", interval = "1d")
             val result = response.chart.result?.firstOrNull() ?: continue
             val closes = result.indicators.quote.firstOrNull()?.close ?: continue

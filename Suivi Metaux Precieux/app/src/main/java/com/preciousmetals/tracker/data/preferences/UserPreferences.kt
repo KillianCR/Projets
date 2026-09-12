@@ -26,6 +26,7 @@ class UserPreferences(private val context: Context) {
         val USD_TO_EUR_RATE = doublePreferencesKey("usd_to_eur_rate")
         val LAST_REFRESH_EPOCH_MILLIS = longPreferencesKey("last_refresh_epoch_millis")
         val HISTORICAL_BACKFILL_DONE = booleanPreferencesKey("historical_backfill_done")
+        val COPPER_BACKFILL_DONE = booleanPreferencesKey("copper_backfill_done")
         val APP_LOCK_ENABLED = booleanPreferencesKey("app_lock_enabled")
     }
 
@@ -76,6 +77,19 @@ class UserPreferences(private val context: Context) {
 
     suspend fun setHistoricalBackfillDone(done: Boolean) {
         context.dataStore.edit { it[Keys.HISTORICAL_BACKFILL_DONE] = done }
+    }
+
+    /**
+     * Separate from [historicalBackfillDone]: an install that already finished the full backfill
+     * before Copper existed would otherwise never get its history, since the main flag is already
+     * true and the one-time backfill never runs again. Lets a single-metal catch-up run once.
+     */
+    val copperBackfillDone: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.COPPER_BACKFILL_DONE] ?: false
+    }
+
+    suspend fun setCopperBackfillDone(done: Boolean) {
+        context.dataStore.edit { it[Keys.COPPER_BACKFILL_DONE] = done }
     }
 
     /** Whether the app should require biometric/device-credential auth on open and on resume. */

@@ -34,13 +34,14 @@ object NotificationHelper {
         ensureChannel(context)
 
         val currentPriceUsdPerBigUnit = currentPriceUsdPerGram * alert.metal.bigUnitGrams
+        val currentPriceUsdPerSmallUnit = currentPriceUsdPerGram * alert.metal.smallUnitGrams
         val directionText = if (alert.direction == AlertDirection.ABOVE) "a dépassé" else "est descendu sous"
         val title = "${alert.metal.displayNameFr} $directionText votre seuil"
         val text = String.format(
             Locale.FRENCH,
-            "Cours actuel : %.2f \$/${alert.metal.bigUnitLabel} (%.2f \$/g)",
+            "Cours actuel : %.2f \$/${alert.metal.bigUnitLabel} (%.2f \$/${alert.metal.smallUnitLabel})",
             currentPriceUsdPerBigUnit,
-            currentPriceUsdPerGram,
+            currentPriceUsdPerSmallUnit,
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
