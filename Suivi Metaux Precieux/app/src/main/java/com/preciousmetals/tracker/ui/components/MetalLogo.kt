@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.theme.BlackEmber
 import com.preciousmetals.tracker.ui.theme.CopperDotDeep
@@ -31,10 +32,11 @@ import com.preciousmetals.tracker.ui.theme.SilverGradientMid
 
 /**
  * A small coin-style "logo" for a metal, no external asset needed: a metallic-sheen gradient
- * circle with a dark "$" glyph, same gradient stops used for each metal's chip dot (MetalBadge).
+ * circle with a dark currency glyph ("€"/"$", matching the app's current display currency), same
+ * gradient stops used for each metal's chip dot (MetalBadge).
  */
 @Composable
-fun MetalLogo(metal: Metal, modifier: Modifier = Modifier, size: Dp = 40.dp) {
+fun MetalLogo(metal: Metal, currency: Currency, modifier: Modifier = Modifier, size: Dp = 40.dp) {
     val colors = when (metal) {
         Metal.GOLD -> listOf(GoldGradientLight, GoldGradientMid, GoldGradientDeep)
         Metal.SILVER -> listOf(SilverGradientLight, SilverGradientMid, SilverGradientDeep)
@@ -49,7 +51,7 @@ fun MetalLogo(metal: Metal, modifier: Modifier = Modifier, size: Dp = 40.dp) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            "$",
+            if (currency == Currency.EUR) "€" else "$",
             color = BlackEmber,
             fontWeight = FontWeight.Bold,
             fontSize = (size.value * 0.42f).sp,

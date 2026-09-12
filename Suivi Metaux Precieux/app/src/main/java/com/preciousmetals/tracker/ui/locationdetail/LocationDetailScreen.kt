@@ -147,6 +147,7 @@ fun LocationDetailScreen(
                         items(current.valuations, key = { it.holding.id }) { valuation ->
                             HoldingRow(
                                 valuation = valuation,
+                                currency = current.currency,
                                 money = ::money,
                                 onClick = { onEditHolding(valuation.holding.id) },
                             )
@@ -168,7 +169,7 @@ private fun LocationMetalSummaryCard(
 ) {
     GlassCard(shape = RoundedCornerShape(20.dp), modifier = Modifier.width(156.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
-            MetalLogo(metal = metal, size = 32.dp)
+            MetalLogo(metal = metal, currency = currency, size = 32.dp)
             Text(
                 metal.displayNameFr,
                 style = MaterialTheme.typography.labelMedium,

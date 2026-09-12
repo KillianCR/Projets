@@ -378,6 +378,7 @@ private fun DashboardContent(
             items(filteredValuations, key = { it.holding.id }) { valuation ->
                 HoldingRow(
                     valuation = valuation,
+                    currency = state.currency,
                     money = ::displayMoney,
                     onClick = { onEditHolding(valuation.holding.id) },
                 )

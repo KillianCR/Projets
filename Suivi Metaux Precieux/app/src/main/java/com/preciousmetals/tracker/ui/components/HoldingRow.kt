@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.HoldingValuation
 import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.util.formatWeight
@@ -33,6 +34,7 @@ import com.preciousmetals.tracker.util.formatWeight
 @Composable
 fun HoldingRow(
     valuation: HoldingValuation,
+    currency: Currency,
     money: (Double) -> String,
     onClick: () -> Unit,
 ) {
@@ -52,7 +54,7 @@ fun HoldingRow(
             modifier = Modifier.padding(14.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            MetalLogo(metal = holding.metal, size = 40.dp)
+            MetalLogo(metal = holding.metal, currency = currency, size = 40.dp)
             Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
                 Text(
                     holding.label.ifBlank { holding.metal.displayNameFr },

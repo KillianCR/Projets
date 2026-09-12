@@ -70,7 +70,7 @@ fun MetalPriceTicker(
                 modifier = Modifier.width(156.dp),
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    MetalLogo(metal = metal, size = 32.dp)
+                    MetalLogo(metal = metal, currency = currency, size = 32.dp)
                     Text(
                         metal.displayNameFr,
                         style = MaterialTheme.typography.labelMedium,
