@@ -31,7 +31,6 @@ class AppContainer(context: Context) {
     val userPreferences = UserPreferences(appContext)
 
     val priceRepository = PriceRepository(
-        goldApiService = NetworkModule.goldApiService,
         exchangeRateApiService = NetworkModule.exchangeRateApiService,
         yahooFinanceApiService = NetworkModule.yahooFinanceApiService,
         priceHistoryDao = database.priceHistoryDao(),

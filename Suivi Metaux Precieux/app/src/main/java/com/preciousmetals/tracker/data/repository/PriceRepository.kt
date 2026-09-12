@@ -4,7 +4,6 @@ import com.preciousmetals.tracker.data.local.dao.PriceHistoryDao
 import com.preciousmetals.tracker.data.local.entity.PriceHistoryEntity
 import com.preciousmetals.tracker.data.preferences.UserPreferences
 import com.preciousmetals.tracker.data.remote.ExchangeRateApiService
-import com.preciousmetals.tracker.data.remote.GoldApiService
 import com.preciousmetals.tracker.data.remote.YahooFinanceApiService
 import com.preciousmetals.tracker.domain.model.GRAMS_PER_TROY_OUNCE
 import com.preciousmetals.tracker.domain.model.Metal
@@ -12,6 +11,7 @@ import java.io.IOException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -20,15 +20,17 @@ import kotlinx.coroutines.flow.map
  * Fetches live spot prices and USD/EUR exchange rates, caches them locally (building a real
  * price-history table over time), and serves both live and historical lookups.
  *
- * Historical valuations for dates before this app was installed are covered by a one-time
- * [backfillHistoricalPrices] call (see [com.preciousmetals.tracker.SuiviMetauxApp]), which pulls
- * ~5 years of free daily closes from Yahoo Finance's public chart feed. That feed is free and
- * keyless but unofficial/undocumented, so it can occasionally fail or rate-limit — the backfill
- * is best-effort and silently retried on a later app launch if it didn't complete; the "prix
- * payé" manual entry always remains available as a fallback in the add/edit holding screen.
+ * Live and historical prices both come from Yahoo Finance's free, keyless (but unofficial and
+ * undocumented) chart feed — the same feed, at two different granularities: [refreshAll] asks for
+ * the day's 1-minute bars and takes the most recent one, [backfillHistoricalPrices] asks for 5
+ * years of daily closes. An earlier version used a separate "gold-api.com" feed for live prices,
+ * dropped after it was found to serve the exact same frozen price for every metal for 10+ hours
+ * straight — Yahoo's feed was verified independently (against real-time market data) to actually
+ * move. Being unofficial, it can still occasionally fail or rate-limit — callers should treat
+ * failure as "try again later", not fatal; the "prix payé" manual entry always remains available
+ * as a fallback in the add/edit holding screen.
  */
 class PriceRepository(
-    private val goldApiService: GoldApiService,
     private val exchangeRateApiService: ExchangeRateApiService,
     private val yahooFinanceApiService: YahooFinanceApiService,
     private val priceHistoryDao: PriceHistoryDao,
@@ -78,6 +80,14 @@ class PriceRepository(
     private fun toStoredPriceUsdPerOunce(rawPrice: Double, metal: Metal): Double =
         (rawPrice / metal.apiUnitGrams) * GRAMS_PER_TROY_OUNCE
 
+    /** The most recent 1-minute close for [metal] today, or null if the feed returned nothing usable yet. */
+    private suspend fun fetchLatestClose(metal: Metal): Double? {
+        val response = yahooFinanceApiService.getChart(metal.yahooSymbol, range = "1d", interval = "1m")
+        val result = response.chart.result?.firstOrNull() ?: return null
+        val closes = result.indicators.quote.firstOrNull()?.close ?: return null
+        return closes.lastOrNull { it != null }
+    }
+
     /**
      * Fetches each metal's spot price independently — one metal timing out or erroring no longer
      * aborts the whole batch (as a single shared `runCatching` around the loop used to: the first
@@ -91,13 +101,16 @@ class PriceRepository(
 
         val failedMetals = mutableListOf<Metal>()
         var firstFailureDetail: String? = null
-        for (metal in Metal.entries) {
-            runCatching { goldApiService.getSpotPrice(metal.apiSymbol) }
-                .onSuccess { dto ->
+        Metal.entries.forEachIndexed { index, metal ->
+            // A small stagger between requests to the same unofficial endpoint — hammering it
+            // with 5 back-to-back calls is what triggers its rate limiting in the first place.
+            if (index > 0) delay(300)
+            runCatching { fetchLatestClose(metal) ?: throw IOException("Pas de cotation disponible") }
+                .onSuccess { latestClose ->
                     priceHistoryDao.insert(
                         PriceHistoryEntity(
                             metal = metal.name,
-                            priceUsdPerOunce = toStoredPriceUsdPerOunce(dto.price, metal),
+                            priceUsdPerOunce = toStoredPriceUsdPerOunce(latestClose, metal),
                             dateEpochDay = today,
                             timestampEpochMillis = now,
                         )

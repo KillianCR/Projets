@@ -7,9 +7,8 @@ const val GRAMS_PER_TROY_OUNCE = 31.1034768
 const val GRAMS_PER_POUND = 453.59237
 
 enum class Metal(
-    val apiSymbol: String,
     val displayNameFr: String,
-    /** Yahoo Finance futures symbol, used only to backfill free historical prices. */
+    /** Yahoo Finance futures symbol — the source for both live prices and historical backfill. */
     val yahooSymbol: String,
     /** Grams per unit the live/historical feeds quote this metal's raw price in. */
     val apiUnitGrams: Double = GRAMS_PER_TROY_OUNCE,
@@ -21,20 +20,15 @@ enum class Metal(
     val bigUnitGrams: Double = GRAMS_PER_TROY_OUNCE,
     val bigUnitLabel: String = "once",
 ) {
-    GOLD(apiSymbol = "XAU", displayNameFr = "Or", yahooSymbol = "GC=F"),
-    SILVER(apiSymbol = "XAG", displayNameFr = "Argent", yahooSymbol = "SI=F"),
-    PLATINUM(apiSymbol = "XPT", displayNameFr = "Platine", yahooSymbol = "PL=F"),
-    PALLADIUM(apiSymbol = "XPD", displayNameFr = "Palladium", yahooSymbol = "PA=F"),
+    GOLD(displayNameFr = "Or", yahooSymbol = "GC=F"),
+    SILVER(displayNameFr = "Argent", yahooSymbol = "SI=F"),
+    PLATINUM(displayNameFr = "Platine", yahooSymbol = "PL=F"),
+    PALLADIUM(displayNameFr = "Palladium", yahooSymbol = "PA=F"),
     COPPER(
-        apiSymbol = "HG",
         displayNameFr = "Cuivre",
         yahooSymbol = "HG=F",
         apiUnitGrams = GRAMS_PER_POUND,
         bigUnitGrams = 1000.0,
         bigUnitLabel = "kilo",
-    );
-
-    companion object {
-        fun fromApiSymbol(symbol: String): Metal? = entries.find { it.apiSymbol == symbol }
-    }
+    ),
 }

@@ -254,9 +254,9 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             }
 
             Text(
-                "Les cours en direct proviennent de gold-api.com et le taux de change EUR/USD de la " +
-                    "Banque centrale européenne (frankfurter.app) ; l'historique, de Yahoo Finance. " +
-                    "Trois sources gratuites, sans compte ni clé API.",
+                "Les cours en direct et l'historique proviennent de Yahoo Finance, et le taux de " +
+                    "change EUR/USD de la Banque centrale européenne (frankfurter.app). " +
+                    "Deux sources gratuites, sans compte ni clé API.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -45,10 +45,6 @@ object NetworkModule {
         .addConverterFactory(jsonConverterFactory)
         .build()
 
-    val goldApiService: GoldApiService by lazy {
-        retrofit(GoldApiService.BASE_URL).create()
-    }
-
     val exchangeRateApiService: ExchangeRateApiService by lazy {
         retrofit(ExchangeRateApiService.BASE_URL).create()
     }
