@@ -1,8 +1,6 @@
 package com.preciousmetals.tracker.ui.navigation
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,15 +20,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.preciousmetals.tracker.ui.theme.NavDividerDark
+import com.preciousmetals.tracker.ui.theme.BlackEmber
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
 /**
- * The bottom nav per the mockup: no floating card background, just a plain row (icons sized to
- * content, evenly spaced) separated from the content above by a hairline top border — the
- * selected tab gets a solid white pill with its icon and label, every other tab shows its icon
- * alone with no label.
+ * The bottom nav as a floating pill: inset from both side edges and lifted off the bottom edge
+ * so the app's ember background shows around it on every side, rather than a hairline-bordered
+ * bar docked flush to the screen edges. The selected tab still gets a solid white pill with its
+ * icon and label, every other tab shows its icon alone with no label.
  */
 @Composable
 fun FloatingBottomNav(
@@ -41,7 +39,10 @@ fun FloatingBottomNav(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(BorderStroke(1.dp, NavDividerDark))
+            .padding(horizontal = 22.dp)
+            .padding(bottom = 22.dp)
+            .clip(CircleShape)
+            .background(BlackEmber)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,

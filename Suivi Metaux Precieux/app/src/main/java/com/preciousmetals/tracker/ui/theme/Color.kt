@@ -57,7 +57,6 @@ val EurPillSurfaceDark = Color(0x0FFFFFFF) // #ffffff0f — currency pill fill
 val EurPillBorderDark = Color(0x26FFFFFF) // #ffffff26 — currency pill / input field border
 val InputSurfaceDark = Color(0x0DFFFFFF) // #ffffff0d — text field fill
 val IconTileSurfaceDark = Color(0x10FFFFFF) // #ffffff10 — small icon tile fill
-val NavDividerDark = Color(0x14FFFFFF) // #ffffff14 — bottom nav top border
 val HeaderIconMutedDark = Color(0x88FFFFFF) // #ffffff88 — refresh/eye icons
 val TextMuted80Dark = Color(0xCCFFFFFF) // #ffffffcc
 val TextMuted67Dark = Color(0xAAFFFFFF) // #ffffffaa
