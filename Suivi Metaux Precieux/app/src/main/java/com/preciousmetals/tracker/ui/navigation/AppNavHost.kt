@@ -117,6 +117,16 @@ fun AppNavHost() {
                         (tab.route == Destinations.HISTORY && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN)
                 },
                 onSelect = { tab ->
+                    // From the per-metal history screen specifically, navigate(tab.route) with
+                    // popUpTo(startDestinationId){saveState=true}+restoreState was silently a
+                    // no-op (confirmed: the tap reached this handler with the right route, no
+                    // exception, but the back stack never changed) — a real bug in that
+                    // save/restore combo when the current entry is an argument route. Popping it
+                    // directly first (a plain popBackStack, no save/restore involved) sidesteps
+                    // it, landing back on Dashboard before the normal tab-switch runs.
+                    if (currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN) {
+                        navController.popBackStack()
+                    }
                     navController.navigate(tab.route) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
