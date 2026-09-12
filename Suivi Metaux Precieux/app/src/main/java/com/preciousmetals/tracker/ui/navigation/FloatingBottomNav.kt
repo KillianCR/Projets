@@ -80,9 +80,9 @@ private fun bottomNavClearance(gap: Dp): Dp {
 @Composable
 fun bottomNavContentPadding(): Dp = bottomNavClearance(gap = 16.dp)
 
-/** Bottom offset for a transient overlay (snackbar) that should sit almost flush against the pill nav. */
+/** Bottom offset for a transient overlay (snackbar) that should sit flush against the pill nav. */
 @Composable
-fun bottomNavOverlayPadding(): Dp = bottomNavClearance(gap = 6.dp)
+fun bottomNavOverlayPadding(): Dp = bottomNavClearance(gap = 0.dp)
 
 @Composable
 private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit) {
