@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +59,30 @@ fun GlassChip(
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
+            )
+        }
+    }
+}
+
+/**
+ * A full-width two/multi-option toggle built from [GlassChip]s sharing the row's width equally —
+ * the mockup's look for what would otherwise be a Material3 SegmentedButton (whose own default
+ * colors don't match: a muted purple selection instead of the app's solid-white pill).
+ */
+@Composable
+fun <T> GlassSegmentedRow(
+    options: List<Pair<T, String>>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        options.forEach { (value, label) ->
+            GlassChip(
+                selected = selected == value,
+                onClick = { onSelect(value) },
+                label = label,
+                modifier = Modifier.weight(1f),
             )
         }
     }

@@ -22,9 +22,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,6 +48,7 @@ import com.preciousmetals.tracker.domain.model.PriceAlert
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
+import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.glassInputFieldColors
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
@@ -196,24 +194,18 @@ private fun AddAlertDialog(
                         )
                     }
                 }
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                    AlertDirection.entries.forEachIndexed { index, d ->
-                        SegmentedButton(
-                            selected = direction == d,
-                            onClick = { direction = d },
-                            shape = SegmentedButtonDefaults.itemShape(index, AlertDirection.entries.size),
-                        ) { Text(if (d == AlertDirection.ABOVE) "Au-dessus" else "En dessous") }
-                    }
-                }
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                    listOf(true to "Par ${metal.bigUnitLabel}", false to "Par ${metal.smallUnitLabel}").forEachIndexed { index, (value, label) ->
-                        SegmentedButton(
-                            selected = perBigUnit == value,
-                            onClick = { perBigUnit = value },
-                            shape = SegmentedButtonDefaults.itemShape(index, 2),
-                        ) { Text(label) }
-                    }
-                }
+                GlassSegmentedRow(
+                    options = listOf(AlertDirection.ABOVE to "Au-dessus", AlertDirection.BELOW to "En dessous"),
+                    selected = direction,
+                    onSelect = { direction = it },
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                GlassSegmentedRow(
+                    options = listOf(true to "Par ${metal.bigUnitLabel}", false to "Par ${metal.smallUnitLabel}"),
+                    selected = perBigUnit,
+                    onSelect = { perBigUnit = it },
+                    modifier = Modifier.padding(top = 12.dp),
+                )
                 OutlinedTextField(
                     value = thresholdText,
                     onValueChange = { thresholdText = it },

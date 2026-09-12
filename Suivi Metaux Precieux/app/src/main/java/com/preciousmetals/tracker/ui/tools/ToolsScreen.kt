@@ -24,9 +24,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -52,6 +49,7 @@ import com.preciousmetals.tracker.domain.model.StorageLocation
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
+import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.glassInputFieldColors
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
@@ -464,23 +462,27 @@ private fun AddGoalDialog(
                     onValueChange = { label = it },
                     label = { Text("Nom (ex: Pot d'argent)") },
                     singleLine = true,
+                    colors = glassInputFieldColors(),
                     modifier = Modifier.fillMaxWidth(),
                 )
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                    GoalTargetType.entries.forEachIndexed { index, type ->
-                        SegmentedButton(
-                            selected = targetType == type,
-                            onClick = { targetType = type },
-                            shape = SegmentedButtonDefaults.itemShape(index, GoalTargetType.entries.size),
-                        ) {
-                            Text(if (type == GoalTargetType.WEIGHT_GRAMS) "Poids d'un métal" else "Valeur totale")
-                        }
-                    }
-                }
+                GlassSegmentedRow(
+                    options = listOf(
+                        GoalTargetType.WEIGHT_GRAMS to "Poids d'un métal",
+                        GoalTargetType.VALUE_USD to "Valeur totale",
+                    ),
+                    selected = targetType,
+                    onSelect = { targetType = it },
+                    modifier = Modifier.padding(top = 12.dp),
+                )
                 if (targetType == GoalTargetType.WEIGHT_GRAMS) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 12.dp)) {
                         items(Metal.entries, key = { it.name }) { m ->
-                            GlassChip(selected = metal == m, onClick = { metal = m }, label = m.displayNameFr)
+                            GlassChip(
+                                selected = metal == m,
+                                onClick = { metal = m },
+                                label = m.displayNameFr,
+                                leadingContent = { MetalBadge(metal = m) },
+                            )
                         }
                     }
                 }
@@ -489,6 +491,7 @@ private fun AddGoalDialog(
                     onValueChange = { amountText = it },
                     label = { Text(if (targetType == GoalTargetType.WEIGHT_GRAMS) "Objectif (grammes)" else "Objectif (devise d'affichage)") },
                     singleLine = true,
+                    colors = glassInputFieldColors(),
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 )
             }
@@ -601,12 +604,14 @@ private fun AddStorageLocationDialog(
                     onValueChange = { name = it },
                     label = { Text("Nom (ex: Domicile, Banque X)") },
                     singleLine = true,
+                    colors = glassInputFieldColors(),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
                     label = { Text("Notes (optionnel)") },
+                    colors = glassInputFieldColors(),
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 )
                 TextButton(onClick = { showDatePicker = true }, modifier = Modifier.padding(top = 8.dp)) {
