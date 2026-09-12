@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.DeleteOutline
@@ -181,8 +182,10 @@ private fun AddAlertDialog(
         title = { Text("Nouvelle alerte") },
         text = {
             Column {
+                val metalListState = rememberLazyListState()
                 LazyRow(
-                    modifier = Modifier.horizontalFadingEdges(),
+                    state = metalListState,
+                    modifier = Modifier.horizontalFadingEdges(metalListState),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(Metal.entries, key = { it.name }) { m ->

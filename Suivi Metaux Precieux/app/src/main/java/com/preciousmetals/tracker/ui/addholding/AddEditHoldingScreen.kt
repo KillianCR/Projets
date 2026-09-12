@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -144,8 +145,10 @@ fun AddEditHoldingScreen(
         ) {
             item {
                 Text("Métal", style = MaterialTheme.typography.titleMedium)
+                val metalListState = rememberLazyListState()
                 LazyRow(
-                    modifier = Modifier.horizontalFadingEdges(),
+                    state = metalListState,
+                    modifier = Modifier.horizontalFadingEdges(metalListState),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(top = 4.dp),
                 ) {

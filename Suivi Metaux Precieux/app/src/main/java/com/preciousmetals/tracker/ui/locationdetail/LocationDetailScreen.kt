@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -109,8 +110,10 @@ fun LocationDetailScreen(
 
                     if (current.byMetal.isNotEmpty()) {
                         item {
+                            val metalListState = rememberLazyListState()
                             LazyRow(
-                                modifier = Modifier.horizontalFadingEdges(),
+                                state = metalListState,
+                                modifier = Modifier.horizontalFadingEdges(metalListState),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
                                 items(current.byMetal, key = { it.metal.name }) { summary ->

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.DeleteOutline
@@ -207,8 +208,10 @@ private fun CalculatorSection(state: ToolsUiState) {
         )
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(18.dp)) {
+                val metalListState = rememberLazyListState()
                 LazyRow(
-                    modifier = Modifier.horizontalFadingEdges(),
+                    state = metalListState,
+                    modifier = Modifier.horizontalFadingEdges(metalListState),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(horizontal = 0.dp),
                 ) {
@@ -228,8 +231,10 @@ private fun CalculatorSection(state: ToolsUiState) {
                     color = TextMuted44Dark,
                     modifier = Modifier.padding(top = 18.dp, bottom = 10.dp),
                 )
+                val purityListState = rememberLazyListState()
                 LazyRow(
-                    modifier = Modifier.horizontalFadingEdges(),
+                    state = purityListState,
+                    modifier = Modifier.horizontalFadingEdges(purityListState),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(horizontal = 0.dp),
                 ) {
@@ -316,8 +321,10 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
         )
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(18.dp)) {
+                val metalListState = rememberLazyListState()
                 LazyRow(
-                    modifier = Modifier.horizontalFadingEdges(),
+                    state = metalListState,
+                    modifier = Modifier.horizontalFadingEdges(metalListState),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(Metal.entries, key = { it.name }) { m ->
@@ -477,8 +484,10 @@ private fun AddGoalDialog(
                     modifier = Modifier.padding(top = 12.dp),
                 )
                 if (targetType == GoalTargetType.WEIGHT_GRAMS) {
+                    val metalListState = rememberLazyListState()
                     LazyRow(
-                        modifier = Modifier.horizontalFadingEdges().padding(top = 12.dp),
+                        state = metalListState,
+                        modifier = Modifier.horizontalFadingEdges(metalListState).padding(top = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(Metal.entries, key = { it.name }) { m ->
