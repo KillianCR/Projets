@@ -29,11 +29,11 @@ fun CompactTopBar(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+            .padding(start = 20.dp, end = 8.dp, top = 2.dp, bottom = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Row(verticalAlignment = Alignment.CenterVertically) { actions() }
     }
 }
