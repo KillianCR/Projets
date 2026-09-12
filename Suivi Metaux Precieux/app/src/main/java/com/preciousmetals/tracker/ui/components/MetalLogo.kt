@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -50,12 +51,16 @@ fun MetalLogo(metal: Metal, currency: Currency, modifier: Modifier = Modifier, s
             .background(Brush.linearGradient(colors), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
+        val isEuro = currency == Currency.EUR
         Text(
-            if (currency == Currency.EUR) "€" else "$",
+            if (isEuro) "€" else "$",
             color = BlackEmber,
             fontWeight = FontWeight.Bold,
             fontSize = (size.value * 0.42f).sp,
             style = MaterialTheme.typography.labelLarge,
+            // The € glyph's own left-side bearing reads as visually off-center within the
+            // circle (unlike $, which is symmetric) — nudge it left to compensate.
+            modifier = if (isEuro) Modifier.offset(x = (-size.value * 0.03f).dp) else Modifier,
         )
     }
 }
