@@ -112,8 +112,8 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .verticalScroll(scrollState)
                 .topFadingEdge(scrollState)
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .padding(bottom = bottomNavContentPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
