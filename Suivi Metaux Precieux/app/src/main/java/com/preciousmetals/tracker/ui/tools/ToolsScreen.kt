@@ -23,7 +23,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -54,9 +53,8 @@ import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.MetalBadge
+import com.preciousmetals.tracker.ui.components.glassInputFieldColors
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
-import com.preciousmetals.tracker.ui.theme.EurPillBorderDark
-import com.preciousmetals.tracker.ui.theme.InputSurfaceDark
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
@@ -253,7 +251,7 @@ private fun CalculatorSection(state: ToolsUiState) {
                     placeholder = { Text("Poids (grammes)") },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
-                    colors = inputFieldColors(),
+                    colors = glassInputFieldColors(),
                     modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
                 )
 
@@ -286,19 +284,6 @@ private fun CalculatorSection(state: ToolsUiState) {
         }
     }
 }
-
-/** The mockup's filled-translucent text field look (bg #ffffff0d, border #ffffff26) instead of Material3's default outline style. */
-@Composable
-private fun inputFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedContainerColor = InputSurfaceDark,
-    unfocusedContainerColor = InputSurfaceDark,
-    focusedBorderColor = EurPillBorderDark,
-    unfocusedBorderColor = EurPillBorderDark,
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    focusedPlaceholderColor = TextMuted44Dark,
-    unfocusedPlaceholderColor = TextMuted44Dark,
-)
 
 // ---------------------------------------------------------------------------------------------
 // Simulateur DCA (achat programmé)
@@ -347,7 +332,7 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
                     placeholder = { Text("Montant mensuel (${state.currency.symbol})") },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
-                    colors = inputFieldColors(),
+                    colors = glassInputFieldColors(),
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                 )
                 OutlinedTextField(
@@ -356,7 +341,7 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
                     placeholder = { Text("Objectif de poids (grammes)") },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
-                    colors = inputFieldColors(),
+                    colors = glassInputFieldColors(),
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 )
                 if (monthsNeeded != null) {

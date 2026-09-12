@@ -1,6 +1,7 @@
 package com.preciousmetals.tracker.util
 
 import com.preciousmetals.tracker.domain.model.Currency
+import com.preciousmetals.tracker.domain.model.Metal
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -29,3 +30,10 @@ fun formatPercent(value: Double): String {
 }
 
 fun formatGrams(grams: Double): String = String.format(Locale.FRENCH, "%,.2f g", grams)
+
+/** A held quantity in the metal's natural small unit (grams for precious metals, kilos for copper). */
+fun formatWeight(grams: Double, metal: Metal): String {
+    val quantity = grams / metal.smallUnitGrams
+    val unit = if (metal.smallUnitLabel == "kilo") "kg" else "g"
+    return String.format(Locale.FRENCH, "%,.2f %s", quantity, unit)
+}

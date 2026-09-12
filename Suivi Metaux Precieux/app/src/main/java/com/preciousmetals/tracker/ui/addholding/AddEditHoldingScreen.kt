@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -142,8 +145,11 @@ fun AddEditHoldingScreen(
         ) {
             item {
                 Text("Métal", style = MaterialTheme.typography.titleMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Metal.entries.forEach { metal ->
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(top = 4.dp),
+                ) {
+                    items(Metal.entries, key = { it.name }) { metal ->
                         FilterChip(
                             selected = state.metal == metal,
                             onClick = { viewModel.setMetal(metal) },
@@ -171,7 +177,7 @@ fun AddEditHoldingScreen(
                 OutlinedTextField(
                     value = state.gramsText,
                     onValueChange = viewModel::setGramsText,
-                    label = { Text("Poids (grammes)") },
+                    label = { Text("Poids (${state.metal.smallUnitLabel}s)") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )

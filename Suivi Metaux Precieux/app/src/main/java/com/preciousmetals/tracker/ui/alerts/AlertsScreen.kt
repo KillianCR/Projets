@@ -3,6 +3,7 @@ package com.preciousmetals.tracker.ui.alerts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,9 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,8 +49,12 @@ import com.preciousmetals.tracker.domain.model.AlertDirection
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PriceAlert
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.GlassCard
+import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.MetalBadge
+import com.preciousmetals.tracker.ui.components.glassInputFieldColors
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
+import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.usdTo
 
@@ -93,17 +98,19 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
             Box(modifier = Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     "Aucune alerte. Créez-en une pour être notifié quand un cours atteint un seuil.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextMuted44Dark,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.padding(32.dp),
                 )
             }
         } else {
             LazyColumn(
                 modifier = Modifier.padding(padding).fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                contentPadding = PaddingValues(
                     start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomNavContentPadding(),
                 ),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(state.alerts, key = { it.id }) { alert ->
                     AlertRow(
@@ -133,14 +140,23 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
 
 @Composable
 private fun AlertRow(alert: PriceAlert, currencyLabel: String, onToggle: () -> Unit, onDelete: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             MetalBadge(metal = alert.metal)
             Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
                 val directionLabel = if (alert.direction == AlertDirection.ABOVE) "dépasse" else "descend sous"
-                Text("${alert.metal.displayNameFr} $directionLabel $currencyLabel")
+                Text(
+                    "${alert.metal.displayNameFr} $directionLabel $currencyLabel",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
                 if (alert.lastTriggeredAtEpochMillis != null) {
-                    Text("Déclenchée", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "Déclenchée",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextMuted44Dark,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
                 }
             }
             Switch(checked = alert.enabled, onCheckedChange = { onToggle() })
@@ -169,10 +185,11 @@ private fun AddAlertDialog(
             Column {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(Metal.entries, key = { it.name }) { m ->
-                        FilterChip(
+                        GlassChip(
                             selected = metal == m,
                             onClick = { metal = m },
-                            label = { Text(m.displayNameFr) },
+                            label = m.displayNameFr,
+                            leadingContent = { MetalBadge(metal = m) },
                         )
                     }
                 }
@@ -200,6 +217,7 @@ private fun AddAlertDialog(
                     label = { Text("Seuil (€/${if (perBigUnit) metal.bigUnitLabel else metal.smallUnitLabel})") },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     singleLine = true,
+                    colors = glassInputFieldColors(),
                 )
             }
         },

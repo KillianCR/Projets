@@ -7,19 +7,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -29,9 +30,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -39,12 +41,15 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.GlassCard
+import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
+import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
 import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.work.WorkScheduler
 import java.time.Instant
 import java.time.ZoneId
-import kotlinx.coroutines.delay
 
 private val refreshOptions = listOf(60 to "1 h", 180 to "3 h", 360 to "6 h", 720 to "12 h", 1440 to "24 h")
 
@@ -109,36 +114,42 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .padding(bottom = bottomNavContentPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Devise d'affichage", style = MaterialTheme.typography.titleMedium)
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                        Currency.entries.forEachIndexed { index, currency ->
-                            SegmentedButton(
+                    SettingsSectionTitle("Devise d'affichage")
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 10.dp),
+                    ) {
+                        Currency.entries.forEach { currency ->
+                            GlassChip(
                                 selected = state.currency == currency,
                                 onClick = { viewModel.setCurrency(currency) },
-                                shape = SegmentedButtonDefaults.itemShape(index, Currency.entries.size),
-                            ) { Text(currency.code) }
+                                label = currency.code,
+                            )
                         }
                     }
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Fréquence d'actualisation des cours", style = MaterialTheme.typography.titleMedium)
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    SettingsSectionTitle("Fréquence d'actualisation des cours")
+                    LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(top = 10.dp),
                     ) {
-                        refreshOptions.forEach { (minutes, label) ->
-                            OutlinedButton(onClick = { viewModel.setRefreshIntervalMinutes(minutes) }) {
-                                Text(if (state.refreshIntervalMinutes == minutes) "✓ $label" else label)
-                            }
+                        items(refreshOptions, key = { it.first }) { (minutes, label) ->
+                            GlassChip(
+                                selected = state.refreshIntervalMinutes == minutes,
+                                onClick = { viewModel.setRefreshIntervalMinutes(minutes) },
+                                label = label,
+                            )
                         }
                     }
                     val lastRefresh = state.lastRefreshEpochMillis
@@ -147,25 +158,26 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                         Text(
                             "Dernière actualisation : ${date.formatFr()}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 8.dp),
+                            color = TextMuted44Dark,
+                            modifier = Modifier.padding(top = 12.dp),
                         )
                     }
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.padding(16.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column {
-                        Text("Notifications d'alertes", style = MaterialTheme.typography.titleMedium)
+                    Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                        SettingsSectionTitle("Notifications d'alertes")
                         Text(
                             "Être notifié quand un cours atteint un seuil défini",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = TextMuted44Dark,
+                            modifier = Modifier.padding(top = 2.dp),
                         )
                     }
                     Switch(
@@ -175,14 +187,14 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.padding(16.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Verrouillage biométrique", style = MaterialTheme.typography.titleMedium)
+                    Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                        SettingsSectionTitle("Verrouillage biométrique")
                         Text(
                             if (biometricAvailable) {
                                 "Empreinte, visage ou code de l'appareil requis à l'ouverture de l'app"
@@ -191,7 +203,8 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                                     "activer cette option"
                             },
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = TextMuted44Dark,
+                            modifier = Modifier.padding(top = 2.dp),
                         )
                     }
                     Switch(
@@ -202,16 +215,16 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Historique des cours", style = MaterialTheme.typography.titleMedium)
+                    SettingsSectionTitle("Historique des cours")
                     Text(
                         "Recharge ~5 ans de cours quotidiens (source gratuite Yahoo Finance, sans " +
                             "compte) pour permettre le calcul automatique du prix d'achat même sur " +
                             "un achat ancien. Se fait normalement tout seul au premier lancement.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                        color = TextMuted44Dark,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
                     )
                     if (state.isBackfillingHistory) {
                         CircularProgressIndicator(modifier = Modifier.padding(4.dp))
@@ -223,15 +236,15 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Sauvegarde", style = MaterialTheme.typography.titleMedium)
+                    SettingsSectionTitle("Sauvegarde")
                     Text(
                         "Vos données restent uniquement sur cet appareil. Exportez-les régulièrement " +
                             "pour les sauvegarder ou les transférer.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                        color = TextMuted44Dark,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
                     )
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -263,8 +276,13 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                     "change EUR/USD de la Banque centrale européenne (frankfurter.app). " +
                     "Deux sources gratuites, sans compte ni clé API.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = TextMuted33Dark,
             )
         }
     }
+}
+
+@Composable
+private fun SettingsSectionTitle(text: String) {
+    Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
 }

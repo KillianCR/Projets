@@ -94,7 +94,7 @@ import com.preciousmetals.tracker.ui.theme.ChipBorderDark
 import com.preciousmetals.tracker.ui.theme.ChipSurfaceDark
 import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.util.formatFr
-import com.preciousmetals.tracker.util.formatGrams
+import com.preciousmetals.tracker.util.formatWeight
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.isCommodityMarketOpen
 import com.preciousmetals.tracker.util.usdTo
@@ -697,7 +697,7 @@ private fun HoldingRow(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    "${holding.objectType.displayNameFr} · ${formatGrams(holding.grams)} · ${holding.purchaseDate.formatFr()}",
+                    "${holding.objectType.displayNameFr} · ${formatWeight(holding.grams, holding.metal)} · ${holding.purchaseDate.formatFr()}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -50,7 +50,7 @@ class AddEditHoldingViewModel(
                         isLoading = false,
                         metal = holding.metal,
                         objectType = holding.objectType,
-                        gramsText = trimNumber(holding.grams),
+                        gramsText = trimNumber(holding.grams / holding.metal.smallUnitGrams),
                         purchaseDate = holding.purchaseDate,
                         label = holding.label,
                         notes = holding.notes,
@@ -137,7 +137,7 @@ class AddEditHoldingViewModel(
     private fun refreshHistoricalPreview() {
         val state = _uiState.value
         if (state.valuationMode != ValuationMode.AUTO) return
-        val grams = state.gramsText.toDoubleOrNull()
+        val grams = state.gramsText.replace(',', '.').toDoubleOrNull()?.times(state.metal.smallUnitGrams)
         viewModelScope.launch {
             val pricePerGramUsd = priceRepository.getNearestHistoricalPriceUsdPerGram(state.metal, state.purchaseDate)
             val rate = priceRepository.usdToEurRate.first()
@@ -152,9 +152,9 @@ class AddEditHoldingViewModel(
 
     fun save() {
         val state = _uiState.value
-        val grams = state.gramsText.replace(',', '.').toDoubleOrNull()
+        val grams = state.gramsText.replace(',', '.').toDoubleOrNull()?.times(state.metal.smallUnitGrams)
         if (grams == null || grams <= 0.0) {
-            _uiState.value = state.copy(error = "Indiquez un poids en grammes valide.")
+            _uiState.value = state.copy(error = "Indiquez un poids en ${state.metal.smallUnitLabel}s valide.")
             return
         }
         if (state.valuationMode == ValuationMode.MANUAL) {
