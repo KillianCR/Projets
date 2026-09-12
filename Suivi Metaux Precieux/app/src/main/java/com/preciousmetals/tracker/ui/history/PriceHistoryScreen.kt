@@ -151,7 +151,10 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
 
                             AreaChartView(
                                 points = current.history.map {
-                                    ChartPoint(it.date, it.priceUsdPerGram.usdTo(current.currency, current.usdToEurRate))
+                                    ChartPoint(
+                                        it.date,
+                                        (it.priceUsdPerGram * current.metal.smallUnitGrams).usdTo(current.currency, current.usdToEurRate),
+                                    )
                                 },
                                 lineColor = color,
                                 valueFormatter = { formatMoney(it, current.currency) },
