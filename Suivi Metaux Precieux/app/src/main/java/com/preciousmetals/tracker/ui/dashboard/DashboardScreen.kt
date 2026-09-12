@@ -143,37 +143,43 @@ fun DashboardScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = androidx.compose.ui.graphics.Color.Transparent,
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(bottom = bottomNavOverlayPadding()),
-            ) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = NearBlackEmber,
-                    contentColor = OnBackgroundDark,
-                    actionColor = OnBackgroundDark,
+    Box(modifier = modifier) {
+        Scaffold(
+            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        ) { padding ->
+            when (val state = uiState) {
+                is DashboardUiState.Loading -> Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) { CircularProgressIndicator() }
+
+                is DashboardUiState.Loaded -> DashboardContent(
+                    state = state,
+                    onCurrencyChange = viewModel::setCurrency,
+                    onRefresh = viewModel::refresh,
+                    onAddHolding = onAddHolding,
+                    onEditHolding = onEditHolding,
+                    onMetalClick = onMetalClick,
+                    modifier = Modifier.padding(padding),
                 )
             }
-        },
-    ) { padding ->
-        when (val state = uiState) {
-            is DashboardUiState.Loading -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center,
-            ) { CircularProgressIndicator() }
+        }
 
-            is DashboardUiState.Loaded -> DashboardContent(
-                state = state,
-                onCurrencyChange = viewModel::setCurrency,
-                onRefresh = viewModel::refresh,
-                onAddHolding = onAddHolding,
-                onEditHolding = onEditHolding,
-                onMetalClick = onMetalClick,
-                modifier = Modifier.padding(padding),
+        // A plain overlay, not Scaffold's snackbarHost slot: Scaffold's own snackbar placement
+        // heuristics (built around a bottomBar/FAB it no longer has here) didn't move with a
+        // bottom padding modifier the way a directly-aligned Box does, leaving the snackbar
+        // stranded well above the floating nav pill instead of flush against it.
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = bottomNavOverlayPadding()),
+        ) { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = NearBlackEmber,
+                contentColor = OnBackgroundDark,
+                actionColor = OnBackgroundDark,
             )
         }
     }
