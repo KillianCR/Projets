@@ -53,6 +53,7 @@ import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.glassInputFieldColors
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
+import com.preciousmetals.tracker.ui.theme.NearBlackEmber
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
@@ -454,6 +455,7 @@ private fun AddGoalDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = NearBlackEmber,
         title = { Text("Nouvel objectif") },
         text = {
             Column {
@@ -596,6 +598,7 @@ private fun AddStorageLocationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = NearBlackEmber,
         title = { Text("Nouveau lieu de stockage") },
         text = {
             Column {

@@ -53,6 +53,7 @@ import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.glassInputFieldColors
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.navigation.bottomNavOverlayPadding
+import com.preciousmetals.tracker.ui.theme.NearBlackEmber
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.usdTo
@@ -181,6 +182,7 @@ private fun AddAlertDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = NearBlackEmber,
         title = { Text("Nouvelle alerte") },
         text = {
             Column {
