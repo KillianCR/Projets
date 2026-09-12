@@ -271,6 +271,7 @@ private fun DashboardContent(
         }
 
         item {
+            val costBasisUsd = summary.totalCostBasisUsd
             val gainUsd = summary.totalGainLossUsd
             val gainPercent = summary.totalGainLossPercent
             GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -279,6 +280,14 @@ private fun DashboardContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Column {
+                        Text("Coût total achat", style = MaterialTheme.typography.labelMedium, color = TextMuted38Dark)
+                        Text(
+                            costBasisUsd?.let { displayMoney(it) } ?: "—",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 17.sp, fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                     Column {
                         Text("Plus-value", style = MaterialTheme.typography.labelMedium, color = TextMuted38Dark)
                         Text(
