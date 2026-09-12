@@ -21,8 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,6 +39,7 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.AreaChartView
 import com.preciousmetals.tracker.ui.components.ChartPoint
+import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.MetalBadge
@@ -76,12 +75,7 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
     Scaffold(
         modifier = modifier,
         containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text("Historique des cours") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-            )
-        },
+        topBar = { CompactTopBar(title = "Historique des cours") },
     ) { padding ->
         Column(
             modifier = Modifier

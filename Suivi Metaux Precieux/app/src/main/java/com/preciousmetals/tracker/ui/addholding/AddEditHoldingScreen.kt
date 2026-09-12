@@ -38,8 +38,6 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -63,6 +61,7 @@ import com.preciousmetals.tracker.domain.model.HoldingDocument
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.ObjectType
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.util.formatFr
 import java.time.Instant
@@ -122,9 +121,8 @@ fun AddEditHoldingScreen(
         modifier = modifier,
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text(if (state.isEditing) "Modifier l'avoir" else "Ajouter un avoir") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+            CompactTopBar(
+                title = if (state.isEditing) "Modifier l'avoir" else "Ajouter un avoir",
                 actions = {
                     if (state.isEditing) {
                         IconButton(onClick = { showDeleteConfirm = true }) {

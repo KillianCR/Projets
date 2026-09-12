@@ -25,8 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +44,7 @@ import com.preciousmetals.tracker.domain.model.AlertDirection
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PriceAlert
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
@@ -79,12 +78,7 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
         containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text("Alertes de cours") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-            )
-        },
+        topBar = { CompactTopBar(title = "Alertes de cours") },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },

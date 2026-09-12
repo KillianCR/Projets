@@ -26,8 +26,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +45,7 @@ import com.preciousmetals.tracker.domain.model.GoalTargetType
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.StorageLocation
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
@@ -92,12 +91,7 @@ fun ToolsScreen(onLocationClick: (Long) -> Unit, modifier: Modifier = Modifier) 
     Scaffold(
         modifier = modifier,
         containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text("Outils") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-            )
-        },
+        topBar = { CompactTopBar(title = "Outils") },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.padding(padding).fillMaxSize(),

@@ -17,8 +17,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -34,6 +32,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.HoldingRow
 import com.preciousmetals.tracker.ui.components.MetalLogo
@@ -72,10 +71,7 @@ fun LocationDetailScreen(
         modifier = modifier,
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                title = { Text((state as? LocationDetailUiState.Loaded)?.locationName ?: "Lieu de stockage") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-            )
+            CompactTopBar(title = (state as? LocationDetailUiState.Loaded)?.locationName ?: "Lieu de stockage")
         },
     ) { padding ->
         when (val current = state) {

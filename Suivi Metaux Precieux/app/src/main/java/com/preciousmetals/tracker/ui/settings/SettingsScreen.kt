@@ -23,8 +23,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +39,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
@@ -103,12 +102,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
         containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text("Réglages") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-            )
-        },
+        topBar = { CompactTopBar(title = "Réglages") },
     ) { padding ->
         Column(
             modifier = Modifier
