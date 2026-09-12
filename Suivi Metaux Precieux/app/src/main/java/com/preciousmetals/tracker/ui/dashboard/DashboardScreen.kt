@@ -42,6 +42,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -79,6 +80,8 @@ import com.preciousmetals.tracker.ui.components.MetalPriceTicker
 import com.preciousmetals.tracker.ui.components.PercentPill
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.HeaderIconMutedDark
+import com.preciousmetals.tracker.ui.theme.NearBlackEmber
+import com.preciousmetals.tracker.ui.theme.OnBackgroundDark
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
@@ -142,7 +145,19 @@ fun DashboardScreen(
     Scaffold(
         modifier = modifier,
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = bottomNavContentPadding()),
+            ) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = NearBlackEmber,
+                    contentColor = OnBackgroundDark,
+                    actionColor = OnBackgroundDark,
+                )
+            }
+        },
     ) { padding ->
         when (val state = uiState) {
             is DashboardUiState.Loading -> Box(
