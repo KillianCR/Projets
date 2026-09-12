@@ -44,6 +44,7 @@ import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.PercentPill
+import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.IconTileSurfaceDark
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
@@ -86,7 +87,10 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
                 .padding(bottom = bottomNavContentPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(
+                modifier = Modifier.horizontalFadingEdges(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 items(Metal.entries, key = { it.name }) { metal ->
                     val selected = (state as? PriceHistoryUiState.Loaded)?.metal == metal
                     GlassChip(

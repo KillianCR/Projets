@@ -50,6 +50,7 @@ import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.glassInputFieldColors
+import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.navigation.bottomNavOverlayPadding
 import com.preciousmetals.tracker.ui.theme.NearBlackEmber
@@ -180,7 +181,10 @@ private fun AddAlertDialog(
         title = { Text("Nouvelle alerte") },
         text = {
             Column {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyRow(
+                    modifier = Modifier.horizontalFadingEdges(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     items(Metal.entries, key = { it.name }) { m ->
                         GlassChip(
                             selected = metal == m,

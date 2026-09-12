@@ -63,6 +63,7 @@ import com.preciousmetals.tracker.domain.model.ObjectType
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.MetalBadge
+import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.util.formatFr
 import java.time.Instant
 import java.time.LocalDate
@@ -144,6 +145,7 @@ fun AddEditHoldingScreen(
             item {
                 Text("Métal", style = MaterialTheme.typography.titleMedium)
                 LazyRow(
+                    modifier = Modifier.horizontalFadingEdges(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(top = 4.dp),
                 ) {

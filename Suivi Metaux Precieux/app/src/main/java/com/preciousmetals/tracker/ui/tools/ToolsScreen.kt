@@ -51,6 +51,7 @@ import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.glassInputFieldColors
+import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.NearBlackEmber
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
@@ -207,6 +208,7 @@ private fun CalculatorSection(state: ToolsUiState) {
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(18.dp)) {
                 LazyRow(
+                    modifier = Modifier.horizontalFadingEdges(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(horizontal = 0.dp),
                 ) {
@@ -227,6 +229,7 @@ private fun CalculatorSection(state: ToolsUiState) {
                     modifier = Modifier.padding(top = 18.dp, bottom = 10.dp),
                 )
                 LazyRow(
+                    modifier = Modifier.horizontalFadingEdges(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(horizontal = 0.dp),
                 ) {
@@ -313,7 +316,10 @@ private fun DcaSimulatorSection(state: ToolsUiState) {
         )
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(18.dp)) {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyRow(
+                    modifier = Modifier.horizontalFadingEdges(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     items(Metal.entries, key = { it.name }) { m ->
                         GlassChip(
                             selected = metal == m,
@@ -471,7 +477,10 @@ private fun AddGoalDialog(
                     modifier = Modifier.padding(top = 12.dp),
                 )
                 if (targetType == GoalTargetType.WEIGHT_GRAMS) {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 12.dp)) {
+                    LazyRow(
+                        modifier = Modifier.horizontalFadingEdges().padding(top = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         items(Metal.entries, key = { it.name }) { m ->
                             GlassChip(
                                 selected = metal == m,

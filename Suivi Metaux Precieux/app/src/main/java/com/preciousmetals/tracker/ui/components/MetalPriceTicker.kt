@@ -57,7 +57,7 @@ fun MetalPriceTicker(
     onMetalClick: ((Metal) -> Unit)? = null,
 ) {
     LazyRow(
-        modifier = modifier,
+        modifier = modifier.horizontalFadingEdges(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = PaddingValues(horizontal = 4.dp),
     ) {

@@ -42,6 +42,7 @@ import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
+import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
@@ -135,6 +136,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     SettingsSectionTitle("Fréquence d'actualisation des cours")
                     LazyRow(
+                        modifier = Modifier.horizontalFadingEdges(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(top = 10.dp),
                     ) {

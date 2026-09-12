@@ -36,6 +36,7 @@ import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.HoldingRow
 import com.preciousmetals.tracker.ui.components.MetalLogo
+import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
@@ -108,7 +109,10 @@ fun LocationDetailScreen(
 
                     if (current.byMetal.isNotEmpty()) {
                         item {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            LazyRow(
+                                modifier = Modifier.horizontalFadingEdges(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
                                 items(current.byMetal, key = { it.metal.name }) { summary ->
                                     LocationMetalSummaryCard(
                                         metal = summary.metal,
