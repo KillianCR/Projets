@@ -78,7 +78,6 @@ import com.preciousmetals.tracker.ui.theme.NearBlackEmber
 import com.preciousmetals.tracker.ui.theme.OnBackgroundDark
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
-import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted56Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted80Dark
 import com.preciousmetals.tracker.ui.theme.EurPillBorderDark
@@ -545,10 +544,15 @@ private fun DashboardHeader(
                 )
             }
         }
-        Column(modifier = Modifier.padding(start = 12.dp, top = 4.dp)) {
-            Text("Bonjour", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp), color = TextMuted44Dark)
-            Text("Mon portefeuille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        }
+        // Just the one title line here — matching the single-line title every other tab shows
+        // in this same header area, instead of "Bonjour" + "Mon portefeuille" stacked, which
+        // made Portefeuille's header noticeably taller than the rest of the app.
+        Text(
+            "Mon portefeuille",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 12.dp, top = 4.dp),
+        )
     }
 }
 
