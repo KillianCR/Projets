@@ -67,15 +67,22 @@ fun FloatingBottomNav(
 }
 
 /**
- * Bottom padding a scrollable screen needs so its last item can clear the floating pill nav
- * (its own height, the margin lifting it off the edge, and the device's navigation-bar inset),
- * plus a little breathing room above it.
+ * Bottom offset that clears the floating pill nav (its own height, the margin lifting it off the
+ * edge, and the device's navigation-bar inset), plus [gap] of breathing room above it.
  */
 @Composable
-fun bottomNavContentPadding(): Dp {
+private fun bottomNavClearance(gap: Dp): Dp {
     val navigationBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    return navigationBarInset + PillOuterMargin + PillHeight + 16.dp
+    return navigationBarInset + PillOuterMargin + PillHeight + gap
 }
+
+/** Bottom padding a scrollable screen needs so its last item can fully clear the floating pill nav. */
+@Composable
+fun bottomNavContentPadding(): Dp = bottomNavClearance(gap = 16.dp)
+
+/** Bottom offset for a transient overlay (snackbar) that should sit almost flush against the pill nav. */
+@Composable
+fun bottomNavOverlayPadding(): Dp = bottomNavClearance(gap = 6.dp)
 
 @Composable
 private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit) {

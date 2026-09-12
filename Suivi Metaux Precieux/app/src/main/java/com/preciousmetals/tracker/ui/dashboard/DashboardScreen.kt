@@ -79,6 +79,7 @@ import com.preciousmetals.tracker.ui.components.MetalLogo
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
 import com.preciousmetals.tracker.ui.components.PercentPill
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
+import com.preciousmetals.tracker.ui.navigation.bottomNavOverlayPadding
 import com.preciousmetals.tracker.ui.theme.HeaderIconMutedDark
 import com.preciousmetals.tracker.ui.theme.NearBlackEmber
 import com.preciousmetals.tracker.ui.theme.OnBackgroundDark
@@ -148,7 +149,7 @@ fun DashboardScreen(
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState,
-                modifier = Modifier.padding(bottom = bottomNavContentPadding()),
+                modifier = Modifier.padding(bottom = bottomNavOverlayPadding()),
             ) { data ->
                 Snackbar(
                     snackbarData = data,
