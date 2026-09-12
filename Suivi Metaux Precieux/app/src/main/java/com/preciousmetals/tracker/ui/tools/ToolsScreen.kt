@@ -53,6 +53,7 @@ import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.glassInputFieldColors
 import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
+import com.preciousmetals.tracker.ui.components.topFadingEdge
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.NearBlackEmber
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
@@ -95,8 +96,10 @@ fun ToolsScreen(onLocationClick: (Long) -> Unit, modifier: Modifier = Modifier) 
         containerColor = Color.Transparent,
         topBar = { CompactTopBar(title = "Outils") },
     ) { padding ->
+        val listState = rememberLazyListState()
         LazyColumn(
-            modifier = Modifier.padding(padding).fillMaxSize(),
+            state = listState,
+            modifier = Modifier.padding(padding).fillMaxSize().topFadingEdge(listState),
             contentPadding = PaddingValues(
                 start = 20.dp, end = 20.dp, top = 16.dp, bottom = bottomNavContentPadding(),
             ),

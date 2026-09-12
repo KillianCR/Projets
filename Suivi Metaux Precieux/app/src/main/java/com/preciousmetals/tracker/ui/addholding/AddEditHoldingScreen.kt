@@ -65,6 +65,7 @@ import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
+import com.preciousmetals.tracker.ui.components.topFadingEdge
 import com.preciousmetals.tracker.util.formatFr
 import java.time.Instant
 import java.time.LocalDate
@@ -138,8 +139,10 @@ fun AddEditHoldingScreen(
             )
         },
     ) { padding ->
+        val listState = rememberLazyListState()
         LazyColumn(
-            modifier = Modifier.padding(padding).fillMaxSize(),
+            state = listState,
+            modifier = Modifier.padding(padding).fillMaxSize().topFadingEdge(listState),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {

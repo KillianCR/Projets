@@ -1,5 +1,6 @@
 package com.preciousmetals.tracker.ui.components
 
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -34,4 +35,28 @@ fun Modifier.horizontalFadingEdges(listState: LazyListState, edgeWidth: Dp = 20.
             ),
             blendMode = BlendMode.DstIn,
         )
+    }
+
+/**
+ * Fades a vertically scrollable screen's content where it meets the header above it — once
+ * scrolled down, the top item fades into the header's area instead of hard-clipping right at its
+ * boundary. Works for both LazyColumn ([androidx.compose.foundation.lazy.LazyListState]) and a
+ * plain scrolling Column ([androidx.compose.foundation.ScrollState]), since both implement
+ * [ScrollableState]. Stays fully opaque once scrolled back to the very top.
+ */
+fun Modifier.topFadingEdge(scrollableState: ScrollableState, edgeHeight: Dp = 24.dp): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        if (scrollableState.canScrollBackward) {
+            drawRect(
+                brush = Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    1f to Color.Black,
+                    startY = 0f,
+                    endY = edgeHeight.toPx(),
+                ),
+                blendMode = BlendMode.DstIn,
+            )
+        }
     }

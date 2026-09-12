@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
@@ -71,6 +72,7 @@ import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.HoldingRow
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
 import com.preciousmetals.tracker.ui.components.PercentPill
+import com.preciousmetals.tracker.ui.components.topFadingEdge
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.navigation.bottomNavOverlayPadding
 import com.preciousmetals.tracker.ui.theme.HeaderIconMutedDark
@@ -220,8 +222,10 @@ private fun DashboardContent(
         }
     }
 
+    val listState = rememberLazyListState()
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        state = listState,
+        modifier = modifier.fillMaxSize().topFadingEdge(listState),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = bottomNavContentPadding()),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {

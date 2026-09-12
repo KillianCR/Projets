@@ -38,6 +38,7 @@ import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.HoldingRow
 import com.preciousmetals.tracker.ui.components.MetalLogo
 import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
+import com.preciousmetals.tracker.ui.components.topFadingEdge
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
@@ -85,8 +86,10 @@ fun LocationDetailScreen(
             is LocationDetailUiState.Loaded -> {
                 fun money(usd: Double) = formatMoney(usd.usdTo(current.currency, current.usdToEurRate), current.currency)
 
+                val listState = rememberLazyListState()
                 LazyColumn(
-                    modifier = Modifier.padding(padding).fillMaxSize(),
+                    state = listState,
+                    modifier = Modifier.padding(padding).fillMaxSize().topFadingEdge(listState),
                     contentPadding = PaddingValues(
                         start = 20.dp, end = 20.dp, top = 16.dp, bottom = bottomNavContentPadding(),
                     ),

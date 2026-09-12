@@ -44,6 +44,7 @@ import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
+import com.preciousmetals.tracker.ui.components.topFadingEdge
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
@@ -106,11 +107,13 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         containerColor = Color.Transparent,
         topBar = { CompactTopBar(title = "Réglages") },
     ) { padding ->
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
+                .topFadingEdge(scrollState)
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .padding(bottom = bottomNavContentPadding()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
