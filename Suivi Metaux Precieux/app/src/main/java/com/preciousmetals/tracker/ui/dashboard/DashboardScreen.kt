@@ -91,6 +91,7 @@ import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.util.formatGrams
 import com.preciousmetals.tracker.util.formatMoney
+import com.preciousmetals.tracker.util.isCommodityMarketOpen
 import com.preciousmetals.tracker.util.usdTo
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,13 +119,20 @@ fun DashboardScreen(
 
     // Fires a confirmation on every refresh that completes without error — even when the fetched
     // price turns out identical to before (the free spot-price feed doesn't tick every second),
-    // so tapping refresh always gives feedback instead of looking like it did nothing.
+    // so tapping refresh always gives feedback instead of looking like it did nothing. Outside
+    // COMEX trading hours (nights, weekends) an unchanged price is expected, not a bug — the
+    // message says so explicitly instead of implying a fresh price just came in.
     var wasRefreshing by remember { mutableStateOf(false) }
     LaunchedEffect(uiState) {
         val state = uiState
         if (state is DashboardUiState.Loaded) {
             if (wasRefreshing && !state.isRefreshing && state.refreshError == null) {
-                snackbarHostState.showSnackbar("Cours actualisés", duration = SnackbarDuration.Short)
+                val message = if (isCommodityMarketOpen()) {
+                    "Cours actualisés"
+                } else {
+                    "Marché fermé (hors horaires de cotation) — derniers cours connus"
+                }
+                snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
             }
             wasRefreshing = state.isRefreshing
         }
