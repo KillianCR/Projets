@@ -56,8 +56,13 @@ import kotlinx.coroutines.launch
 fun OnboardingGate(content: @Composable () -> Unit) {
     val container = LocalAppContainer.current
     val completed by container.userPreferences.onboardingCompleted.collectAsStateWithLifecycle(initialValue = false)
-    // Set as soon as the user finishes/skips, instead of waiting for the DataStore write to round
-    // back through the flow — otherwise "Commencer" would feel like it did nothing for a beat.
+    // Set as soon as the write lands, instead of waiting for the DataStore flow to round back
+    // through collectAsStateWithLifecycle — otherwise "Commencer" would feel like it did nothing
+    // for a beat. Declared before the early return (unlike the coroutine scope that used to live
+    // inside the OnboardingScreen branch) so it isn't cancelled mid-write the instant that branch
+    // leaves composition — that was silently dropping the persisted flag, so onboarding kept
+    // coming back on every relaunch despite "Commencer" appearing to work.
+    val scope = rememberCoroutineScope()
     var justCompleted by rememberSaveable { mutableStateOf(false) }
 
     if (completed || justCompleted) {
@@ -65,11 +70,12 @@ fun OnboardingGate(content: @Composable () -> Unit) {
         return
     }
 
-    val scope = rememberCoroutineScope()
     OnboardingScreen(
         onFinish = {
-            justCompleted = true
-            scope.launch { container.userPreferences.setOnboardingCompleted(true) }
+            scope.launch {
+                container.userPreferences.setOnboardingCompleted(true)
+                justCompleted = true
+            }
         },
     )
 }
