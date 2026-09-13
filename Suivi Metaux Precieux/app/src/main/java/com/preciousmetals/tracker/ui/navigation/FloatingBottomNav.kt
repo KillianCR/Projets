@@ -50,10 +50,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.preciousmetals.tracker.ui.theme.CardBorderDark
-import com.preciousmetals.tracker.ui.theme.CardSurfaceDark
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
 import kotlin.math.roundToInt
 
@@ -62,14 +60,17 @@ data class BottomTab(val route: String, val label: String, val icon: ImageVector
 private val PillOuterMargin = 22.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
 
-/** Real backdrop blur behind the pill (not just a flat translucent fill), tinted with the same
- * glass-card color as every other card in the app. backgroundColor is set explicitly (every real
- * Haze sample does, even to Color.Transparent) rather than left at the HazeStyle default of
- * Color.Unspecified — leaving it Unspecified was silently producing no draw at all. */
+/**
+ * TEMPORARY DIAGNOSTIC STYLE — opaque solid red, no blur needed to show it. The last screenshot
+ * showed text through the pill at full sharpness, meaning hazeEffect drew nothing at all (not
+ * even its tint). This isolates whether hazeEffect draws ANYTHING: if the pill shows solid red,
+ * the capture/attach mechanism works and blur itself is the failing part; if it's still see-
+ * through, hazeEffect isn't attaching/drawing at all regardless of style. Revert once confirmed.
+ */
 private val PillHazeStyle = HazeStyle(
-    backgroundColor = Color.Transparent,
-    tints = listOf(HazeTint(CardSurfaceDark)),
-    blurRadius = 30.dp,
+    backgroundColor = Color.Red,
+    tints = emptyList(),
+    blurRadius = 0.dp,
 )
 
 /** Option A — bouncy spring: a light overshoot as the pill settles onto the new tab. */
