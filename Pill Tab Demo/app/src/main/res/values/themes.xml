@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.PillTabDemo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#070504</item>
+        <item name="android:statusBarColor">#070504</item>
+        <item name="android:navigationBarColor">#070504</item>
+    </style>
+</resources>
