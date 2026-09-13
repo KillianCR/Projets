@@ -27,7 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,6 +54,8 @@ import com.preciousmetals.tracker.util.formatFr
 import com.preciousmetals.tracker.work.WorkScheduler
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private val refreshOptions = listOf(60 to "1 h", 180 to "3 h", 360 to "6 h", 720 to "12 h", 1440 to "24 h")
 
@@ -96,10 +100,18 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         }
     }
 
-    val biometricAvailable = remember(context) {
-        BiometricManager.from(context).canAuthenticate(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        ) == BiometricManager.BIOMETRIC_SUCCESS
+    // canAuthenticate() does IPC to the system biometric service and can take 100-300ms — called
+    // synchronously in remember{}, this used to block composition of the whole screen (and, with
+    // it, every other animation running on the same UI thread, including the nav bar's pill) for
+    // that entire time. Running it in a coroutine keeps that latency off the composition/frame
+    // pipeline entirely; the switch just starts disabled for a moment instead of freezing the app.
+    var biometricAvailable by remember { mutableStateOf(false) }
+    LaunchedEffect(context) {
+        biometricAvailable = withContext(Dispatchers.Default) {
+            BiometricManager.from(context).canAuthenticate(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            ) == BiometricManager.BIOMETRIC_SUCCESS
+        }
     }
 
     Scaffold(
