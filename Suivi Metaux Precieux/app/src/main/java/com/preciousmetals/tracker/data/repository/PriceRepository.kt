@@ -80,12 +80,23 @@ class PriceRepository(
     private fun toStoredPriceUsdPerOunce(rawPrice: Double, metal: Metal): Double =
         (rawPrice / metal.apiUnitGrams) * GRAMS_PER_TROY_OUNCE
 
-    /** The most recent 1-minute close for [metal] today, or null if the feed returned nothing usable yet. */
-    private suspend fun fetchLatestClose(metal: Metal): Double? {
+    /**
+     * The most recent price for [metal]: the latest 1-minute close if the market's trading right
+     * now, falling back to Yahoo's own last-known price ([YahooChartMetaDto.regularMarketPrice],
+     * then its previous-close fields) when it isn't — outside trading hours the 1-minute quote
+     * array can come back empty even though a perfectly good last price is still available. This
+     * is what keeps a refresh from wrongly reporting "failure" over a weekend or after hours: the
+     * market being closed isn't an error, it just means the price hasn't moved (the dashboard
+     * already tells the user that via [com.preciousmetals.tracker.util.isCommodityMarketOpen]).
+     */
+    private suspend fun fetchLatestPrice(metal: Metal): Double {
         val response = yahooFinanceApiService.getChart(metal.yahooSymbol, range = "1d", interval = "1m")
-        val result = response.chart.result?.firstOrNull() ?: return null
-        val closes = result.indicators.quote.firstOrNull()?.close ?: return null
-        return closes.lastOrNull { it != null }
+        val result = response.chart.result?.firstOrNull() ?: throw IOException("Pas de cotation disponible")
+        return result.indicators.quote.firstOrNull()?.close?.lastOrNull { it != null }
+            ?: result.meta?.regularMarketPrice
+            ?: result.meta?.previousClose
+            ?: result.meta?.chartPreviousClose
+            ?: throw IOException("Pas de cotation disponible")
     }
 
     /**
@@ -105,12 +116,12 @@ class PriceRepository(
             // A small stagger between requests to the same unofficial endpoint — hammering it
             // with 5 back-to-back calls is what triggers its rate limiting in the first place.
             if (index > 0) delay(300)
-            runCatching { fetchLatestClose(metal) ?: throw IOException("Pas de cotation disponible") }
-                .onSuccess { latestClose ->
+            runCatching { fetchLatestPrice(metal) }
+                .onSuccess { latestPrice ->
                     priceHistoryDao.insert(
                         PriceHistoryEntity(
                             metal = metal.name,
-                            priceUsdPerOunce = toStoredPriceUsdPerOunce(latestClose, metal),
+                            priceUsdPerOunce = toStoredPriceUsdPerOunce(latestPrice, metal),
                             dateEpochDay = today,
                             timestampEpochMillis = now,
                         )
