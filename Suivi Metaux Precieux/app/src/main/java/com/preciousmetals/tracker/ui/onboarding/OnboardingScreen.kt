@@ -28,6 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -45,6 +46,7 @@ import com.preciousmetals.tracker.ui.theme.IconTileSurfaceDark
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted56Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted67Dark
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -55,7 +57,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun OnboardingGate(content: @Composable () -> Unit) {
     val container = LocalAppContainer.current
-    val completed by container.userPreferences.onboardingCompleted.collectAsStateWithLifecycle(initialValue = false)
+    // Reading DataStore is asynchronous — its very first emission always takes a moment, even
+    // for a returning install where the flag is already true on disk. A plain Boolean state with
+    // a `false` fallback can't tell "not completed" apart from "haven't read the real value yet",
+    // so it briefly renders the onboarding for every launch before the true value arrives and
+    // dismisses it a beat later — the "1 second then disappears" flash. Null distinguishes the
+    // two, so nothing is shown at all until the real, on-disk value is known.
+    val completed by remember { container.userPreferences.onboardingCompleted.map<Boolean, Boolean?> { it } }
+        .collectAsStateWithLifecycle(initialValue = null)
     // Set as soon as the write lands, instead of waiting for the DataStore flow to round back
     // through collectAsStateWithLifecycle — otherwise "Commencer" would feel like it did nothing
     // for a beat. Declared before the early return (unlike the coroutine scope that used to live
@@ -65,19 +74,18 @@ fun OnboardingGate(content: @Composable () -> Unit) {
     val scope = rememberCoroutineScope()
     var justCompleted by rememberSaveable { mutableStateOf(false) }
 
-    if (completed || justCompleted) {
-        content()
-        return
+    when {
+        completed == null && !justCompleted -> Unit // still reading the real value — show nothing yet
+        completed == true || justCompleted -> content()
+        else -> OnboardingScreen(
+            onFinish = {
+                scope.launch {
+                    container.userPreferences.setOnboardingCompleted(true)
+                    justCompleted = true
+                }
+            },
+        )
     }
-
-    OnboardingScreen(
-        onFinish = {
-            scope.launch {
-                container.userPreferences.setOnboardingCompleted(true)
-                justCompleted = true
-            }
-        },
-    )
 }
 
 private data class OnboardingPage(
