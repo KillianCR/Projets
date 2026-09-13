@@ -3,6 +3,10 @@ package com.preciousmetals.tracker.ui.navigation
 import com.preciousmetals.tracker.domain.model.Metal
 
 object Destinations {
+    /** Hosts all 5 bottom tabs at once (see [TabHost]) — a single NavHost destination so
+     * switching between them is a local state flip, not a real navigation transaction. */
+    const val MAIN = "main"
+
     const val DASHBOARD = "dashboard"
     const val HISTORY = "history"
     const val ALERTS = "alerts"

@@ -1,7 +1,5 @@
 package com.preciousmetals.tracker.ui.navigation
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -19,11 +17,17 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -47,33 +51,18 @@ private val bottomTabs = listOf(
     BottomTab(Destinations.SETTINGS, "Réglages", Icons.Outlined.Settings),
 )
 
-private val bottomTabRoutes = bottomTabs.map { it.route }.toSet()
-
-/**
- * True when both sides of a navigation are top-level tabs — i.e. this is a bottom-nav tap, not a
- * push to a detail/edit screen. Tab switches skip screen-content animation entirely (below).
- *
- * Confirmed by slow-motion screen recordings (frame-by-frame) of two different tab switches: the
- * nav bar's pill freezes mid-slide for 100-240ms, then jumps straight to its end position in a
- * single frame — a stalled UI thread, not a slow spring. One cause (a blocking biometric check on
- * Réglages) is fixed elsewhere, but the freeze reproduced identically switching History→Portfolio
- * too, which has nothing to do with that check. What both cases share: NavHost's crossfade, even
- * at 150ms, keeps BOTH the outgoing and incoming screen composed/laid out/drawn for its whole
- * duration — on a content-heavy destination (the portfolio's ticker, holdings, allocation chart)
- * that doubled cost is enough to stall the thread the pill's own animation runs on. Removing the
- * transition halves that load: only one screen is ever composed at a time.
- */
-private fun isTabSwitch(initial: NavBackStackEntry, target: NavBackStackEntry): Boolean =
-    initial.destination.route in bottomTabRoutes && target.destination.route in bottomTabRoutes
-
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val showBottomBar = bottomTabs.any { it.route == currentRoute } ||
+    val showBottomBar = currentRoute == Destinations.MAIN ||
         currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN ||
         currentRoute == Destinations.LOCATION_DETAIL_PATTERN
+
+    // Which of the 5 tabs is showing, inside the single Destinations.MAIN destination — switching
+    // tabs is just flipping this, never a real NavHost transaction (see TabHost doc for why).
+    var selectedTab by rememberSaveable { mutableStateOf(Destinations.DASHBOARD) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -81,30 +70,21 @@ fun AppNavHost() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = Destinations.DASHBOARD,
+                startDestination = Destinations.MAIN,
                 modifier = Modifier.padding(innerPadding),
-                enterTransition = {
-                    if (isTabSwitch(initialState, targetState)) {
-                        EnterTransition.None
-                    } else {
-                        fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 }
-                    }
-                },
-                exitTransition = {
-                    if (isTabSwitch(initialState, targetState)) ExitTransition.None else fadeOut(tween(180))
-                },
+                enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 } },
+                exitTransition = { fadeOut(tween(180)) },
                 popEnterTransition = { fadeIn(tween(220)) },
                 popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
             ) {
-                composable(Destinations.DASHBOARD) {
-                    DashboardScreen(
+                composable(Destinations.MAIN) {
+                    TabHost(
+                        selectedTabRoute = selectedTab,
                         onAddHolding = { navController.navigate(Destinations.addHolding()) },
                         onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
                         onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
+                        onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
                     )
-                }
-                composable(Destinations.HISTORY) {
-                    PriceHistoryScreen()
                 }
                 composable(
                     route = Destinations.HISTORY_FOR_METAL_PATTERN,
@@ -113,17 +93,6 @@ fun AppNavHost() {
                     val metal = entry.arguments?.getString(Destinations.HISTORY_METAL_ARG)
                         ?.let { name -> runCatching { Metal.valueOf(name) }.getOrNull() }
                     PriceHistoryScreen(initialMetal = metal)
-                }
-                composable(Destinations.ALERTS) {
-                    AlertsScreen()
-                }
-                composable(Destinations.TOOLS) {
-                    ToolsScreen(
-                        onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
-                    )
-                }
-                composable(Destinations.SETTINGS) {
-                    SettingsScreen()
                 }
                 composable(
                     route = Destinations.LOCATION_DETAIL_PATTERN,
@@ -157,34 +126,81 @@ fun AppNavHost() {
             FloatingBottomNav(
                 tabs = bottomTabs,
                 isSelected = { tab ->
-                    currentRoute == tab.route ||
+                    selectedTab == tab.route ||
                         (tab.route == Destinations.HISTORY && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN) ||
                         (tab.route == Destinations.TOOLS && currentRoute == Destinations.LOCATION_DETAIL_PATTERN)
                 },
                 onSelect = { tab ->
                     // From an argument-route detail screen (per-metal history, a storage
-                    // location's detail), navigate(tab.route) with
-                    // popUpTo(startDestinationId){saveState=true}+restoreState was silently a
-                    // no-op (confirmed: the tap reached this handler with the right route, no
-                    // exception, but the back stack never changed) — a real bug in that
-                    // save/restore combo when the current entry is an argument route. Popping it
-                    // directly first (a plain popBackStack, no save/restore involved) sidesteps
-                    // it, landing back on the previous tab before the normal tab-switch runs.
+                    // location's detail) pushed on top of MAIN, pop back to it first.
                     if (currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN ||
                         currentRoute == Destinations.LOCATION_DETAIL_PATTERN
                     ) {
                         navController.popBackStack()
                     }
-                    navController.navigate(tab.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    selectedTab = tab.route
                 },
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
+        }
+    }
+}
+
+/**
+ * Renders all 5 bottom tabs at once, permanently — only [selectedTabRoute]'s is visible and
+ * interactive, the other 4 sit hidden (alpha 0, touch-blocked) behind it. This is what actually
+ * fixes the freeze two separate slow-motion recordings traced back to NavHost: with the normal
+ * "one composable() per tab" setup, leaving a tab disposes its whole Compose UI tree, so coming
+ * back means rebuilding it from scratch (ViewModel state survives via saveState/restoreState, but
+ * every Icon/Text/Row in the screen still has to be recomposed, measured, laid out and drawn
+ * again) — on a content-heavy tab (the portfolio's ticker, holdings, allocation chart) that cold
+ * rebuild was enough to stall the UI thread the nav bar's pill animation runs on too. Here every
+ * tab's composition — and with it scroll position, in-progress form state, everything — simply
+ * stays alive the whole time; switching tabs costs nothing more than an alpha flip.
+ */
+@Composable
+private fun TabHost(
+    selectedTabRoute: String,
+    onAddHolding: () -> Unit,
+    onEditHolding: (Long) -> Unit,
+    onMetalClick: (Metal) -> Unit,
+    onLocationClick: (Long) -> Unit,
+) {
+    val saveableStateHolder = rememberSaveableStateHolder()
+    Box(modifier = Modifier.fillMaxSize()) {
+        bottomTabs.forEach { tab ->
+            val isCurrent = tab.route == selectedTabRoute
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = if (isCurrent) 1f else 0f }
+                    .zIndex(if (isCurrent) 1f else 0f)
+                    .then(if (isCurrent) Modifier else Modifier.blockPointerInput()),
+            ) {
+                saveableStateHolder.SaveableStateProvider(tab.route) {
+                    when (tab.route) {
+                        Destinations.DASHBOARD -> DashboardScreen(
+                            onAddHolding = onAddHolding,
+                            onEditHolding = onEditHolding,
+                            onMetalClick = onMetalClick,
+                        )
+                        Destinations.HISTORY -> PriceHistoryScreen()
+                        Destinations.ALERTS -> AlertsScreen()
+                        Destinations.TOOLS -> ToolsScreen(onLocationClick = onLocationClick)
+                        Destinations.SETTINGS -> SettingsScreen()
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Swallows every pointer event before it reaches this subtree's own content — keeps a hidden
+ * tab's buttons/lists from responding to touches meant for the visible tab drawn above it. */
+private fun Modifier.blockPointerInput(): Modifier = this.pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
         }
     }
 }
