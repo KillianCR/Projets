@@ -25,8 +25,8 @@ import com.preciousmetals.tracker.ui.navigation.BottomTab
 import com.preciousmetals.tracker.ui.navigation.FloatingBottomNav
 import com.preciousmetals.tracker.ui.portfolio.PortfolioScreen
 import com.preciousmetals.tracker.ui.theme.SuiviMetauxTheme
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
 private val DemoTabs = listOf(
     BottomTab("portefeuille", "Portefeuille", Icons.Outlined.AccountBalanceWallet),
@@ -47,7 +47,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             SuiviMetauxTheme {
-                val hazeState = remember { HazeState() }
+                // The bare HazeState() constructor leaves blurEnabled at whatever internal
+                // default that build resolves to; rememberHazeState(blurEnabled = true) forces it
+                // on unambiguously — the border was rendering but the interior stayed fully
+                // transparent, consistent with blur (and its fallback tint) never actually running.
+                val hazeState = rememberHazeState(blurEnabled = true)
                 var selectedTab by remember { mutableStateOf(DemoTabs.first()) }
 
                 // hazeSource and the pill's hazeEffect must be SIBLINGS (as in every Haze sample:

@@ -58,8 +58,11 @@ import dev.chrisbanes.haze.hazeEffect
 import kotlin.math.roundToInt
 
 /** Strong, real backdrop blur (not just a flat translucent fill) behind the pill bar, tinted with
- * the same glass-card color as the rest of the design test. */
+ * the same glass-card color as the rest of the design test. backgroundColor is set explicitly
+ * (every real Haze sample does, even to Color.Transparent) rather than left at the HazeStyle
+ * default of Color.Unspecified — leaving it Unspecified was silently producing no draw at all. */
 private val PillHazeStyle = HazeStyle(
+    backgroundColor = Color.Transparent,
     tints = listOf(HazeTint(CardSurfaceDark)),
     blurRadius = 30.dp,
 )

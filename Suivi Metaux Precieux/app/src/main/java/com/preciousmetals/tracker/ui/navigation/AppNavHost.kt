@@ -18,7 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -43,8 +42,8 @@ import com.preciousmetals.tracker.ui.history.PriceHistoryScreen
 import com.preciousmetals.tracker.ui.locationdetail.LocationDetailScreen
 import com.preciousmetals.tracker.ui.settings.SettingsScreen
 import com.preciousmetals.tracker.ui.tools.ToolsScreen
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
 private val bottomTabs = listOf(
     BottomTab(Destinations.DASHBOARD, "Portefeuille", Icons.Outlined.AccountBalanceWallet),
@@ -70,8 +69,10 @@ fun AppNavHost() {
     // Shared with FloatingBottomNav below: hazeSource here marks the screen content as what gets
     // captured for the pill's backdrop blur. Must stay a SIBLING of FloatingBottomNav (both direct
     // children of the Box below), never an ancestor/descendant of it — nesting the pill inside the
-    // hazeSource subtree means nothing is actually captured behind it.
-    val hazeState = remember { HazeState() }
+    // hazeSource subtree means nothing is actually captured behind it. The bare HazeState()
+    // constructor leaves blurEnabled at an ambiguous default; rememberHazeState(blurEnabled = true)
+    // forces it on explicitly, matching every Haze sample.
+    val hazeState = rememberHazeState(blurEnabled = true)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(

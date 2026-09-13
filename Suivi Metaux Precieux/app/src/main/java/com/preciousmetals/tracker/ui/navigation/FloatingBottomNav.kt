@@ -63,8 +63,11 @@ private val PillOuterMargin = 22.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
 
 /** Real backdrop blur behind the pill (not just a flat translucent fill), tinted with the same
- * glass-card color as every other card in the app. */
+ * glass-card color as every other card in the app. backgroundColor is set explicitly (every real
+ * Haze sample does, even to Color.Transparent) rather than left at the HazeStyle default of
+ * Color.Unspecified — leaving it Unspecified was silently producing no draw at all. */
 private val PillHazeStyle = HazeStyle(
+    backgroundColor = Color.Transparent,
     tints = listOf(HazeTint(CardSurfaceDark)),
     blurRadius = 30.dp,
 )
