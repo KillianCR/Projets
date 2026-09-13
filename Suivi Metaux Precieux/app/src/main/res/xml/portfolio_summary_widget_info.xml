@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="180dp"
-    android:minHeight="90dp"
-    android:targetCellWidth="3"
-    android:targetCellHeight="2"
+    android:minWidth="140dp"
+    android:minHeight="60dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="1"
     android:updatePeriodMillis="21600000"
     android:previewImage="@mipmap/ic_launcher"
-    android:initialLayout="@layout/spot_price_widget_loading"
+    android:initialLayout="@layout/portfolio_summary_widget_loading"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

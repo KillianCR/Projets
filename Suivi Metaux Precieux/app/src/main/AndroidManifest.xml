@@ -41,6 +41,18 @@
                 android:resource="@xml/spot_price_widget_info" />
         </receiver>
 
+        <receiver
+            android:name=".widget.PortfolioSummaryWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_portfolio_summary_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/portfolio_summary_widget_info" />
+        </receiver>
+
     </application>
 
 </manifest>

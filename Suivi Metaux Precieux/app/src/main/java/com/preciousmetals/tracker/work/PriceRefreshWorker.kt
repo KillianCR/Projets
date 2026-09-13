@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.preciousmetals.tracker.SuiviMetauxApp
 import com.preciousmetals.tracker.domain.model.AlertDirection
+import com.preciousmetals.tracker.widget.PortfolioSummaryWidget
 import com.preciousmetals.tracker.widget.SpotPriceWidget
 import kotlinx.coroutines.flow.first
 
@@ -23,6 +24,7 @@ class PriceRefreshWorker(
         }
 
         SpotPriceWidget.refreshAllInstances(applicationContext)
+        PortfolioSummaryWidget.refreshAllInstances(applicationContext)
 
         val notificationsEnabled = container.userPreferences.notificationsEnabled.first()
         if (notificationsEnabled) {

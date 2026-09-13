@@ -2,18 +2,14 @@ package com.preciousmetals.tracker.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.action.actionStartActivity
-import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
-import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.unit.ColorProvider
 import androidx.glance.layout.Column
@@ -32,18 +28,17 @@ import com.preciousmetals.tracker.MainActivity
 import com.preciousmetals.tracker.SuiviMetauxApp
 import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.Metal
+import com.preciousmetals.tracker.ui.theme.NegativeRedDark
+import com.preciousmetals.tracker.ui.theme.OnBackgroundDark
+import com.preciousmetals.tracker.ui.theme.PositiveGreenDark
+import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
+import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
+import com.preciousmetals.tracker.ui.theme.brandColor
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.formatPercent
 import com.preciousmetals.tracker.util.usdTo
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
-
-private val WidgetBackground = Color(0xFF1B1B21)
-private val WidgetOnBackground = Color(0xFFF5F3EF)
-private val WidgetOnBackgroundMuted = Color(0xFF9A96A8)
-private val WidgetBrandGold = Color(0xFFF2B705)
-private val WidgetPositive = Color(0xFF34C77B)
-private val WidgetNegative = Color(0xFFFF6B6B)
 
 private data class MetalPriceRow(
     val metal: Metal,
@@ -53,9 +48,11 @@ private data class MetalPriceRow(
 
 /**
  * A compact home-screen widget showing every tracked metal's latest cached spot price (see
- * [com.preciousmetals.tracker.data.repository.PriceRepository]) and its move since yesterday's
- * cached close. Reads from the local cache only — no network call from the widget itself — so it
- * stays fast and in sync with whatever the app last refreshed. Tapping it opens the app.
+ * [com.preciousmetals.tracker.data.repository.PriceRepository]) — copper priced per kilo like
+ * everywhere else in the app, the four others per gram — and its move since yesterday's cached
+ * close. Reads from the local cache only — no network call from the widget itself — so it stays
+ * fast and in sync with whatever the app (or [com.preciousmetals.tracker.work.PriceRefreshWorker]
+ * in the background) last refreshed. Tapping it opens the app.
  */
 class SpotPriceWidget : GlanceAppWidget() {
 
@@ -92,51 +89,46 @@ class SpotPriceWidget : GlanceAppWidget() {
 
 @Composable
 private fun WidgetContent(rows: List<MetalPriceRow>, currency: Currency, usdToEurRate: Double) {
-    Column(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(ColorProvider(WidgetBackground))
-            .cornerRadius(20.dp)
-            .padding(12.dp)
-            .clickable(actionStartActivity<MainActivity>()),
-    ) {
-        Text(
-            text = "Suivi Métaux",
-            style = TextStyle(color = ColorProvider(WidgetBrandGold), fontWeight = FontWeight.Bold, fontSize = 13.sp),
-        )
-        Spacer(modifier = GlanceModifier.height(8.dp))
-        rows.forEach { row -> MetalPriceLine(row = row, currency = currency, usdToEurRate = usdToEurRate) }
+    WidgetCard(onClick = actionStartActivity<MainActivity>()) {
+        Column(modifier = GlanceModifier.fillMaxSize().padding(10.dp)) {
+            Text(
+                text = "Suivi Métaux",
+                style = TextStyle(color = ColorProvider(TextMuted44Dark), fontWeight = FontWeight.Bold, fontSize = 11.sp),
+            )
+            Spacer(modifier = GlanceModifier.height(4.dp))
+            rows.forEach { row -> MetalPriceLine(row = row, currency = currency, usdToEurRate = usdToEurRate) }
+        }
     }
 }
 
 @Composable
 private fun MetalPriceLine(row: MetalPriceRow, currency: Currency, usdToEurRate: Double) {
     Row(
-        modifier = GlanceModifier.fillMaxWidth().padding(vertical = 3.dp),
+        modifier = GlanceModifier.fillMaxWidth().padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = row.metal.displayNameFr,
-            style = TextStyle(color = ColorProvider(WidgetOnBackground), fontSize = 13.sp),
+            style = TextStyle(color = ColorProvider(row.metal.brandColor()), fontWeight = FontWeight.Medium, fontSize = 12.sp),
             modifier = GlanceModifier.defaultWeight(),
         )
         val priceText = row.priceUsdPerGram
-            ?.usdTo(currency, usdToEurRate)
-            ?.let { "${formatMoney(it, currency)}/g" }
+            ?.let { (it * row.metal.smallUnitGrams).usdTo(currency, usdToEurRate) }
+            ?.let { "${formatMoney(it, currency)}/${row.metal.shortSmallUnitLabel()}" }
             ?: "…"
         Text(
             text = priceText,
-            style = TextStyle(color = ColorProvider(WidgetOnBackground), fontWeight = FontWeight.Medium, fontSize = 13.sp),
+            style = TextStyle(color = ColorProvider(OnBackgroundDark), fontWeight = FontWeight.Medium, fontSize = 12.sp),
         )
         Spacer(modifier = GlanceModifier.width(6.dp))
         val changeColor = when {
-            row.changePercent == null -> WidgetOnBackgroundMuted
-            row.changePercent >= 0 -> WidgetPositive
-            else -> WidgetNegative
+            row.changePercent == null -> TextMuted33Dark
+            row.changePercent >= 0 -> PositiveGreenDark
+            else -> NegativeRedDark
         }
         Text(
             text = row.changePercent?.let { formatPercent(it) } ?: "",
-            style = TextStyle(color = ColorProvider(changeColor), fontSize = 11.sp),
+            style = TextStyle(color = ColorProvider(changeColor), fontSize = 10.sp),
         )
     }
 }
