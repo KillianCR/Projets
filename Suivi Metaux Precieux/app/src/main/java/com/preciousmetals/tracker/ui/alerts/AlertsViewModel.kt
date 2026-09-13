@@ -10,7 +10,6 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PriceAlert
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -24,14 +23,16 @@ class AlertsViewModel(
         alertRepository.observeAll(),
         userPreferences.displayCurrency,
         priceRepository.usdToEurRate,
-    ) { alerts, currency, rate -> AlertsUiState(alerts, currency, rate) }
+        priceRepository.observeAllLatestPricesUsdPerGram(),
+    ) { alerts, currency, rate, livePrices -> AlertsUiState(alerts, currency, rate, livePrices) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AlertsUiState())
 
-    fun addAlert(metal: Metal, direction: AlertDirection, thresholdEur: Double, perBigUnit: Boolean) {
+    /** Threshold expressed relative to [metal]'s current cached price — e.g. "+5% au-dessus". */
+    fun addAlertByPercent(metal: Metal, direction: AlertDirection, percent: Double) {
         viewModelScope.launch {
-            val rate = priceRepository.usdToEurRate.first()
-            val thresholdEurPerGram = thresholdEur / (if (perBigUnit) metal.bigUnitGrams else metal.smallUnitGrams)
-            val thresholdUsdPerGram = thresholdEurPerGram / rate
+            val currentPriceUsdPerGram = priceRepository.getLatestPriceOnceUsdPerGram(metal) ?: return@launch
+            val sign = if (direction == AlertDirection.ABOVE) 1.0 else -1.0
+            val thresholdUsdPerGram = currentPriceUsdPerGram * (1.0 + sign * percent / 100.0)
             alertRepository.upsert(
                 PriceAlert(
                     metal = metal,

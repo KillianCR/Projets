@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.preciousmetals.tracker.domain.model.AlertDirection
+import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PriceAlert
 import com.preciousmetals.tracker.ui.LocalAppContainer
@@ -130,9 +131,12 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
 
     if (showAddDialog) {
         AddAlertDialog(
+            livePricesUsdPerGram = state.livePricesUsdPerGram,
+            currency = state.currency,
+            usdToEurRate = state.usdToEurRate,
             onDismiss = { showAddDialog = false },
-            onConfirm = { metal, direction, thresholdEur, perOunce ->
-                viewModel.addAlert(metal, direction, thresholdEur, perOunce)
+            onConfirm = { metal, direction, percent ->
+                viewModel.addAlertByPercent(metal, direction, percent)
                 showAddDialog = false
             },
         )
@@ -168,16 +172,24 @@ private fun AlertRow(alert: PriceAlert, currencyLabel: String, onToggle: () -> U
     }
 }
 
+private val AlertPercentPresets = listOf(5, 10, 15, 20, 30, 40, 50)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddAlertDialog(
+    livePricesUsdPerGram: Map<Metal, Double?>,
+    currency: Currency,
+    usdToEurRate: Double,
     onDismiss: () -> Unit,
-    onConfirm: (Metal, AlertDirection, Double, Boolean) -> Unit,
+    onConfirm: (Metal, AlertDirection, Double) -> Unit,
 ) {
     var metal by remember { mutableStateOf(Metal.GOLD) }
     var direction by remember { mutableStateOf(AlertDirection.ABOVE) }
-    var perBigUnit by remember { mutableStateOf(true) }
-    var thresholdText by remember { mutableStateOf("") }
+    var percentText by remember { mutableStateOf(AlertPercentPresets.first().toString()) }
+
+    val percent = percentText.replace(',', '.').toDoubleOrNull()
+    val currentPriceUsdPerGram = livePricesUsdPerGram[metal]
+    val sign = if (direction == AlertDirection.ABOVE) 1.0 else -1.0
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -206,29 +218,65 @@ private fun AddAlertDialog(
                     onSelect = { direction = it },
                     modifier = Modifier.padding(top = 12.dp),
                 )
-                GlassSegmentedRow(
-                    options = listOf(true to "Par ${metal.bigUnitLabel}", false to "Par ${metal.smallUnitLabel}"),
-                    selected = perBigUnit,
-                    onSelect = { perBigUnit = it },
-                    modifier = Modifier.padding(top = 12.dp),
+                Text(
+                    "Seuil : variation par rapport au cours actuel",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextMuted44Dark,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
                 )
+                val percentListState = rememberLazyListState()
+                LazyRow(
+                    state = percentListState,
+                    modifier = Modifier.horizontalFadingEdges(percentListState),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(AlertPercentPresets) { preset ->
+                        GlassChip(
+                            selected = percent == preset.toDouble(),
+                            onClick = { percentText = preset.toString() },
+                            label = "$preset %",
+                        )
+                    }
+                }
                 OutlinedTextField(
-                    value = thresholdText,
-                    onValueChange = { thresholdText = it },
-                    label = { Text("Seuil (€/${if (perBigUnit) metal.bigUnitLabel else metal.smallUnitLabel})") },
+                    value = percentText,
+                    onValueChange = { percentText = it },
+                    label = { Text("Pourcentage personnalisé (%)") },
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     singleLine = true,
                     colors = glassInputFieldColors(),
                 )
+                val previewText = when {
+                    currentPriceUsdPerGram == null -> "Cours pas encore disponible pour ${metal.displayNameFr}."
+                    percent == null || percent <= 0.0 -> null
+                    else -> {
+                        val targetUsdPerGram = currentPriceUsdPerGram * (1.0 + sign * percent / 100.0)
+                        val targetLabel = formatMoney(
+                            (targetUsdPerGram * metal.smallUnitGrams).usdTo(currency, usdToEurRate),
+                            currency,
+                        ) + "/" + (if (metal.smallUnitLabel == "kilo") "kg" else "g")
+                        val directionLabel = if (direction == AlertDirection.ABOVE) "dépasse" else "descend sous"
+                        "Alerte quand ${metal.displayNameFr} $directionLabel $targetLabel"
+                    }
+                }
+                if (previewText != null) {
+                    Text(
+                        previewText,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextMuted44Dark,
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                }
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                val value = thresholdText.replace(',', '.').toDoubleOrNull()
-                if (value != null && value > 0.0) {
-                    onConfirm(metal, direction, value, perBigUnit)
-                }
-            }) { Text("Créer") }
+            TextButton(
+                onClick = {
+                    if (percent != null && percent > 0.0 && currentPriceUsdPerGram != null) {
+                        onConfirm(metal, direction, percent)
+                    }
+                },
+            ) { Text("Créer") }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Annuler") }
