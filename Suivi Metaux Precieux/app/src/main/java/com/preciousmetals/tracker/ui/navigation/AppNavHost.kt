@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -44,6 +45,19 @@ private val bottomTabs = listOf(
     BottomTab(Destinations.SETTINGS, "Réglages", Icons.Outlined.Settings),
 )
 
+private val bottomTabRoutes = bottomTabs.map { it.route }.toSet()
+
+/**
+ * True when both sides of a navigation are top-level tabs — i.e. this is a bottom-nav tap, not a
+ * push to a detail/edit screen. Tab switches use a plain, fast crossfade (below) instead of the
+ * heavier slide used for push navigation: a full-screen slide competes for the same frame budget
+ * as the nav bar's own sliding pill indicator, and on a content-heavy destination (the
+ * portfolio's ticker/holdings, say) that competition is what made the pill's slide look choppy —
+ * it wasn't the pill itself, it was two animations fighting over the same frames at once.
+ */
+private fun isTabSwitch(initial: NavBackStackEntry, target: NavBackStackEntry): Boolean =
+    initial.destination.route in bottomTabRoutes && target.destination.route in bottomTabRoutes
+
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
@@ -61,8 +75,16 @@ fun AppNavHost() {
                 navController = navController,
                 startDestination = Destinations.DASHBOARD,
                 modifier = Modifier.padding(innerPadding),
-                enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 } },
-                exitTransition = { fadeOut(tween(180)) },
+                enterTransition = {
+                    if (isTabSwitch(initialState, targetState)) {
+                        fadeIn(tween(150))
+                    } else {
+                        fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 }
+                    }
+                },
+                exitTransition = {
+                    if (isTabSwitch(initialState, targetState)) fadeOut(tween(150)) else fadeOut(tween(180))
+                },
                 popEnterTransition = { fadeIn(tween(220)) },
                 popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
             ) {
