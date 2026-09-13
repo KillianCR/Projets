@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Inventory2
@@ -46,6 +45,7 @@ import com.preciousmetals.tracker.domain.model.GoalTargetType
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.StorageLocation
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.AddStorageLocationDialog
 import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
@@ -64,9 +64,7 @@ import com.preciousmetals.tracker.util.formatGrams
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.formatWeight
 import com.preciousmetals.tracker.util.usdTo
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 import kotlin.math.ceil
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -600,69 +598,3 @@ private fun StorageLocationCard(location: StorageLocation, holdingCount: Int, on
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddStorageLocationDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (name: String, notes: String, reminderDate: LocalDate?) -> Unit,
-) {
-    var name by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    var reminderDate by remember { mutableStateOf<LocalDate?>(null) }
-    var showDatePicker by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = NearBlackEmber,
-        title = { Text("Nouveau lieu de stockage") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nom (ex: Domicile, Banque X)") },
-                    singleLine = true,
-                    colors = glassInputFieldColors(),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text("Notes (optionnel)") },
-                    colors = glassInputFieldColors(),
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                )
-                TextButton(onClick = { showDatePicker = true }, modifier = Modifier.padding(top = 8.dp)) {
-                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null)
-                    Text("  " + (reminderDate?.let { "Rappel assurance : ${it.formatFr()}" } ?: "Ajouter un rappel d'assurance"))
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                if (name.isNotBlank()) onConfirm(name, notes, reminderDate)
-            }) { Text("Créer") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } },
-    )
-
-    if (showDatePicker) {
-        val datePickerState = androidx.compose.material3.rememberDatePickerState(
-            initialSelectedDateMillis = (reminderDate ?: LocalDate.now()).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-        )
-        androidx.compose.material3.DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        reminderDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
-                    }
-                    showDatePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Annuler") } },
-        ) {
-            androidx.compose.material3.DatePicker(state = datePickerState)
-        }
-    }
-}

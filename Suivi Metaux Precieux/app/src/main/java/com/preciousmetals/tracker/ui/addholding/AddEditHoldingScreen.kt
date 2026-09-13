@@ -57,7 +57,9 @@ import coil.compose.AsyncImage
 import com.preciousmetals.tracker.domain.model.HoldingDocument
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.ObjectType
+import com.preciousmetals.tracker.domain.model.StorageLocation
 import com.preciousmetals.tracker.ui.LocalAppContainer
+import com.preciousmetals.tracker.ui.components.AddStorageLocationDialog
 import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
@@ -101,6 +103,7 @@ fun AddEditHoldingScreen(
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showAddLocationDialog by remember { mutableStateOf(false) }
 
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -236,25 +239,34 @@ fun AddEditHoldingScreen(
                 )
             }
 
-            if (storageLocations.isNotEmpty()) {
-                item {
-                    Text("Lieu de stockage", style = MaterialTheme.typography.titleMedium)
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 4.dp),
-                    ) {
+            item {
+                Text("Lieu de stockage", style = MaterialTheme.typography.titleMedium)
+                val locationListState = rememberLazyListState()
+                LazyRow(
+                    state = locationListState,
+                    modifier = Modifier.horizontalFadingEdges(locationListState).padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    item {
                         GlassChip(
                             selected = state.storageLocationId == null,
                             onClick = { viewModel.setStorageLocation(null) },
                             label = "Aucun",
                         )
-                        storageLocations.forEach { location ->
-                            GlassChip(
-                                selected = state.storageLocationId == location.id,
-                                onClick = { viewModel.setStorageLocation(location.id) },
-                                label = location.name,
-                            )
-                        }
+                    }
+                    items(storageLocations, key = { it.id }) { location ->
+                        GlassChip(
+                            selected = state.storageLocationId == location.id,
+                            onClick = { viewModel.setStorageLocation(location.id) },
+                            label = location.name,
+                        )
+                    }
+                    item {
+                        GlassChip(
+                            selected = false,
+                            onClick = { showAddLocationDialog = true },
+                            label = "+ Ajouter",
+                        )
                     }
                 }
             }
@@ -377,6 +389,18 @@ fun AddEditHoldingScreen(
             },
             dismissButton = {
                 androidx.compose.material3.TextButton(onClick = { showDeleteConfirm = false }) { Text("Annuler") }
+            },
+        )
+    }
+
+    if (showAddLocationDialog) {
+        AddStorageLocationDialog(
+            onDismiss = { showAddLocationDialog = false },
+            onConfirm = { name, notes, reminderDate ->
+                viewModel.addStorageLocation(
+                    StorageLocation(name = name, notes = notes, insuranceReminderDate = reminderDate)
+                )
+                showAddLocationDialog = false
             },
         )
     }

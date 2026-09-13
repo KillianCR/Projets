@@ -107,6 +107,14 @@ class AddEditHoldingViewModel(
         _uiState.value = _uiState.value.copy(storageLocationId = id)
     }
 
+    /** Selects the new location for this holding right away — it's why the user just created it. */
+    fun addStorageLocation(location: StorageLocation) {
+        viewModelScope.launch {
+            val id = storageLocationRepository.upsert(location)
+            _uiState.value = _uiState.value.copy(storageLocationId = id)
+        }
+    }
+
     fun addDocument(uri: String, label: String) {
         val id = holdingId ?: return
         viewModelScope.launch {
