@@ -1,5 +1,7 @@
 package com.preciousmetals.tracker.ui.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -49,11 +51,17 @@ private val bottomTabRoutes = bottomTabs.map { it.route }.toSet()
 
 /**
  * True when both sides of a navigation are top-level tabs — i.e. this is a bottom-nav tap, not a
- * push to a detail/edit screen. Tab switches use a plain, fast crossfade (below) instead of the
- * heavier slide used for push navigation: a full-screen slide competes for the same frame budget
- * as the nav bar's own sliding pill indicator, and on a content-heavy destination (the
- * portfolio's ticker/holdings, say) that competition is what made the pill's slide look choppy —
- * it wasn't the pill itself, it was two animations fighting over the same frames at once.
+ * push to a detail/edit screen. Tab switches skip screen-content animation entirely (below).
+ *
+ * Confirmed by slow-motion screen recordings (frame-by-frame) of two different tab switches: the
+ * nav bar's pill freezes mid-slide for 100-240ms, then jumps straight to its end position in a
+ * single frame — a stalled UI thread, not a slow spring. One cause (a blocking biometric check on
+ * Réglages) is fixed elsewhere, but the freeze reproduced identically switching History→Portfolio
+ * too, which has nothing to do with that check. What both cases share: NavHost's crossfade, even
+ * at 150ms, keeps BOTH the outgoing and incoming screen composed/laid out/drawn for its whole
+ * duration — on a content-heavy destination (the portfolio's ticker, holdings, allocation chart)
+ * that doubled cost is enough to stall the thread the pill's own animation runs on. Removing the
+ * transition halves that load: only one screen is ever composed at a time.
  */
 private fun isTabSwitch(initial: NavBackStackEntry, target: NavBackStackEntry): Boolean =
     initial.destination.route in bottomTabRoutes && target.destination.route in bottomTabRoutes
@@ -77,13 +85,13 @@ fun AppNavHost() {
                 modifier = Modifier.padding(innerPadding),
                 enterTransition = {
                     if (isTabSwitch(initialState, targetState)) {
-                        fadeIn(tween(150))
+                        EnterTransition.None
                     } else {
                         fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 }
                     }
                 },
                 exitTransition = {
-                    if (isTabSwitch(initialState, targetState)) fadeOut(tween(150)) else fadeOut(tween(180))
+                    if (isTabSwitch(initialState, targetState)) ExitTransition.None else fadeOut(tween(180))
                 },
                 popEnterTransition = { fadeIn(tween(220)) },
                 popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
