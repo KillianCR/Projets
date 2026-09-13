@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -19,10 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,11 +40,11 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.preciousmetals.tracker.ui.theme.BlackEmber
@@ -59,14 +56,14 @@ private val PillOuterMargin = 22.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
 
 /** Option A — bouncy spring: a light overshoot as the pill settles onto the new tab. */
-private val PillSpringSpec: AnimationSpec<Dp> =
+private val PillSpringSpec: AnimationSpec<Float> =
     spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)
 
 /** Option B — fixed-duration tween: no overshoot, a steadier "precise" ease. */
-private val PillTweenSpec: AnimationSpec<Dp> = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+private val PillTweenSpec: AnimationSpec<Float> = tween(durationMillis = 300, easing = FastOutSlowInEasing)
 
 /** Pick whichever of the two options above feels right; swap this one line to switch. */
-private val PillAnimationSpec: AnimationSpec<Dp> = PillSpringSpec
+private val PillAnimationSpec: AnimationSpec<Float> = PillSpringSpec
 
 /**
  * The bottom nav as a floating pill: inset from both side edges and lifted off the bottom edge
@@ -78,10 +75,14 @@ private val PillAnimationSpec: AnimationSpec<Dp> = PillSpringSpec
  * The colored pill is a single element, drawn once behind the [Row] of tabs (not owned by any
  * individual tab). Each tab's real on-screen bounds are measured every layout pass via
  * [onGloballyPositioned] and kept in [itemBounds]; the pill's target offset/width are read from
- * the currently-selected tab's bounds and animated with [animateDpAsState], so clicking another
- * tab makes the pill visibly slide and resize over to it instead of one pill disappearing and a
- * new one appearing in its place. Tab layout itself (padding, label visibility) changes instantly
- * — only the pill animates — so the pill is always chasing a fixed target, never a moving one.
+ * the currently-selected tab's bounds and animated with [animateFloatAsState] in raw pixels.
+ *
+ * The animated values are read inside a [Modifier.layout] block rather than passed as ordinary
+ * composable parameters (as an earlier version of this did via `Modifier.width(dp)`): a value read
+ * at the top of the composable forces a full recomposition on every single animation frame, which
+ * is what made the slide look choppy instead of smooth. Reading `.value` inside `layout {}` only
+ * triggers a re-layout of this one node each frame — no recomposition, no allocation, so the
+ * animation actually runs at the full frame rate.
  */
 @Composable
 fun FloatingBottomNav(
@@ -92,23 +93,25 @@ fun FloatingBottomNav(
 ) {
     var rootCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val itemBounds = remember { mutableStateListOf<Rect>().apply { addAll(List(tabs.size) { Rect.Zero }) } }
-    val density = LocalDensity.current
 
     val selectedIndex = tabs.indexOfFirst(isSelected).coerceAtLeast(0)
-    // Reading through derivedStateOf means the pill's animateDpAsState calls below only see a new
-    // target when the SELECTED tab's own bounds change — not on every itemBounds write (e.g. an
-    // unrelated tab's onGloballyPositioned firing during an unrelated layout pass).
+    // Reading through derivedStateOf means the code below only sees a new target when the
+    // SELECTED tab's own bounds change — not on every itemBounds write (e.g. an unrelated tab's
+    // onGloballyPositioned firing during an unrelated layout pass).
     val selectedBounds by remember(selectedIndex) {
         derivedStateOf { itemBounds.getOrElse(selectedIndex) { Rect.Zero } }
     }
 
-    val animatedX by animateDpAsState(
-        targetValue = with(density) { selectedBounds.left.toDp() },
+    // State objects, deliberately not `by`-delegated here: reading `.value` is deferred to the
+    // layout phase inside the indicator's Modifier.layout block below, not done here at
+    // composition time — see the class doc for why that split matters for smoothness.
+    val animatedX = animateFloatAsState(
+        targetValue = selectedBounds.left,
         animationSpec = PillAnimationSpec,
         label = "navPillOffsetX",
     )
-    val animatedWidth by animateDpAsState(
-        targetValue = with(density) { selectedBounds.width.toDp() },
+    val animatedWidth = animateFloatAsState(
+        targetValue = selectedBounds.width,
         animationSpec = PillAnimationSpec,
         label = "navPillWidth",
     )
@@ -126,9 +129,14 @@ fun FloatingBottomNav(
         if (selectedBounds.width > 0f) {
             Box(
                 modifier = Modifier
-                    .offset { IntOffset(animatedX.roundToPx(), selectedBounds.top.roundToInt()) }
-                    .width(animatedWidth)
-                    .height(with(density) { selectedBounds.height.toDp() })
+                    .layout { measurable, _ ->
+                        val width = animatedWidth.value.roundToInt()
+                        val height = selectedBounds.height.roundToInt()
+                        val placeable = measurable.measure(Constraints.fixed(width, height))
+                        layout(width, height) {
+                            placeable.placeRelative(animatedX.value.roundToInt(), selectedBounds.top.roundToInt())
+                        }
+                    }
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary),
             )
