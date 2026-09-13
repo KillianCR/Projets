@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,6 +36,7 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.CompactTopBar
 import com.preciousmetals.tracker.ui.components.GlassCard
+import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.HoldingRow
 import com.preciousmetals.tracker.ui.components.MetalLogo
 import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
@@ -50,7 +52,7 @@ import com.preciousmetals.tracker.util.usdTo
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationDetailScreen(
-    locationId: Long,
+    locationId: Long?,
     onEditHolding: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -59,7 +61,7 @@ fun LocationDetailScreen(
         factory = viewModelFactory {
             initializer {
                 LocationDetailViewModel(
-                    locationId = locationId,
+                    initialLocationId = locationId,
                     portfolioRepository = container.portfolioRepository,
                     storageLocationRepository = container.storageLocationRepository,
                     userPreferences = container.userPreferences,
@@ -73,9 +75,7 @@ fun LocationDetailScreen(
     Scaffold(
         modifier = modifier,
         containerColor = Color.Transparent,
-        topBar = {
-            CompactTopBar(title = (state as? LocationDetailUiState.Loaded)?.locationName ?: "Lieu de stockage")
-        },
+        topBar = { CompactTopBar(title = "Lieux de stockage") },
     ) { padding ->
         when (val current = state) {
             is LocationDetailUiState.Loading -> Box(
@@ -83,7 +83,20 @@ fun LocationDetailScreen(
                 contentAlignment = Alignment.Center,
             ) { CircularProgressIndicator() }
 
-            is LocationDetailUiState.Loaded -> {
+            is LocationDetailUiState.Loaded -> if (current.locations.isEmpty()) {
+                Box(
+                    modifier = Modifier.padding(padding).fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "Aucun lieu de stockage pour l'instant. Créez-en un depuis Outils ou en modifiant un avoir.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextMuted44Dark,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(32.dp),
+                    )
+                }
+            } else {
                 fun money(usd: Double) = formatMoney(usd.usdTo(current.currency, current.usdToEurRate), current.currency)
 
                 val listState = rememberLazyListState()
@@ -95,6 +108,23 @@ fun LocationDetailScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
+                    item {
+                        val locationListState = rememberLazyListState()
+                        LazyRow(
+                            state = locationListState,
+                            modifier = Modifier.horizontalFadingEdges(locationListState),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            items(current.locations, key = { it.id }) { location ->
+                                GlassChip(
+                                    selected = location.id == current.selectedLocationId,
+                                    onClick = { viewModel.selectLocation(location.id) },
+                                    label = location.name,
+                                )
+                            }
+                        }
+                    }
+
                     item {
                         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(

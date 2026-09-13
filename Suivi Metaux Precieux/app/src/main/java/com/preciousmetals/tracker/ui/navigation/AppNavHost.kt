@@ -84,6 +84,7 @@ fun AppNavHost() {
                         onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
                         onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
                         onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
+                        onViewStorageLocations = { navController.navigate(Destinations.locationDetail()) },
                     )
                 }
                 composable(
@@ -96,11 +97,16 @@ fun AppNavHost() {
                 }
                 composable(
                     route = Destinations.LOCATION_DETAIL_PATTERN,
-                    arguments = listOf(navArgument(Destinations.LOCATION_ID_ARG) { type = NavType.LongType }),
+                    arguments = listOf(
+                        navArgument(Destinations.LOCATION_ID_ARG) {
+                            type = NavType.LongType
+                            defaultValue = -1L
+                        }
+                    ),
                 ) { entry ->
                     val locationId = entry.arguments?.getLong(Destinations.LOCATION_ID_ARG) ?: -1L
                     LocationDetailScreen(
-                        locationId = locationId,
+                        locationId = locationId.takeIf { it >= 0L },
                         onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
                     )
                 }
@@ -165,6 +171,7 @@ private fun TabHost(
     onEditHolding: (Long) -> Unit,
     onMetalClick: (Metal) -> Unit,
     onLocationClick: (Long) -> Unit,
+    onViewStorageLocations: () -> Unit,
 ) {
     val saveableStateHolder = rememberSaveableStateHolder()
     Box(modifier = Modifier.fillMaxSize()) {
@@ -183,6 +190,7 @@ private fun TabHost(
                             onAddHolding = onAddHolding,
                             onEditHolding = onEditHolding,
                             onMetalClick = onMetalClick,
+                            onViewStorageLocations = onViewStorageLocations,
                         )
                         Destinations.HISTORY -> PriceHistoryScreen()
                         Destinations.ALERTS -> AlertsScreen()

@@ -20,10 +20,13 @@ object Destinations {
     const val HISTORY_FOR_METAL_PATTERN = "history/{$HISTORY_METAL_ARG}"
 
     const val LOCATION_ID_ARG = "locationId"
-    const val LOCATION_DETAIL_PATTERN = "location/{$LOCATION_ID_ARG}"
+    // No location pre-selected (e.g. from the portfolio's "Stockage" quick action) falls back to
+    // the first location the screen finds — see LocationDetailViewModel.
+    const val LOCATION_DETAIL_PATTERN = "location?locationId={$LOCATION_ID_ARG}"
 
     fun addHolding(): String = "holding"
     fun editHolding(holdingId: Long): String = "holding?holdingId=$holdingId"
     fun historyForMetal(metal: Metal): String = "history/${metal.name}"
-    fun locationDetail(locationId: Long): String = "location/$locationId"
+    fun locationDetail(locationId: Long? = null): String =
+        if (locationId != null) "location?locationId=$locationId" else "location"
 }
