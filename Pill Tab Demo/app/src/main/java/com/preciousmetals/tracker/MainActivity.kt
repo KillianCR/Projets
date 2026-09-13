@@ -48,28 +48,28 @@ class MainActivity : ComponentActivity() {
         setContent {
             SuiviMetauxTheme {
                 val hazeState = remember { HazeState() }
-                // hazeSource sits on the outermost box so the captured "source" includes the
-                // ember gradient itself, not just the scrolling content on top of it — otherwise
-                // the pill would blur through to transparent instead of the actual background.
-                Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
-                    EmberGradientBackground(modifier = Modifier.fillMaxSize()) {
-                        var selectedTab by remember { mutableStateOf(DemoTabs.first()) }
+                var selectedTab by remember { mutableStateOf(DemoTabs.first()) }
 
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            when (selectedTab.route) {
-                                "portefeuille" -> PortfolioScreen(modifier = Modifier.fillMaxSize())
-                                else -> PlaceholderScreen(selectedTab.label)
-                            }
-
-                            FloatingBottomNav(
-                                tabs = DemoTabs,
-                                isSelected = { it == selectedTab },
-                                onSelect = { selectedTab = it },
-                                hazeState = hazeState,
-                                modifier = Modifier.align(Alignment.BottomCenter),
-                            )
+                // hazeSource and the pill's hazeEffect must be SIBLINGS (as in every Haze sample:
+                // the scrollable content and the blurred bar both sit directly in the Scaffold),
+                // not source-inside-effect or effect-inside-source — nesting the pill inside the
+                // hazeSource subtree (an earlier version of this) meant nothing was actually
+                // captured behind it, so it never blurred.
+                Box(modifier = Modifier.fillMaxSize()) {
+                    EmberGradientBackground(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
+                        when (selectedTab.route) {
+                            "portefeuille" -> PortfolioScreen(modifier = Modifier.fillMaxSize())
+                            else -> PlaceholderScreen(selectedTab.label)
                         }
                     }
+
+                    FloatingBottomNav(
+                        tabs = DemoTabs,
+                        isSelected = { it == selectedTab },
+                        onSelect = { selectedTab = it },
+                        hazeState = hazeState,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
                 }
             }
         }

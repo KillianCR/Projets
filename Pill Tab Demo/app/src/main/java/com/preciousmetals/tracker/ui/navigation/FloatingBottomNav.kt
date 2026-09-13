@@ -143,7 +143,7 @@ fun FloatingBottomNav(
             .padding(horizontal = PillOuterMargin)
             .padding(bottom = PillOuterMargin)
             .clip(CircleShape)
-            .hazeEffect(state = hazeState, style = PillHazeStyle)
+            .hazeEffect(state = hazeState, style = PillHazeStyle) { blurEnabled = true }
             .border(BorderStroke(1.dp, CardBorderDark), CircleShape)
             .onGloballyPositioned { rootCoordinates = it },
     ) {
