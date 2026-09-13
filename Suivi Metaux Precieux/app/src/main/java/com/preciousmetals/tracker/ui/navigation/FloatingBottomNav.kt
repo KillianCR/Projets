@@ -63,7 +63,7 @@ private val PillSpringSpec: AnimationSpec<Float> =
 private val PillTweenSpec: AnimationSpec<Float> = tween(durationMillis = 300, easing = FastOutSlowInEasing)
 
 /** Pick whichever of the two options above feels right; swap this one line to switch. */
-private val PillAnimationSpec: AnimationSpec<Float> = PillSpringSpec
+private val PillAnimationSpec: AnimationSpec<Float> = PillTweenSpec
 
 /**
  * The bottom nav as a floating pill: inset from both side edges and lifted off the bottom edge
