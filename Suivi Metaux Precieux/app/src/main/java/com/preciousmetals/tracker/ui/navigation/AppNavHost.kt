@@ -76,7 +76,6 @@ fun AppNavHost() {
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            modifier = Modifier.hazeSource(state = hazeState),
             containerColor = Color.Transparent,
         ) { innerPadding ->
             NavHost(
@@ -88,15 +87,21 @@ fun AppNavHost() {
                 popEnterTransition = { fadeIn(tween(220)) },
                 popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
             ) {
+                // hazeSource is applied to each destination's own content Box directly — not to
+                // Scaffold (a SubcomposeLayout) or NavHost (an AnimatedContent) — matching every
+                // Haze sample, which always marks the concrete scrolling content itself, never an
+                // intermediate layout wrapper. Applying it higher up silently captured nothing.
                 composable(Destinations.MAIN) {
-                    TabHost(
-                        selectedTabRoute = selectedTab,
-                        onAddHolding = { navController.navigate(Destinations.addHolding()) },
-                        onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
-                        onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
-                        onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
-                        onViewStorageLocations = { navController.navigate(Destinations.locationDetail()) },
-                    )
+                    Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
+                        TabHost(
+                            selectedTabRoute = selectedTab,
+                            onAddHolding = { navController.navigate(Destinations.addHolding()) },
+                            onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                            onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
+                            onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
+                            onViewStorageLocations = { navController.navigate(Destinations.locationDetail()) },
+                        )
+                    }
                 }
                 composable(
                     route = Destinations.HISTORY_FOR_METAL_PATTERN,
@@ -104,7 +109,9 @@ fun AppNavHost() {
                 ) { entry ->
                     val metal = entry.arguments?.getString(Destinations.HISTORY_METAL_ARG)
                         ?.let { name -> runCatching { Metal.valueOf(name) }.getOrNull() }
-                    PriceHistoryScreen(initialMetal = metal)
+                    Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
+                        PriceHistoryScreen(initialMetal = metal)
+                    }
                 }
                 composable(
                     route = Destinations.LOCATION_DETAIL_PATTERN,
@@ -116,11 +123,13 @@ fun AppNavHost() {
                     ),
                 ) { entry ->
                     val locationId = entry.arguments?.getLong(Destinations.LOCATION_ID_ARG) ?: -1L
-                    LocationDetailScreen(
-                        locationId = locationId.takeIf { it >= 0L },
-                        onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
-                        onBack = { navController.popBackStack() },
-                    )
+                    Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
+                        LocationDetailScreen(
+                            locationId = locationId.takeIf { it >= 0L },
+                            onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
                 }
                 composable(
                     route = Destinations.ADD_EDIT_HOLDING_PATTERN,
