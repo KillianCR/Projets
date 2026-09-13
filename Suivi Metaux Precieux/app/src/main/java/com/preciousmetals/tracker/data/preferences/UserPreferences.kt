@@ -28,6 +28,7 @@ class UserPreferences(private val context: Context) {
         val HISTORICAL_BACKFILL_DONE = booleanPreferencesKey("historical_backfill_done")
         val COPPER_BACKFILL_DONE = booleanPreferencesKey("copper_backfill_done")
         val APP_LOCK_ENABLED = booleanPreferencesKey("app_lock_enabled")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     }
 
     val displayCurrency: Flow<Currency> = context.dataStore.data.map { prefs ->
@@ -99,5 +100,14 @@ class UserPreferences(private val context: Context) {
 
     suspend fun setAppLockEnabled(enabled: Boolean) {
         context.dataStore.edit { it[Keys.APP_LOCK_ENABLED] = enabled }
+    }
+
+    /** Whether the first-launch feature walkthrough has already been shown. */
+    val onboardingCompleted: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.ONBOARDING_COMPLETED] ?: false
+    }
+
+    suspend fun setOnboardingCompleted(completed: Boolean) {
+        context.dataStore.edit { it[Keys.ONBOARDING_COMPLETED] = completed }
     }
 }

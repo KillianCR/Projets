@@ -18,6 +18,7 @@ import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.EmberGradientBackground
 import com.preciousmetals.tracker.ui.lock.AppLockGate
 import com.preciousmetals.tracker.ui.navigation.AppNavHost
+import com.preciousmetals.tracker.ui.onboarding.OnboardingGate
 import com.preciousmetals.tracker.ui.theme.SuiviMetauxTheme
 
 /**
@@ -36,8 +37,10 @@ class MainActivity : FragmentActivity() {
                     // Always the ember gradient, regardless of the device's light/dark setting —
                     // the app has a single theme (see SuiviMetauxTheme).
                     EmberGradientBackground(modifier = Modifier.fillMaxSize()) {
-                        AppLockGate {
-                            AppNavHost()
+                        OnboardingGate {
+                            AppLockGate {
+                                AppNavHost()
+                            }
                         }
                     }
                 }
