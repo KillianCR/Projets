@@ -226,7 +226,7 @@ private fun DashboardContent(
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize().topFadingEdge(listState),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = bottomNavContentPadding()),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 0.dp, bottom = bottomNavContentPadding()),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {
