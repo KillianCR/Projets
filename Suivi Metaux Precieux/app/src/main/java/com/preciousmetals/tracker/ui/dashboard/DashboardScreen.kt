@@ -72,6 +72,7 @@ import com.preciousmetals.tracker.ui.components.AllocationSlice
 import com.preciousmetals.tracker.ui.components.CombinedMetalsLogo
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.HoldingRow
+import com.preciousmetals.tracker.ui.components.MetalLogo
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
 import com.preciousmetals.tracker.ui.components.PercentPill
 import com.preciousmetals.tracker.ui.components.topFadingEdge
@@ -208,15 +209,20 @@ private fun DashboardContent(
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var sortOption by rememberSaveable { mutableStateOf(HoldingSortOption.DATE_DESC) }
-    // Combined coin logo for every row by default; the toggle next to the search field switches
-    // to each holding's own metal logo instead.
-    var useCombinedLogo by rememberSaveable { mutableStateOf(true) }
+    // null = tous les métaux (icône combinée) ; sinon ne garde que le métal choisi via le menu
+    // ouvert par ce même bouton.
+    var metalFilter by rememberSaveable { mutableStateOf<Metal?>(null) }
 
-    val filteredValuations = remember(summary.valuations, searchQuery, sortOption) {
-        val filtered = if (searchQuery.isBlank()) {
+    val filteredValuations = remember(summary.valuations, searchQuery, sortOption, metalFilter) {
+        val byMetal = if (metalFilter == null) {
             summary.valuations
         } else {
-            summary.valuations.filter { valuation ->
+            summary.valuations.filter { it.holding.metal == metalFilter }
+        }
+        val filtered = if (searchQuery.isBlank()) {
+            byMetal
+        } else {
+            byMetal.filter { valuation ->
                 val holding = valuation.holding
                 holding.label.contains(searchQuery, ignoreCase = true) ||
                     holding.metal.displayNameFr.contains(searchQuery, ignoreCase = true) ||
@@ -380,8 +386,9 @@ private fun DashboardContent(
                     onQueryChange = { searchQuery = it },
                     sortOption = sortOption,
                     onSortOptionChange = { sortOption = it },
-                    useCombinedLogo = useCombinedLogo,
-                    onUseCombinedLogoChange = { useCombinedLogo = it },
+                    currency = state.currency,
+                    metalFilter = metalFilter,
+                    onMetalFilterChange = { metalFilter = it },
                 )
             }
         }
@@ -390,8 +397,13 @@ private fun DashboardContent(
             item { EmptyHoldingsState(onAddHolding = onAddHolding) }
         } else if (filteredValuations.isEmpty()) {
             item {
+                val message = if (searchQuery.isNotBlank()) {
+                    "Aucun avoir ne correspond à \"$searchQuery\"."
+                } else {
+                    "Aucun avoir en ${metalFilter?.displayNameFr}."
+                }
                 Text(
-                    "Aucun avoir ne correspond à \"$searchQuery\".",
+                    message,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
@@ -403,7 +415,6 @@ private fun DashboardContent(
                     currency = state.currency,
                     money = ::displayMoney,
                     onClick = { onEditHolding(valuation.holding.id) },
-                    useCombinedLogo = useCombinedLogo,
                 )
             }
         }
@@ -416,8 +427,9 @@ private fun SearchAndSortRow(
     onQueryChange: (String) -> Unit,
     sortOption: HoldingSortOption,
     onSortOptionChange: (HoldingSortOption) -> Unit,
-    useCombinedLogo: Boolean,
-    onUseCombinedLogoChange: (Boolean) -> Unit,
+    currency: Currency,
+    metalFilter: Metal?,
+    onMetalFilterChange: (Metal?) -> Unit,
 ) {
     var sortMenuExpanded by remember { mutableStateOf(false) }
     var logoMenuExpanded by remember { mutableStateOf(false) }
@@ -485,32 +497,38 @@ private fun SearchAndSortRow(
                 modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    CombinedMetalsLogo(size = 26.dp)
+                    if (metalFilter == null) {
+                        CombinedMetalsLogo(size = 26.dp)
+                    } else {
+                        MetalLogo(metal = metalFilter, currency = currency, size = 26.dp)
+                    }
                 }
             }
             DropdownMenu(expanded = logoMenuExpanded, onDismissRequest = { logoMenuExpanded = false }) {
                 DropdownMenuItem(
-                    text = { Text("Chaque métal avec son logo") },
+                    text = { Text("Tous les métaux") },
                     trailingIcon = {
-                        if (!useCombinedLogo) Icon(Icons.Outlined.Check, contentDescription = null)
+                        if (metalFilter == null) Icon(Icons.Outlined.Check, contentDescription = null)
                     },
                     onClick = {
-                        onUseCombinedLogoChange(false)
+                        onMetalFilterChange(null)
                         logoMenuExpanded = false
                     },
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                 )
-                DropdownMenuItem(
-                    text = { Text("Tous avec ce logo (par défaut)") },
-                    trailingIcon = {
-                        if (useCombinedLogo) Icon(Icons.Outlined.Check, contentDescription = null)
-                    },
-                    onClick = {
-                        onUseCombinedLogoChange(true)
-                        logoMenuExpanded = false
-                    },
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-                )
+                Metal.entries.forEach { metal ->
+                    DropdownMenuItem(
+                        text = { Text(metal.displayNameFr) },
+                        trailingIcon = {
+                            if (metalFilter == metal) Icon(Icons.Outlined.Check, contentDescription = null)
+                        },
+                        onClick = {
+                            onMetalFilterChange(metal)
+                            logoMenuExpanded = false
+                        },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                    )
+                }
             }
         }
     }

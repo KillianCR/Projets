@@ -37,7 +37,6 @@ fun HoldingRow(
     currency: Currency,
     money: (Double) -> String,
     onClick: () -> Unit,
-    useCombinedLogo: Boolean = false,
 ) {
     val holding = valuation.holding
 
@@ -55,11 +54,7 @@ fun HoldingRow(
             modifier = Modifier.padding(14.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (useCombinedLogo) {
-                CombinedMetalsLogo(size = 40.dp)
-            } else {
-                MetalLogo(metal = holding.metal, currency = currency, size = 40.dp)
-            }
+            MetalLogo(metal = holding.metal, currency = currency, size = 40.dp)
             Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
                 Text(
                     holding.label.ifBlank { holding.metal.displayNameFr },
