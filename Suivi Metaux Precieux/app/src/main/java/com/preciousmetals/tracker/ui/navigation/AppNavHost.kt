@@ -138,9 +138,11 @@ fun AppNavHost() {
                     // LOCATION_DETAIL_PATTERN while selectedTab is still "dashboard") — checking
                     // them first keeps the pill pinned to the one tab that route belongs to,
                     // instead of ALSO matching selectedTab's now-stale tab underneath it.
+                    // Lieux de stockage counts as Portefeuille, not Outils — it's reached from,
+                    // and returns to, the portfolio now.
                     when (currentRoute) {
                         Destinations.HISTORY_FOR_METAL_PATTERN -> tab.route == Destinations.HISTORY
-                        Destinations.LOCATION_DETAIL_PATTERN -> tab.route == Destinations.TOOLS
+                        Destinations.LOCATION_DETAIL_PATTERN -> tab.route == Destinations.DASHBOARD
                         else -> selectedTab == tab.route
                     }
                 },
