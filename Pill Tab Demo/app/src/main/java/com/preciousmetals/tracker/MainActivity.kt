@@ -25,6 +25,8 @@ import com.preciousmetals.tracker.ui.navigation.BottomTab
 import com.preciousmetals.tracker.ui.navigation.FloatingBottomNav
 import com.preciousmetals.tracker.ui.portfolio.PortfolioScreen
 import com.preciousmetals.tracker.ui.theme.SuiviMetauxTheme
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 
 private val DemoTabs = listOf(
     BottomTab("portefeuille", "Portefeuille", Icons.Outlined.AccountBalanceWallet),
@@ -45,21 +47,28 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             SuiviMetauxTheme {
-                EmberGradientBackground(modifier = Modifier.fillMaxSize()) {
-                    var selectedTab by remember { mutableStateOf(DemoTabs.first()) }
+                val hazeState = remember { HazeState() }
+                // hazeSource sits on the outermost box so the captured "source" includes the
+                // ember gradient itself, not just the scrolling content on top of it — otherwise
+                // the pill would blur through to transparent instead of the actual background.
+                Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
+                    EmberGradientBackground(modifier = Modifier.fillMaxSize()) {
+                        var selectedTab by remember { mutableStateOf(DemoTabs.first()) }
 
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        when (selectedTab.route) {
-                            "portefeuille" -> PortfolioScreen(modifier = Modifier.fillMaxSize())
-                            else -> PlaceholderScreen(selectedTab.label)
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            when (selectedTab.route) {
+                                "portefeuille" -> PortfolioScreen(modifier = Modifier.fillMaxSize())
+                                else -> PlaceholderScreen(selectedTab.label)
+                            }
+
+                            FloatingBottomNav(
+                                tabs = DemoTabs,
+                                isSelected = { it == selectedTab },
+                                onSelect = { selectedTab = it },
+                                hazeState = hazeState,
+                                modifier = Modifier.align(Alignment.BottomCenter),
+                            )
                         }
-
-                        FloatingBottomNav(
-                            tabs = DemoTabs,
-                            isSelected = { it == selectedTab },
-                            onSelect = { selectedTab = it },
-                            modifier = Modifier.align(Alignment.BottomCenter),
-                        )
                     }
                 }
             }

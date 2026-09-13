@@ -65,6 +65,9 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
+    // Real backdrop blur for the pill tab bar (blurs the content scrolling behind it).
+    implementation("dev.chrisbanes.haze:haze:1.5.3")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")

@@ -51,7 +51,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.preciousmetals.tracker.ui.theme.CardBorderDark
 import com.preciousmetals.tracker.ui.theme.CardSurfaceDark
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 import kotlin.math.roundToInt
+
+/** Strong, real backdrop blur (not just a flat translucent fill) behind the pill bar, tinted with
+ * the same glass-card color as the rest of the design test. */
+private val PillHazeStyle = HazeStyle(
+    tints = listOf(HazeTint(CardSurfaceDark)),
+    blurRadius = 30.dp,
+)
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
@@ -97,6 +108,7 @@ fun FloatingBottomNav(
     tabs: List<BottomTab>,
     isSelected: (BottomTab) -> Boolean,
     onSelect: (BottomTab) -> Unit,
+    hazeState: HazeState,
     modifier: Modifier = Modifier,
 ) {
     var rootCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -131,7 +143,7 @@ fun FloatingBottomNav(
             .padding(horizontal = PillOuterMargin)
             .padding(bottom = PillOuterMargin)
             .clip(CircleShape)
-            .background(CardSurfaceDark)
+            .hazeEffect(state = hazeState, style = PillHazeStyle)
             .border(BorderStroke(1.dp, CardBorderDark), CircleShape)
             .onGloballyPositioned { rootCoordinates = it },
     ) {
