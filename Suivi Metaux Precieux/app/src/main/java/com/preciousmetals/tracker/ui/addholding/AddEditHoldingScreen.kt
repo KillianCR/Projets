@@ -27,16 +27,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
@@ -63,6 +59,8 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.ObjectType
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.CompactTopBar
+import com.preciousmetals.tracker.ui.components.GlassChip
+import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
 import com.preciousmetals.tracker.ui.components.MetalBadge
 import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.ui.components.topFadingEdge
@@ -156,11 +154,11 @@ fun AddEditHoldingScreen(
                     contentPadding = PaddingValues(top = 4.dp),
                 ) {
                     items(Metal.entries, key = { it.name }) { metal ->
-                        FilterChip(
+                        GlassChip(
                             selected = state.metal == metal,
                             onClick = { viewModel.setMetal(metal) },
-                            label = { Text(metal.displayNameFr) },
-                            leadingIcon = { MetalBadge(metal = metal) },
+                            label = metal.displayNameFr,
+                            leadingContent = { MetalBadge(metal = metal) },
                         )
                     }
                 }
@@ -170,10 +168,10 @@ fun AddEditHoldingScreen(
                 Text("Type d'objet", style = MaterialTheme.typography.titleMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ObjectType.entries.forEach { type ->
-                        FilterChip(
+                        GlassChip(
                             selected = state.objectType == type,
                             onClick = { viewModel.setObjectType(type) },
-                            label = { Text(type.displayNameFr) },
+                            label = type.displayNameFr,
                         )
                     }
                 }
@@ -245,16 +243,16 @@ fun AddEditHoldingScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.padding(top = 4.dp),
                     ) {
-                        FilterChip(
+                        GlassChip(
                             selected = state.storageLocationId == null,
                             onClick = { viewModel.setStorageLocation(null) },
-                            label = { Text("Aucun") },
+                            label = "Aucun",
                         )
                         storageLocations.forEach { location ->
-                            FilterChip(
+                            GlassChip(
                                 selected = state.storageLocationId == location.id,
                                 onClick = { viewModel.setStorageLocation(location.id) },
-                                label = { Text(location.name) },
+                                label = location.name,
                             )
                         }
                     }
@@ -289,17 +287,14 @@ fun AddEditHoldingScreen(
 
             item {
                 Text("Prix d'achat", style = MaterialTheme.typography.titleMedium)
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    ValuationMode.entries.forEachIndexed { index, mode ->
-                        SegmentedButton(
-                            selected = state.valuationMode == mode,
-                            onClick = { viewModel.setValuationMode(mode) },
-                            shape = SegmentedButtonDefaults.itemShape(index, ValuationMode.entries.size),
-                        ) {
-                            Text(if (mode == ValuationMode.MANUAL) "Prix payé" else "Calcul auto")
-                        }
-                    }
-                }
+                GlassSegmentedRow(
+                    options = ValuationMode.entries.map { mode ->
+                        mode to if (mode == ValuationMode.MANUAL) "Prix payé" else "Calcul auto"
+                    },
+                    selected = state.valuationMode,
+                    onSelect = viewModel::setValuationMode,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
             }
 
             if (state.valuationMode == ValuationMode.MANUAL) {

@@ -503,10 +503,12 @@ private fun EmptyHoldingsState(onAddHolding: () -> Unit) {
 }
 
 /**
- * Two stacked rows, matching the redesign report: refresh (start) / EUR pill (truly centered,
- * independent of the icons' widths) / eye (end) on top, then "Bonjour" / "Mon portefeuille" as
- * its own left-aligned block underneath — not a single inline row with the title squeezed
- * between the icons, which is what this used to be.
+ * The title comes first, flush with the top like every other tab's [CompactTopBar] title — then
+ * the refresh (start) / EUR pill (truly centered, independent of the icons' widths) / eye (end)
+ * row underneath. Portefeuille has no CompactTopBar of its own (this row of icons takes its
+ * place), so the title needs to sit at that same top position to read as "the same level" as
+ * Historique/Alertes/Outils/Réglages's titles instead of appearing lower, pushed down by the
+ * icon row above it.
  */
 @Composable
 private fun DashboardHeader(
@@ -519,7 +521,12 @@ private fun DashboardHeader(
 ) {
     val haptics = LocalHapticFeedback.current
     Column(modifier = Modifier.fillMaxWidth()) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            "Mon portefeuille",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Box(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
             IconButton(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -557,15 +564,6 @@ private fun DashboardHeader(
                 )
             }
         }
-        // Just the one title line here — matching the single-line title every other tab shows
-        // in this same header area, instead of "Bonjour" + "Mon portefeuille" stacked, which
-        // made Portefeuille's header noticeably taller than the rest of the app.
-        Text(
-            "Mon portefeuille",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(start = 12.dp, top = 4.dp),
-        )
     }
 }
 
