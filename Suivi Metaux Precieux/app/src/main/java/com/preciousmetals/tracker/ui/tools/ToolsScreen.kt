@@ -566,6 +566,7 @@ private fun StorageLocationsSection(
 
 @Composable
 private fun StorageLocationCard(location: StorageLocation, holdingCount: Int, onDelete: () -> Unit, onClick: () -> Unit) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     val reminderSoon = location.insuranceReminderDate?.let { it.isBefore(LocalDate.now().plusDays(30)) } == true
     GlassCard(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
         Row(
@@ -591,10 +592,28 @@ private fun StorageLocationCard(location: StorageLocation, holdingCount: Int, on
                     }
                 }
             }
-            IconButton(onClick = onDelete) {
+            IconButton(onClick = { showDeleteConfirm = true }) {
                 Icon(Icons.Outlined.DeleteOutline, contentDescription = "Supprimer ce lieu", tint = MaterialTheme.colorScheme.error)
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = NearBlackEmber,
+            title = { Text("Supprimer « ${location.name} » ?") },
+            text = { Text("Cette action est irréversible. Les avoirs associés à ce lieu ne seront pas supprimés.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    onDelete()
+                }) { Text("Supprimer") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("Annuler") }
+            },
+        )
     }
 }
 

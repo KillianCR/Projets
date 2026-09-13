@@ -311,7 +311,7 @@ private fun DashboardContent(
         item {
             Column {
                 Text(
-                    "VOS MÉTAUX",
+                    "COURS DES MÉTAUX",
                     style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp, letterSpacing = 0.4.sp),
                     fontWeight = FontWeight.SemiBold,
                     color = TextMuted56Dark,
