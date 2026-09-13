@@ -7,7 +7,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,13 +49,25 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import com.preciousmetals.tracker.ui.theme.BlackEmber
+import com.preciousmetals.tracker.ui.theme.CardBorderDark
+import com.preciousmetals.tracker.ui.theme.CardSurfaceDark
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 import kotlin.math.roundToInt
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
 private val PillOuterMargin = 22.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
+
+/** Real backdrop blur behind the pill (not just a flat translucent fill), tinted with the same
+ * glass-card color as every other card in the app. */
+private val PillHazeStyle = HazeStyle(
+    tints = listOf(HazeTint(CardSurfaceDark)),
+    blurRadius = 30.dp,
+)
 
 /** Option A — bouncy spring: a light overshoot as the pill settles onto the new tab. */
 private val PillSpringSpec: AnimationSpec<Float> =
@@ -89,6 +103,7 @@ fun FloatingBottomNav(
     tabs: List<BottomTab>,
     isSelected: (BottomTab) -> Boolean,
     onSelect: (BottomTab) -> Unit,
+    hazeState: HazeState,
     modifier: Modifier = Modifier,
 ) {
     var rootCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -123,7 +138,8 @@ fun FloatingBottomNav(
             .padding(horizontal = PillOuterMargin)
             .padding(bottom = PillOuterMargin)
             .clip(CircleShape)
-            .background(BlackEmber)
+            .hazeEffect(state = hazeState, style = PillHazeStyle) { blurEnabled = true }
+            .border(BorderStroke(1.dp, CardBorderDark), CircleShape)
             .onGloballyPositioned { rootCoordinates = it },
     ) {
         if (selectedBounds.width > 0f) {
