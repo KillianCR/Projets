@@ -54,6 +54,7 @@ import com.preciousmetals.tracker.util.usdTo
 fun LocationDetailScreen(
     locationId: Long?,
     onEditHolding: (Long) -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val container = LocalAppContainer.current
@@ -75,7 +76,7 @@ fun LocationDetailScreen(
     Scaffold(
         modifier = modifier,
         containerColor = Color.Transparent,
-        topBar = { CompactTopBar(title = "Lieux de stockage") },
+        topBar = { CompactTopBar(title = "Lieux de stockage", onBack = onBack) },
     ) { padding ->
         when (val current = state) {
             is LocationDetailUiState.Loading -> Box(

@@ -108,6 +108,7 @@ fun AppNavHost() {
                     LocationDetailScreen(
                         locationId = locationId.takeIf { it >= 0L },
                         onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                        onBack = { navController.popBackStack() },
                     )
                 }
                 composable(
@@ -132,9 +133,16 @@ fun AppNavHost() {
             FloatingBottomNav(
                 tabs = bottomTabs,
                 isSelected = { tab ->
-                    selectedTab == tab.route ||
-                        (tab.route == Destinations.HISTORY && currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN) ||
-                        (tab.route == Destinations.TOOLS && currentRoute == Destinations.LOCATION_DETAIL_PATTERN)
+                    // These two detail routes are pushed on top of MAIN without touching
+                    // selectedTab (e.g. the portfolio's own "Stockage" shortcut reaches
+                    // LOCATION_DETAIL_PATTERN while selectedTab is still "dashboard") — checking
+                    // them first keeps the pill pinned to the one tab that route belongs to,
+                    // instead of ALSO matching selectedTab's now-stale tab underneath it.
+                    when (currentRoute) {
+                        Destinations.HISTORY_FOR_METAL_PATTERN -> tab.route == Destinations.HISTORY
+                        Destinations.LOCATION_DETAIL_PATTERN -> tab.route == Destinations.TOOLS
+                        else -> selectedTab == tab.route
+                    }
                 },
                 onSelect = { tab ->
                     // From an argument-route detail screen (per-metal history, a storage
