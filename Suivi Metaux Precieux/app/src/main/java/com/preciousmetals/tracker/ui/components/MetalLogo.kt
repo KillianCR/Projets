@@ -1,6 +1,7 @@
 package com.preciousmetals.tracker.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -63,4 +64,32 @@ fun MetalLogo(metal: Metal, currency: Currency, modifier: Modifier = Modifier, s
             modifier = if (isEuro) Modifier.offset(x = (-size.value * 0.03f).dp) else Modifier,
         )
     }
+}
+
+/**
+ * The app's brand mark: gold, silver and copper coins cascading left-to-right, each overlapping
+ * the next, gold in front — the same combined logo used as the launcher icon. Used wherever a
+ * holdings list shows one logo standing in for every metal instead of each row's own [MetalLogo].
+ */
+@Composable
+fun CombinedMetalsLogo(modifier: Modifier = Modifier, size: Dp = 40.dp) {
+    val coinSize = size * 0.5f
+    val step = coinSize * (36f / 84f)
+    val ringColor = BlackEmber.copy(alpha = 0.55f)
+
+    Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
+        MetalCoin(listOf(CopperDotLight, CopperDotDeep), coinSize, ringColor, Modifier.offset(x = step))
+        MetalCoin(listOf(SilverGradientLight, SilverGradientMid, SilverGradientDeep), coinSize, ringColor)
+        MetalCoin(listOf(GoldGradientLight, GoldGradientMid, GoldGradientDeep), coinSize, ringColor, Modifier.offset(x = -step))
+    }
+}
+
+@Composable
+private fun MetalCoin(colors: List<androidx.compose.ui.graphics.Color>, size: Dp, ringColor: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .background(Brush.linearGradient(colors), CircleShape)
+            .border((size.value * 0.045f).dp, ringColor, CircleShape),
+    )
 }

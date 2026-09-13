@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Inventory2
@@ -68,6 +69,7 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.AllocationBarView
 import com.preciousmetals.tracker.ui.components.AllocationSlice
+import com.preciousmetals.tracker.ui.components.CombinedMetalsLogo
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.HoldingRow
 import com.preciousmetals.tracker.ui.components.MetalPriceTicker
@@ -206,6 +208,9 @@ private fun DashboardContent(
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var sortOption by rememberSaveable { mutableStateOf(HoldingSortOption.DATE_DESC) }
+    // Combined coin logo for every row by default; the toggle next to the search field switches
+    // to each holding's own metal logo instead.
+    var useCombinedLogo by rememberSaveable { mutableStateOf(true) }
 
     val filteredValuations = remember(summary.valuations, searchQuery, sortOption) {
         val filtered = if (searchQuery.isBlank()) {
@@ -375,6 +380,8 @@ private fun DashboardContent(
                     onQueryChange = { searchQuery = it },
                     sortOption = sortOption,
                     onSortOptionChange = { sortOption = it },
+                    useCombinedLogo = useCombinedLogo,
+                    onUseCombinedLogoChange = { useCombinedLogo = it },
                 )
             }
         }
@@ -396,6 +403,7 @@ private fun DashboardContent(
                     currency = state.currency,
                     money = ::displayMoney,
                     onClick = { onEditHolding(valuation.holding.id) },
+                    useCombinedLogo = useCombinedLogo,
                 )
             }
         }
@@ -408,8 +416,11 @@ private fun SearchAndSortRow(
     onQueryChange: (String) -> Unit,
     sortOption: HoldingSortOption,
     onSortOptionChange: (HoldingSortOption) -> Unit,
+    useCombinedLogo: Boolean,
+    onUseCombinedLogoChange: (Boolean) -> Unit,
 ) {
     var sortMenuExpanded by remember { mutableStateOf(false) }
+    var logoMenuExpanded by remember { mutableStateOf(false) }
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -464,6 +475,42 @@ private fun SearchAndSortRow(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                     )
                 }
+            }
+        }
+        Box {
+            Surface(
+                onClick = { logoMenuExpanded = true },
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    CombinedMetalsLogo(size = 26.dp)
+                }
+            }
+            DropdownMenu(expanded = logoMenuExpanded, onDismissRequest = { logoMenuExpanded = false }) {
+                DropdownMenuItem(
+                    text = { Text("Chaque métal avec son logo") },
+                    trailingIcon = {
+                        if (!useCombinedLogo) Icon(Icons.Outlined.Check, contentDescription = null)
+                    },
+                    onClick = {
+                        onUseCombinedLogoChange(false)
+                        logoMenuExpanded = false
+                    },
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                )
+                DropdownMenuItem(
+                    text = { Text("Tous avec ce logo (par défaut)") },
+                    trailingIcon = {
+                        if (useCombinedLogo) Icon(Icons.Outlined.Check, contentDescription = null)
+                    },
+                    onClick = {
+                        onUseCombinedLogoChange(true)
+                        logoMenuExpanded = false
+                    },
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                )
             }
         }
     }
