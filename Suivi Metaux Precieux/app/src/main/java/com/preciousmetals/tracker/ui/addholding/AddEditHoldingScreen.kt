@@ -54,7 +54,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
-import com.preciousmetals.tracker.domain.model.HoldingDocument
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.ObjectType
 import com.preciousmetals.tracker.domain.model.StorageLocation
@@ -96,6 +95,7 @@ fun AddEditHoldingScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val storageLocations by viewModel.storageLocations.collectAsStateWithLifecycle()
     val documents by viewModel.documents.collectAsStateWithLifecycle()
+    val pendingDocuments by viewModel.pendingDocuments.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.saved, state.deleted) {
         if (state.saved || state.deleted) onDone()
@@ -271,29 +271,40 @@ fun AddEditHoldingScreen(
                 }
             }
 
-            if (state.isEditing) {
-                item {
-                    Text("Documents", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Facture, certificat d'authenticité, attestation d'assurance…",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
-                    )
+            item {
+                Text("Documents", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Facture, certificat d'authenticité, attestation d'assurance…",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
+                )
+                if (state.isEditing) {
                     documents.forEach { document ->
                         DocumentRow(
-                            document = document,
+                            label = document.label,
                             onOpen = { openDocument(context, document.uri) },
                             onDelete = { viewModel.deleteDocument(document) },
                         )
                     }
-                    OutlinedButton(
-                        onClick = { documentPicker.launch(arrayOf("application/pdf", "image/*")) },
-                        modifier = Modifier.padding(top = if (documents.isEmpty()) 0.dp else 8.dp),
-                    ) {
-                        Icon(Icons.Outlined.UploadFile, contentDescription = null)
-                        Text("  Ajouter un document")
+                } else {
+                    // Not saved yet, so there's no holding id to attach a real document row to —
+                    // these are held in the ViewModel and only written once save() gets one.
+                    pendingDocuments.forEach { document ->
+                        DocumentRow(
+                            label = document.label,
+                            onOpen = { openDocument(context, document.uri) },
+                            onDelete = { viewModel.deletePendingDocument(document) },
+                        )
                     }
+                }
+                val hasDocuments = if (state.isEditing) documents.isNotEmpty() else pendingDocuments.isNotEmpty()
+                OutlinedButton(
+                    onClick = { documentPicker.launch(arrayOf("application/pdf", "image/*")) },
+                    modifier = Modifier.padding(top = if (hasDocuments) 8.dp else 0.dp),
+                ) {
+                    Icon(Icons.Outlined.UploadFile, contentDescription = null)
+                    Text("  Ajouter un document")
                 }
             }
 
@@ -407,14 +418,14 @@ fun AddEditHoldingScreen(
 }
 
 @Composable
-private fun DocumentRow(document: HoldingDocument, onOpen: () -> Unit, onDelete: () -> Unit) {
+private fun DocumentRow(label: String, onOpen: () -> Unit, onDelete: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
     ) {
         Icon(Icons.Outlined.Description, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
-            document.label,
+            label,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(start = 10.dp).weight(1f),
         )

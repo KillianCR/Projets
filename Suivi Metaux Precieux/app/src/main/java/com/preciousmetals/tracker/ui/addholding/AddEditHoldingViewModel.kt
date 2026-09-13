@@ -39,6 +39,11 @@ class AddEditHoldingViewModel(
         if (holdingId != null) holdingDocumentRepository.observeForHolding(holdingId) else flowOf(emptyList())
     ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    // A brand-new holding has no id yet to attach a HoldingDocument row to, so documents picked
+    // before the first save are held here instead and only written once save() has one.
+    private val _pendingDocuments = MutableStateFlow<List<PendingDocument>>(emptyList())
+    val pendingDocuments: StateFlow<List<PendingDocument>> = _pendingDocuments.asStateFlow()
+
     init {
         if (holdingId != null) {
             viewModelScope.launch {
@@ -116,7 +121,11 @@ class AddEditHoldingViewModel(
     }
 
     fun addDocument(uri: String, label: String) {
-        val id = holdingId ?: return
+        val id = holdingId
+        if (id == null) {
+            _pendingDocuments.value = _pendingDocuments.value + PendingDocument(uri, label)
+            return
+        }
         viewModelScope.launch {
             holdingDocumentRepository.add(
                 HoldingDocument(
@@ -131,6 +140,10 @@ class AddEditHoldingViewModel(
 
     fun deleteDocument(document: HoldingDocument) {
         viewModelScope.launch { holdingDocumentRepository.delete(document) }
+    }
+
+    fun deletePendingDocument(document: PendingDocument) {
+        _pendingDocuments.value = _pendingDocuments.value - document
     }
 
     fun setValuationMode(mode: ValuationMode) {
@@ -203,7 +216,19 @@ class AddEditHoldingViewModel(
                 notes = state.notes,
                 storageLocationId = state.storageLocationId,
             )
-            holdingRepository.upsert(holding)
+            val savedId = holdingRepository.upsert(holding)
+            if (holdingId == null && _pendingDocuments.value.isNotEmpty()) {
+                _pendingDocuments.value.forEach { pending ->
+                    holdingDocumentRepository.add(
+                        HoldingDocument(
+                            holdingId = savedId,
+                            uri = pending.uri,
+                            label = pending.label,
+                            addedAtEpochMillis = System.currentTimeMillis(),
+                        )
+                    )
+                }
+            }
             _uiState.value = _uiState.value.copy(isSaving = false, saved = true)
         }
     }
@@ -217,3 +242,6 @@ class AddEditHoldingViewModel(
         }
     }
 }
+
+/** A document picked before the holding it belongs to has been saved for the first time. */
+data class PendingDocument(val uri: String, val label: String)
