@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -26,15 +27,27 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import com.preciousmetals.tracker.ui.theme.BlackEmber
+import kotlin.math.roundToInt
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
@@ -48,7 +61,10 @@ private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab 
  * full-width strip and dim/hide whatever screen content sits behind it), so screens scroll
  * edge-to-edge underneath it; see [bottomNavContentPadding] for the matching scroll clearance.
  * The selected tab still gets a solid white pill with its icon and label, every other tab shows
- * its icon alone with no label.
+ * its icon alone with no label. The colored pill itself is a single element that tracks the
+ * selected tab's real (already-animating) position and size every frame, so switching tabs reads
+ * as that pill physically sliding over to the new one instead of one pill vanishing and another
+ * appearing in its place.
  */
 @Composable
 fun FloatingBottomNav(
@@ -57,7 +73,14 @@ fun FloatingBottomNav(
     onSelect: (BottomTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    var rootCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val tabBounds = remember { mutableStateMapOf<String, Rect>() }
+    val density = LocalDensity.current
+
+    val selectedTab = tabs.firstOrNull(isSelected)
+    val indicatorBounds = selectedTab?.let { tabBounds[it.route] }
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
@@ -65,12 +88,36 @@ fun FloatingBottomNav(
             .padding(bottom = PillOuterMargin)
             .clip(CircleShape)
             .background(BlackEmber)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically,
+            .onGloballyPositioned { rootCoordinates = it },
     ) {
-        tabs.forEach { tab ->
-            NavPill(tab = tab, selected = isSelected(tab), onClick = { onSelect(tab) })
+        if (indicatorBounds != null) {
+            Box(
+                modifier = Modifier
+                    .offset { IntOffset(indicatorBounds.left.roundToInt(), indicatorBounds.top.roundToInt()) }
+                    .size(with(density) { indicatorBounds.width.toDp() }, with(density) { indicatorBounds.height.toDp() })
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            tabs.forEach { tab ->
+                NavPill(
+                    tab = tab,
+                    selected = isSelected(tab),
+                    onClick = { onSelect(tab) },
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        val root = rootCoordinates ?: return@onGloballyPositioned
+                        val position = root.localPositionOf(coords, Offset.Zero)
+                        tabBounds[tab.route] = Rect(offset = position, size = coords.size.toSize())
+                    },
+                )
+            }
         }
     }
 }
@@ -93,12 +140,14 @@ fun bottomNavContentPadding(): Dp = bottomNavClearance(gap = 16.dp)
 @Composable
 fun bottomNavOverlayPadding(): Dp = bottomNavClearance(gap = 0.dp)
 
+/**
+ * A tab's icon (plus label once selected) with no background of its own — the colored pill behind
+ * the selected tab is drawn once by the parent (see [FloatingBottomNav]) and tracks this
+ * composable's own live bounds, so its size animations here (padding, label expand/collapse) are
+ * exactly what drives that shared pill's slide/resize, frame for frame.
+ */
 @Composable
-private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit) {
-    val background by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-        label = "navPillBackground",
-    )
+private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val contentColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.33f),
         label = "navPillContentColor",
@@ -110,10 +159,9 @@ private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit) {
     )
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .height(40.dp)
             .clip(CircleShape)
-            .background(background)
             .clickable(onClick = onClick)
             .padding(horizontal = horizontalPadding),
         horizontalArrangement = Arrangement.Center,
