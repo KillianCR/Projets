@@ -1,13 +1,13 @@
 package com.preciousmetals.tracker.ui.navigation
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,18 +22,22 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -54,17 +58,30 @@ data class BottomTab(val route: String, val label: String, val icon: ImageVector
 private val PillOuterMargin = 22.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
 
+/** Option A — bouncy spring: a light overshoot as the pill settles onto the new tab. */
+private val PillSpringSpec: AnimationSpec<Dp> =
+    spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)
+
+/** Option B — fixed-duration tween: no overshoot, a steadier "precise" ease. */
+private val PillTweenSpec: AnimationSpec<Dp> = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+
+/** Pick whichever of the two options above feels right; swap this one line to switch. */
+private val PillAnimationSpec: AnimationSpec<Dp> = PillSpringSpec
+
 /**
  * The bottom nav as a floating pill: inset from both side edges and lifted off the bottom edge
  * so the app's own content — not just its ember background — shows through around it on every
  * side. It's rendered as a plain overlay (not a Scaffold bottomBar slot, which would reserve a
  * full-width strip and dim/hide whatever screen content sits behind it), so screens scroll
  * edge-to-edge underneath it; see [bottomNavContentPadding] for the matching scroll clearance.
- * The selected tab still gets a solid white pill with its icon and label, every other tab shows
- * its icon alone with no label. The colored pill itself is a single element that tracks the
- * selected tab's real (already-animating) position and size every frame, so switching tabs reads
- * as that pill physically sliding over to the new one instead of one pill vanishing and another
- * appearing in its place.
+ *
+ * The colored pill is a single element, drawn once behind the [Row] of tabs (not owned by any
+ * individual tab). Each tab's real on-screen bounds are measured every layout pass via
+ * [onGloballyPositioned] and kept in [itemBounds]; the pill's target offset/width are read from
+ * the currently-selected tab's bounds and animated with [animateDpAsState], so clicking another
+ * tab makes the pill visibly slide and resize over to it instead of one pill disappearing and a
+ * new one appearing in its place. Tab layout itself (padding, label visibility) changes instantly
+ * — only the pill animates — so the pill is always chasing a fixed target, never a moving one.
  */
 @Composable
 fun FloatingBottomNav(
@@ -74,11 +91,27 @@ fun FloatingBottomNav(
     modifier: Modifier = Modifier,
 ) {
     var rootCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-    val tabBounds = remember { mutableStateMapOf<String, Rect>() }
+    val itemBounds = remember { mutableStateListOf<Rect>().apply { addAll(List(tabs.size) { Rect.Zero }) } }
     val density = LocalDensity.current
 
-    val selectedTab = tabs.firstOrNull(isSelected)
-    val indicatorBounds = selectedTab?.let { tabBounds[it.route] }
+    val selectedIndex = tabs.indexOfFirst(isSelected).coerceAtLeast(0)
+    // Reading through derivedStateOf means the pill's animateDpAsState calls below only see a new
+    // target when the SELECTED tab's own bounds change — not on every itemBounds write (e.g. an
+    // unrelated tab's onGloballyPositioned firing during an unrelated layout pass).
+    val selectedBounds by remember(selectedIndex) {
+        derivedStateOf { itemBounds.getOrElse(selectedIndex) { Rect.Zero } }
+    }
+
+    val animatedX by animateDpAsState(
+        targetValue = with(density) { selectedBounds.left.toDp() },
+        animationSpec = PillAnimationSpec,
+        label = "navPillOffsetX",
+    )
+    val animatedWidth by animateDpAsState(
+        targetValue = with(density) { selectedBounds.width.toDp() },
+        animationSpec = PillAnimationSpec,
+        label = "navPillWidth",
+    )
 
     Box(
         modifier = modifier
@@ -90,11 +123,12 @@ fun FloatingBottomNav(
             .background(BlackEmber)
             .onGloballyPositioned { rootCoordinates = it },
     ) {
-        if (indicatorBounds != null) {
+        if (selectedBounds.width > 0f) {
             Box(
                 modifier = Modifier
-                    .offset { IntOffset(indicatorBounds.left.roundToInt(), indicatorBounds.top.roundToInt()) }
-                    .size(with(density) { indicatorBounds.width.toDp() }, with(density) { indicatorBounds.height.toDp() })
+                    .offset { IntOffset(animatedX.roundToPx(), selectedBounds.top.roundToInt()) }
+                    .width(animatedWidth)
+                    .height(with(density) { selectedBounds.height.toDp() })
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary),
             )
@@ -106,7 +140,7 @@ fun FloatingBottomNav(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            tabs.forEach { tab ->
+            tabs.forEachIndexed { index, tab ->
                 NavPill(
                     tab = tab,
                     selected = isSelected(tab),
@@ -114,7 +148,7 @@ fun FloatingBottomNav(
                     modifier = Modifier.onGloballyPositioned { coords ->
                         val root = rootCoordinates ?: return@onGloballyPositioned
                         val position = root.localPositionOf(coords, Offset.Zero)
-                        tabBounds[tab.route] = Rect(offset = position, size = coords.size.toSize())
+                        itemBounds[index] = Rect(offset = position, size = coords.size.toSize())
                     },
                 )
             }
@@ -141,21 +175,22 @@ fun bottomNavContentPadding(): Dp = bottomNavClearance(gap = 16.dp)
 fun bottomNavOverlayPadding(): Dp = bottomNavClearance(gap = 0.dp)
 
 /**
- * A tab's icon (plus label once selected) with no background of its own — the colored pill behind
- * the selected tab is drawn once by the parent (see [FloatingBottomNav]) and tracks this
- * composable's own live bounds, so its size animations here (padding, label expand/collapse) are
- * exactly what drives that shared pill's slide/resize, frame for frame.
+ * A tab's icon (plus label once selected) with no background of its own — the shared sliding pill
+ * behind it is drawn by the parent (see [FloatingBottomNav]). Layout here (padding, label
+ * presence) changes instantly on selection; only the icon's color and scale get their own quick,
+ * independent micro-animation, decoupled from the pill's slide.
  */
 @Composable
 private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val contentColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.33f),
+        animationSpec = tween(200),
         label = "navPillContentColor",
     )
-    val horizontalPadding by animateDpAsState(
-        targetValue = if (selected) 16.dp else 10.dp,
-        animationSpec = spring(dampingRatio = 0.7f),
-        label = "navPillPadding",
+    val iconScale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0.9f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "navPillIconScale",
     )
 
     Row(
@@ -163,19 +198,15 @@ private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit, modi
             .height(40.dp)
             .clip(CircleShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = horizontalPadding),
+            .padding(horizontal = if (selected) 16.dp else 10.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(20.dp)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(20.dp).scale(iconScale)) {
             Icon(imageVector = tab.icon, contentDescription = tab.label, tint = contentColor)
         }
-        AnimatedVisibility(
-            visible = selected,
-            enter = fadeIn() + expandHorizontally(),
-            exit = fadeOut() + shrinkHorizontally(),
-        ) {
-            androidx.compose.material3.Text(
+        if (selected) {
+            Text(
                 text = tab.label,
                 color = contentColor,
                 style = MaterialTheme.typography.labelLarge,
