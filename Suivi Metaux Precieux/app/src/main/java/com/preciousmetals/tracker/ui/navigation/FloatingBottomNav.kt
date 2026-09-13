@@ -61,16 +61,17 @@ private val PillOuterMargin = 22.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
 
 /**
- * TEMPORARY DIAGNOSTIC STYLE — opaque solid red, no blur needed to show it. The last screenshot
- * showed text through the pill at full sharpness, meaning hazeEffect drew nothing at all (not
- * even its tint). This isolates whether hazeEffect draws ANYTHING: if the pill shows solid red,
- * the capture/attach mechanism works and blur itself is the failing part; if it's still see-
- * through, hazeEffect isn't attaching/drawing at all regardless of style. Revert once confirmed.
+ * TEMPORARY DIAGNOSTIC STYLE, round 2 — opaque red confirmed hazeEffect draws and attaches
+ * correctly. This round isolates whether the BLUR step itself runs: semi-transparent red (not
+ * fully opaque, so whatever is behind can show through) with a real blurRadius. If what's behind
+ * shows up blurred/fuzzy through the red tint, blur works and the earlier failure was specifically
+ * backgroundColor = Color.Transparent (exactly zero alpha may skip the whole draw). If text/icons
+ * still show through perfectly sharp, the blur step itself never runs regardless of backgroundColor.
  */
 private val PillHazeStyle = HazeStyle(
-    backgroundColor = Color.Red,
+    backgroundColor = Color.Red.copy(alpha = 0.35f),
     tints = emptyList(),
-    blurRadius = 0.dp,
+    blurRadius = 30.dp,
 )
 
 /** Option A — bouncy spring: a light overshoot as the pill settles onto the new tab. */
