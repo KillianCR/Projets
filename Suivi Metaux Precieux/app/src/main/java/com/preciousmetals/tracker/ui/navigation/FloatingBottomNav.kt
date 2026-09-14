@@ -64,11 +64,15 @@ private val PillOuterMargin = 26.dp
 // the gap below the pill look oversized.
 private val PillBottomMargin = 10.dp
 // 72dp -> 56dp: a bit over 20% shorter top-to-bottom.
-private val PillHeight = 56.dp // 6dp vertical padding on each side + 44dp tab height
+private val PillHeight = 56.dp
+// The one gap used on every side between the bar's own edge and each tab's touch/highlight area —
+// same value horizontally and vertically, so the selected pastille hugs the bar identically on
+// all four sides instead of reading closer on the sides than top/bottom (or vice versa).
+private val PillContentInset = 4.dp
 // Each tab's own touch target height — also the selected highlight's height, since it's sized off
-// the same bounds. Tall relative to PillHeight so the highlight sits close to the bar's own edges
-// ("presque collé") instead of floating in the middle of it.
-private val TabTouchHeight = 44.dp
+// the same bounds. Derived from PillHeight so the vertical inset above always equals
+// PillContentInset.
+private val TabTouchHeight = PillHeight - PillContentInset * 2
 
 /** The subtle rounded highlight behind the selected icon, Instagram-style — a soft light wash,
  * not a solid brand-colored pill. */
@@ -180,10 +184,10 @@ fun FloatingBottomNav(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                // Thin inset — each tab already claims its full weighted share (see NavPill), so
-                // this is purely the small gap between the outermost pastilles and the bar's own
-                // rounded ends, not room for the highlights to grow into.
-                .padding(horizontal = 4.dp, vertical = (PillHeight - TabTouchHeight) / 2),
+                // Same inset on every side — each tab already claims its full weighted share (see
+                // NavPill), so this is purely the gap between the pastilles and the bar's own
+                // edges, not room for the highlights to grow into.
+                .padding(PillContentInset),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
         ) {
