@@ -41,7 +41,10 @@ import com.preciousmetals.tracker.ui.dashboard.DashboardScreen
 import com.preciousmetals.tracker.ui.history.PriceHistoryScreen
 import com.preciousmetals.tracker.ui.locationdetail.LocationDetailScreen
 import com.preciousmetals.tracker.ui.settings.SettingsScreen
+import com.preciousmetals.tracker.ui.components.EmberGradientBackground
 import com.preciousmetals.tracker.ui.tools.ToolsScreen
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
 private val bottomTabs = listOf(
     BottomTab(Destinations.DASHBOARD, "Portefeuille", Icons.Outlined.AccountBalanceWallet),
@@ -64,67 +67,77 @@ fun AppNavHost() {
     // tabs is just flipping this, never a real NavHost transaction (see TabHost doc for why).
     var selectedTab by rememberSaveable { mutableStateOf(Destinations.DASHBOARD) }
 
+    val hazeState = rememberHazeState(blurEnabled = true)
+
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            containerColor = Color.Transparent,
-        ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = Destinations.MAIN,
-                modifier = Modifier.padding(innerPadding),
-                enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 } },
-                exitTransition = { fadeOut(tween(180)) },
-                popEnterTransition = { fadeIn(tween(220)) },
-                popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
-            ) {
-                composable(Destinations.MAIN) {
-                    TabHost(
-                        selectedTabRoute = selectedTab,
-                        onAddHolding = { navController.navigate(Destinations.addHolding()) },
-                        onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
-                        onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
-                        onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
-                        onViewStorageLocations = { navController.navigate(Destinations.locationDetail()) },
-                    )
-                }
-                composable(
-                    route = Destinations.HISTORY_FOR_METAL_PATTERN,
-                    arguments = listOf(navArgument(Destinations.HISTORY_METAL_ARG) { type = NavType.StringType }),
-                ) { entry ->
-                    val metal = entry.arguments?.getString(Destinations.HISTORY_METAL_ARG)
-                        ?.let { name -> runCatching { Metal.valueOf(name) }.getOrNull() }
-                    PriceHistoryScreen(initialMetal = metal)
-                }
-                composable(
-                    route = Destinations.LOCATION_DETAIL_PATTERN,
-                    arguments = listOf(
-                        navArgument(Destinations.LOCATION_ID_ARG) {
-                            type = NavType.LongType
-                            defaultValue = -1L
-                        }
-                    ),
-                ) { entry ->
-                    val locationId = entry.arguments?.getLong(Destinations.LOCATION_ID_ARG) ?: -1L
-                    LocationDetailScreen(
-                        locationId = locationId.takeIf { it >= 0L },
-                        onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
-                        onBack = { navController.popBackStack() },
-                    )
-                }
-                composable(
-                    route = Destinations.ADD_EDIT_HOLDING_PATTERN,
-                    arguments = listOf(
-                        navArgument(Destinations.HOLDING_ID_ARG) {
-                            type = NavType.LongType
-                            defaultValue = -1L
-                        }
-                    ),
-                ) { entry ->
-                    val holdingId = entry.arguments?.getLong(Destinations.HOLDING_ID_ARG) ?: -1L
-                    AddEditHoldingScreen(
-                        holdingId = holdingId.takeIf { it >= 0L },
-                        onDone = { navController.popBackStack() },
-                    )
+        // The pill's backdrop blur only has something to blur if the captured source actually
+        // PAINTS pixels. Every screen here is transparent over the ember gradient MainActivity
+        // paints further up, so marking them as the source captured nothing and the blur silently
+        // did nothing. Painting the same gradient again inside the hazeSource node (identical, so
+        // no visual change) gives the blur a real backdrop — and keeps the source a SIBLING of
+        // FloatingBottomNav below, never its ancestor, which is what the working demo does.
+        EmberGradientBackground(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
+            Scaffold(
+                containerColor = Color.Transparent,
+            ) { innerPadding ->
+                NavHost(
+                    navController = navController,
+                    startDestination = Destinations.MAIN,
+                    modifier = Modifier.padding(innerPadding),
+                    enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 8 } },
+                    exitTransition = { fadeOut(tween(180)) },
+                    popEnterTransition = { fadeIn(tween(220)) },
+                    popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
+                ) {
+                    composable(Destinations.MAIN) {
+                        TabHost(
+                            selectedTabRoute = selectedTab,
+                            onAddHolding = { navController.navigate(Destinations.addHolding()) },
+                            onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                            onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
+                            onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
+                            onViewStorageLocations = { navController.navigate(Destinations.locationDetail()) },
+                        )
+                    }
+                    composable(
+                        route = Destinations.HISTORY_FOR_METAL_PATTERN,
+                        arguments = listOf(navArgument(Destinations.HISTORY_METAL_ARG) { type = NavType.StringType }),
+                    ) { entry ->
+                        val metal = entry.arguments?.getString(Destinations.HISTORY_METAL_ARG)
+                            ?.let { name -> runCatching { Metal.valueOf(name) }.getOrNull() }
+                        PriceHistoryScreen(initialMetal = metal)
+                    }
+                    composable(
+                        route = Destinations.LOCATION_DETAIL_PATTERN,
+                        arguments = listOf(
+                            navArgument(Destinations.LOCATION_ID_ARG) {
+                                type = NavType.LongType
+                                defaultValue = -1L
+                            }
+                        ),
+                    ) { entry ->
+                        val locationId = entry.arguments?.getLong(Destinations.LOCATION_ID_ARG) ?: -1L
+                        LocationDetailScreen(
+                            locationId = locationId.takeIf { it >= 0L },
+                            onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                            onBack = { navController.popBackStack() },
+                        )
+                    }
+                    composable(
+                        route = Destinations.ADD_EDIT_HOLDING_PATTERN,
+                        arguments = listOf(
+                            navArgument(Destinations.HOLDING_ID_ARG) {
+                                type = NavType.LongType
+                                defaultValue = -1L
+                            }
+                        ),
+                    ) { entry ->
+                        val holdingId = entry.arguments?.getLong(Destinations.HOLDING_ID_ARG) ?: -1L
+                        AddEditHoldingScreen(
+                            holdingId = holdingId.takeIf { it >= 0L },
+                            onDone = { navController.popBackStack() },
+                        )
+                    }
                 }
             }
         }
@@ -156,6 +169,7 @@ fun AppNavHost() {
                     }
                     selectedTab = tab.route
                 },
+                hazeState = hazeState,
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
