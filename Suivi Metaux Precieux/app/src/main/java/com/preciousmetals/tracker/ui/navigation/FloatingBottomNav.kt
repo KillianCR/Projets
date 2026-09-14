@@ -58,7 +58,7 @@ import kotlin.math.roundToInt
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
-private val PillOuterMargin = 18.dp
+private val PillOuterMargin = 26.dp
 // Smaller than PillOuterMargin: this sits on top of navigationBarsPadding(), which now (edge-to-
 // edge) already reserves the real gesture/button nav bar inset — the old 22dp added there too made
 // the gap below the pill look oversized.
@@ -179,7 +179,10 @@ fun FloatingBottomNav(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = (PillHeight - TabTouchHeight) / 2),
+                // Thin inset — each tab already claims its full weighted share (see NavPill), so
+                // this is purely the small gap between the outermost pastilles and the bar's own
+                // rounded ends, not room for the highlights to grow into.
+                .padding(horizontal = 4.dp, vertical = (PillHeight - TabTouchHeight) / 2),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
         ) {
