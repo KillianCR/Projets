@@ -23,6 +23,7 @@ object AlertChecker {
     ) {
         if (!userPreferences.notificationsEnabled.first()) return
 
+        val usdToEurRate = priceRepository.usdToEurRate.first()
         for (alert in alertRepository.getEnabledOnce()) {
             val currentPrice = priceRepository.getLatestPriceOnceUsdPerGram(alert.metal) ?: continue
             val triggered = when (alert.direction) {
@@ -30,7 +31,7 @@ object AlertChecker {
                 AlertDirection.BELOW -> currentPrice <= alert.thresholdUsdPerGram
             }
             if (triggered) {
-                NotificationHelper.showAlertTriggered(context, alert, currentPrice)
+                NotificationHelper.showAlertTriggered(context, alert, currentPrice, usdToEurRate)
                 alertRepository.markTriggered(alert, System.currentTimeMillis())
             }
         }

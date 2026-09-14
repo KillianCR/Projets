@@ -12,7 +12,8 @@ import androidx.core.app.NotificationManagerCompat
 import com.preciousmetals.tracker.R
 import com.preciousmetals.tracker.domain.model.AlertDirection
 import com.preciousmetals.tracker.domain.model.PriceAlert
-import java.util.Locale
+import com.preciousmetals.tracker.util.formatMoney
+import com.preciousmetals.tracker.util.usdTo
 
 object NotificationHelper {
     private const val CHANNEL_ID = "price_alerts"
@@ -30,19 +31,20 @@ object NotificationHelper {
         manager.createNotificationChannel(channel)
     }
 
-    fun showAlertTriggered(context: Context, alert: PriceAlert, currentPriceUsdPerGram: Double) {
+    /**
+     * [usdToEurRate] is required to render the notification in [PriceAlert.currency] — the price
+     * feed only ever gives USD/gram, so an EUR alert still needs the live exchange rate to show a
+     * € amount instead of silently falling back to $.
+     */
+    fun showAlertTriggered(context: Context, alert: PriceAlert, currentPriceUsdPerGram: Double, usdToEurRate: Double) {
         ensureChannel(context)
 
-        val currentPriceUsdPerBigUnit = currentPriceUsdPerGram * alert.metal.bigUnitGrams
-        val currentPriceUsdPerSmallUnit = currentPriceUsdPerGram * alert.metal.smallUnitGrams
+        val currentPriceBigUnit = (currentPriceUsdPerGram * alert.metal.bigUnitGrams).usdTo(alert.currency, usdToEurRate)
+        val currentPriceSmallUnit = (currentPriceUsdPerGram * alert.metal.smallUnitGrams).usdTo(alert.currency, usdToEurRate)
         val directionText = if (alert.direction == AlertDirection.ABOVE) "a dépassé" else "est descendu sous"
         val title = "${alert.metal.displayNameFr} $directionText votre seuil"
-        val text = String.format(
-            Locale.FRENCH,
-            "Cours actuel : %.2f \$/${alert.metal.bigUnitLabel} (%.2f \$/${alert.metal.smallUnitLabel})",
-            currentPriceUsdPerBigUnit,
-            currentPriceUsdPerSmallUnit,
-        )
+        val text = "Cours actuel : ${formatMoney(currentPriceBigUnit, alert.currency)}/${alert.metal.bigUnitLabel} " +
+            "(${formatMoney(currentPriceSmallUnit, alert.currency)}/${alert.metal.smallUnitLabel})"
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
