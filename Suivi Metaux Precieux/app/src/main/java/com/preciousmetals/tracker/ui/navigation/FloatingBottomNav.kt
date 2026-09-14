@@ -73,10 +73,6 @@ private val PillContentInset = 4.dp
 // the same bounds. Derived from PillHeight so the vertical inset above always equals
 // PillContentInset.
 private val TabTouchHeight = PillHeight - PillContentInset * 2
-// Extra width added to the selected highlight only, split evenly on both sides — widens the
-// pastille beyond its tab's own equal share of the bar without touching PillContentInset (which
-// would also change the bar's internal padding and, through TabTouchHeight, its height).
-private val PastilleWidthGrowth = 14.dp
 
 /** The subtle rounded highlight behind the selected icon, Instagram-style — a soft light wash,
  * not a solid brand-colored pill. */
@@ -171,18 +167,11 @@ fun FloatingBottomNav(
             Box(
                 modifier = Modifier
                     .layout { measurable, _ ->
-                        // Widened by PastilleWidthGrowth beyond the tab's own measured bounds,
-                        // centered on the same midpoint — height and position stay exactly on
-                        // selectedBounds, only the width grows.
-                        val growthPx = PastilleWidthGrowth.toPx()
-                        val width = (animatedWidth.value + growthPx).roundToInt()
+                        val width = animatedWidth.value.roundToInt()
                         val height = selectedBounds.height.roundToInt()
                         val placeable = measurable.measure(Constraints.fixed(width, height))
                         layout(width, height) {
-                            placeable.placeRelative(
-                                (animatedX.value - growthPx / 2f).roundToInt(),
-                                selectedBounds.top.roundToInt(),
-                            )
+                            placeable.placeRelative(animatedX.value.roundToInt(), selectedBounds.top.roundToInt())
                         }
                     }
                     // Same shape as the bar itself (CircleShape), not an independent radius — on
