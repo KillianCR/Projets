@@ -50,29 +50,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.preciousmetals.tracker.ui.theme.CardBorderDark
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.hazeEffect
+import com.preciousmetals.tracker.ui.theme.CardSurfaceDark
 import kotlin.math.roundToInt
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
 private val PillOuterMargin = 22.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
-
-/**
- * TEMPORARY DIAGNOSTIC STYLE, round 2 — opaque red confirmed hazeEffect draws and attaches
- * correctly. This round isolates whether the BLUR step itself runs: semi-transparent red (not
- * fully opaque, so whatever is behind can show through) with a real blurRadius. If what's behind
- * shows up blurred/fuzzy through the red tint, blur works and the earlier failure was specifically
- * backgroundColor = Color.Transparent (exactly zero alpha may skip the whole draw). If text/icons
- * still show through perfectly sharp, the blur step itself never runs regardless of backgroundColor.
- */
-private val PillHazeStyle = HazeStyle(
-    backgroundColor = Color.Red.copy(alpha = 0.35f),
-    tints = emptyList(),
-    blurRadius = 30.dp,
-)
 
 /** Option A — bouncy spring: a light overshoot as the pill settles onto the new tab. */
 private val PillSpringSpec: AnimationSpec<Float> =
@@ -108,7 +92,6 @@ fun FloatingBottomNav(
     tabs: List<BottomTab>,
     isSelected: (BottomTab) -> Boolean,
     onSelect: (BottomTab) -> Unit,
-    hazeState: HazeState,
     modifier: Modifier = Modifier,
 ) {
     var rootCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -143,7 +126,7 @@ fun FloatingBottomNav(
             .padding(horizontal = PillOuterMargin)
             .padding(bottom = PillOuterMargin)
             .clip(CircleShape)
-            .hazeEffect(state = hazeState, style = PillHazeStyle) { blurEnabled = true }
+            .background(CardSurfaceDark)
             .border(BorderStroke(1.dp, CardBorderDark), CircleShape)
             .onGloballyPositioned { rootCoordinates = it },
     ) {

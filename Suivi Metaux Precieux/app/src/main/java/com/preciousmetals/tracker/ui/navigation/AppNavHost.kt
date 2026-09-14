@@ -42,8 +42,6 @@ import com.preciousmetals.tracker.ui.history.PriceHistoryScreen
 import com.preciousmetals.tracker.ui.locationdetail.LocationDetailScreen
 import com.preciousmetals.tracker.ui.settings.SettingsScreen
 import com.preciousmetals.tracker.ui.tools.ToolsScreen
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 
 private val bottomTabs = listOf(
     BottomTab(Destinations.DASHBOARD, "Portefeuille", Icons.Outlined.AccountBalanceWallet),
@@ -66,14 +64,6 @@ fun AppNavHost() {
     // tabs is just flipping this, never a real NavHost transaction (see TabHost doc for why).
     var selectedTab by rememberSaveable { mutableStateOf(Destinations.DASHBOARD) }
 
-    // Shared with FloatingBottomNav below: hazeSource here marks the screen content as what gets
-    // captured for the pill's backdrop blur. Must stay a SIBLING of FloatingBottomNav (both direct
-    // children of the Box below), never an ancestor/descendant of it — nesting the pill inside the
-    // hazeSource subtree means nothing is actually captured behind it. The bare HazeState()
-    // constructor leaves blurEnabled at an ambiguous default; rememberHazeState(blurEnabled = true)
-    // forces it on explicitly, matching every Haze sample.
-    val hazeState = rememberHazeState(blurEnabled = true)
-
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -87,21 +77,15 @@ fun AppNavHost() {
                 popEnterTransition = { fadeIn(tween(220)) },
                 popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(180)) { it / 8 } },
             ) {
-                // hazeSource is applied to each destination's own content Box directly — not to
-                // Scaffold (a SubcomposeLayout) or NavHost (an AnimatedContent) — matching every
-                // Haze sample, which always marks the concrete scrolling content itself, never an
-                // intermediate layout wrapper. Applying it higher up silently captured nothing.
                 composable(Destinations.MAIN) {
-                    Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
-                        TabHost(
-                            selectedTabRoute = selectedTab,
-                            onAddHolding = { navController.navigate(Destinations.addHolding()) },
-                            onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
-                            onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
-                            onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
-                            onViewStorageLocations = { navController.navigate(Destinations.locationDetail()) },
-                        )
-                    }
+                    TabHost(
+                        selectedTabRoute = selectedTab,
+                        onAddHolding = { navController.navigate(Destinations.addHolding()) },
+                        onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                        onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
+                        onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
+                        onViewStorageLocations = { navController.navigate(Destinations.locationDetail()) },
+                    )
                 }
                 composable(
                     route = Destinations.HISTORY_FOR_METAL_PATTERN,
@@ -109,9 +93,7 @@ fun AppNavHost() {
                 ) { entry ->
                     val metal = entry.arguments?.getString(Destinations.HISTORY_METAL_ARG)
                         ?.let { name -> runCatching { Metal.valueOf(name) }.getOrNull() }
-                    Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
-                        PriceHistoryScreen(initialMetal = metal)
-                    }
+                    PriceHistoryScreen(initialMetal = metal)
                 }
                 composable(
                     route = Destinations.LOCATION_DETAIL_PATTERN,
@@ -123,13 +105,11 @@ fun AppNavHost() {
                     ),
                 ) { entry ->
                     val locationId = entry.arguments?.getLong(Destinations.LOCATION_ID_ARG) ?: -1L
-                    Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
-                        LocationDetailScreen(
-                            locationId = locationId.takeIf { it >= 0L },
-                            onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
-                            onBack = { navController.popBackStack() },
-                        )
-                    }
+                    LocationDetailScreen(
+                        locationId = locationId.takeIf { it >= 0L },
+                        onEditHolding = { id -> navController.navigate(Destinations.editHolding(id)) },
+                        onBack = { navController.popBackStack() },
+                    )
                 }
                 composable(
                     route = Destinations.ADD_EDIT_HOLDING_PATTERN,
@@ -176,7 +156,6 @@ fun AppNavHost() {
                     }
                     selectedTab = tab.route
                 },
-                hazeState = hazeState,
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
