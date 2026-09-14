@@ -61,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -112,6 +113,7 @@ fun DashboardScreen(
     modifier: Modifier = Modifier,
 ) {
     val container = LocalAppContainer.current
+    val applicationContext = LocalContext.current.applicationContext
     val viewModel: DashboardViewModel = viewModel(
         factory = viewModelFactory {
             initializer {
@@ -119,6 +121,8 @@ fun DashboardScreen(
                     portfolioRepository = container.portfolioRepository,
                     priceRepository = container.priceRepository,
                     userPreferences = container.userPreferences,
+                    alertRepository = container.alertRepository,
+                    applicationContext = applicationContext,
                 )
             }
         }

@@ -1,13 +1,16 @@
 package com.preciousmetals.tracker.ui.dashboard
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.preciousmetals.tracker.data.preferences.UserPreferences
+import com.preciousmetals.tracker.data.repository.AlertRepository
 import com.preciousmetals.tracker.data.repository.PortfolioRepository
 import com.preciousmetals.tracker.data.repository.PriceRepository
 import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PortfolioSummary
+import com.preciousmetals.tracker.work.AlertChecker
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +22,8 @@ class DashboardViewModel(
     private val portfolioRepository: PortfolioRepository,
     private val priceRepository: PriceRepository,
     private val userPreferences: UserPreferences,
+    private val alertRepository: AlertRepository,
+    private val applicationContext: Context,
 ) : ViewModel() {
 
     private val isRefreshing = MutableStateFlow(false)
@@ -80,6 +85,11 @@ class DashboardViewModel(
             refreshError.value = result.exceptionOrNull()?.let {
                 it.message ?: "Impossible de récupérer les cours (vérifiez votre connexion)."
             }
+            // Whatever metals DID refresh successfully are already cached even when result is a
+            // failure (one metal failing doesn't roll back the others) — a manual in-app refresh
+            // used to only update prices without ever checking alerts at all, so a threshold
+            // crossed right here would sit unnotified until the next background refresh.
+            AlertChecker.checkAndNotify(applicationContext, alertRepository, priceRepository, userPreferences)
             isRefreshing.value = false
         }
     }
