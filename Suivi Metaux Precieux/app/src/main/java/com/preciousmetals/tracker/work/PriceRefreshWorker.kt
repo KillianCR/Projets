@@ -18,10 +18,13 @@ class PriceRefreshWorker(
     override suspend fun doWork(): Result {
         val container = (applicationContext as SuiviMetauxApp).container
 
+        // refreshAll() reports failure as soon as ANY single metal's request fails on this
+        // unofficial, rate-limit-prone feed, but every metal that DID succeed is already cached
+        // (see PriceRepository.refreshAll's own per-metal independence). Widgets and alerts must
+        // still pick up whatever came through instead of being skipped outright just because one
+        // unrelated metal failed on this run — that was silently preventing alerts from ever being
+        // checked on any run with a single flaky request.
         val refreshResult = container.priceRepository.refreshAll()
-        if (refreshResult.isFailure) {
-            return if (runAttemptCount < 3) Result.retry() else Result.failure()
-        }
 
         SpotPriceWidget.refreshAllInstances(applicationContext)
         PortfolioSummaryWidget.refreshAllInstances(applicationContext)
@@ -42,6 +45,9 @@ class PriceRefreshWorker(
             }
         }
 
+        if (refreshResult.isFailure) {
+            return if (runAttemptCount < 3) Result.retry() else Result.failure()
+        }
         return Result.success()
     }
 }
