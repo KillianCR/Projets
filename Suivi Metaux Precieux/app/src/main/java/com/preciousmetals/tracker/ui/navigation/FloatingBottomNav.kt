@@ -7,7 +7,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +48,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import com.preciousmetals.tracker.ui.theme.CardBorderDark
 import com.preciousmetals.tracker.ui.theme.CardSurfaceDark
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
@@ -55,14 +58,16 @@ import kotlin.math.roundToInt
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
-// Narrower side margins than before — closer to Instagram's own tab bar, which runs almost the
-// full width of the screen rather than sitting as a compact, clearly-inset pill.
-private val PillOuterMargin = 14.dp
+private val PillOuterMargin = 18.dp
 // Smaller than PillOuterMargin: this sits on top of navigationBarsPadding(), which now (edge-to-
 // edge) already reserves the real gesture/button nav bar inset — the old 22dp added there too made
 // the gap below the pill look oversized.
 private val PillBottomMargin = 10.dp
-private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
+private val PillHeight = 72.dp // 6dp vertical padding on each side + 60dp tab height
+// Each tab's own touch target height — also the selected highlight's height, since it's sized off
+// the same bounds. Tall relative to PillHeight so the highlight sits close to the bar's own edges
+// ("presque collé") instead of floating in the middle of it.
+private val TabTouchHeight = 60.dp
 
 /** The subtle rounded highlight behind the selected icon, Instagram-style — a soft light wash,
  * not a solid brand-colored pill. */
@@ -148,6 +153,8 @@ fun FloatingBottomNav(
             .padding(bottom = PillBottomMargin)
             .clip(CircleShape)
             .hazeEffect(state = hazeState, style = PillHazeStyle) { blurEnabled = true }
+            // Same hairline contour as the kanban / glass cards elsewhere in the app.
+            .border(BorderStroke(1.dp, CardBorderDark), CircleShape)
             .consumeTouchesReachingTheBar()
             .onGloballyPositioned { rootCoordinates = it },
     ) {
@@ -172,7 +179,7 @@ fun FloatingBottomNav(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 16.dp),
+                .padding(horizontal = 12.dp, vertical = (PillHeight - TabTouchHeight) / 2),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -249,14 +256,14 @@ private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit, modi
 
     Row(
         modifier = modifier
-            .height(40.dp)
+            .height(TabTouchHeight)
             .clip(CircleShape)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(26.dp).scale(iconScale)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(30.dp).scale(iconScale)) {
             Icon(imageVector = tab.icon, contentDescription = tab.label, tint = contentColor)
         }
     }
