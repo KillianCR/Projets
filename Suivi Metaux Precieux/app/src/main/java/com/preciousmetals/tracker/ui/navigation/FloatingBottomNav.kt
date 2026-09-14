@@ -188,7 +188,10 @@ fun FloatingBottomNav(
                     tab = tab,
                     selected = isSelected(tab),
                     onClick = { onSelect(tab) },
-                    modifier = Modifier.onGloballyPositioned { coords ->
+                    // Each tab claims an equal share of the bar's width (rather than wrapping just
+                    // the icon) so the selected highlight reads as a wide slab close to the edges
+                    // of its slot, not a small circle hugging the icon.
+                    modifier = Modifier.weight(1f).onGloballyPositioned { coords ->
                         val root = rootCoordinates ?: return@onGloballyPositioned
                         val position = root.localPositionOf(coords, Offset.Zero)
                         itemBounds[index] = Rect(offset = position, size = coords.size.toSize())
@@ -237,9 +240,11 @@ fun bottomNavContentPadding(): Dp = bottomNavClearance(gap = 16.dp)
 fun bottomNavOverlayPadding(): Dp = bottomNavClearance(gap = 0.dp)
 
 /**
- * A tab as a plain icon, Instagram-style — no label, every tab the same width, so the shared
- * sliding highlight behind it (drawn by the parent, see [FloatingBottomNav]) settles as an even
- * square under whichever icon is selected. Only the icon's color and scale animate on selection.
+ * A tab as a plain icon, Instagram-style — no label, each tab an equal share of the bar's width
+ * (via a `weight(1f)` the caller adds to the modifier), so the shared sliding highlight behind it
+ * (drawn by the parent, see [FloatingBottomNav]) settles as a wide slab close to the edges of its
+ * slot, not a small circle hugging just the icon. Only the icon's color and scale animate on
+ * selection.
  */
 @Composable
 private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
