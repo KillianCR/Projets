@@ -63,11 +63,12 @@ private val PillOuterMargin = 26.dp
 // edge) already reserves the real gesture/button nav bar inset — the old 22dp added there too made
 // the gap below the pill look oversized.
 private val PillBottomMargin = 10.dp
-private val PillHeight = 72.dp // 6dp vertical padding on each side + 60dp tab height
+// 72dp -> 56dp: a bit over 20% shorter top-to-bottom.
+private val PillHeight = 56.dp // 6dp vertical padding on each side + 44dp tab height
 // Each tab's own touch target height — also the selected highlight's height, since it's sized off
 // the same bounds. Tall relative to PillHeight so the highlight sits close to the bar's own edges
 // ("presque collé") instead of floating in the middle of it.
-private val TabTouchHeight = 60.dp
+private val TabTouchHeight = 44.dp
 
 /** The subtle rounded highlight behind the selected icon, Instagram-style — a soft light wash,
  * not a solid brand-colored pill. */
