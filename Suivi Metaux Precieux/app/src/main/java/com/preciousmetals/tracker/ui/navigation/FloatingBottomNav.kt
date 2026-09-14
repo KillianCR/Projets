@@ -62,6 +62,10 @@ import kotlin.math.roundToInt
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
 private val PillOuterMargin = 22.dp
+// Smaller than PillOuterMargin: this sits on top of navigationBarsPadding(), which now (edge-to-
+// edge) already reserves the real gesture/button nav bar inset — the old 22dp added there too made
+// the gap below the pill look oversized.
+private val PillBottomMargin = 10.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
 
 /** Strong, real backdrop blur (not just a flat translucent fill) behind the pill bar, tinted with
@@ -141,7 +145,7 @@ fun FloatingBottomNav(
             .fillMaxWidth()
             .navigationBarsPadding()
             .padding(horizontal = PillOuterMargin)
-            .padding(bottom = PillOuterMargin)
+            .padding(bottom = PillBottomMargin)
             .clip(CircleShape)
             .hazeEffect(state = hazeState, style = PillHazeStyle) { blurEnabled = true }
             .border(BorderStroke(1.dp, CardBorderDark), CircleShape)
@@ -212,7 +216,7 @@ private fun Modifier.consumeTouchesReachingTheBar(): Modifier = this.pointerInpu
 @Composable
 private fun bottomNavClearance(gap: Dp): Dp {
     val navigationBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    return navigationBarInset + PillOuterMargin + PillHeight + gap
+    return navigationBarInset + PillBottomMargin + PillHeight + gap
 }
 
 /** Bottom padding a scrollable screen needs so its last item can fully clear the floating pill nav. */
