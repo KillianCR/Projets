@@ -7,9 +7,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,9 +21,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -46,12 +43,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import com.preciousmetals.tracker.ui.theme.CardBorderDark
 import com.preciousmetals.tracker.ui.theme.CardSurfaceDark
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
@@ -61,12 +56,18 @@ import kotlin.math.roundToInt
 
 data class BottomTab(val route: String, val label: String, val icon: ImageVector)
 
-private val PillOuterMargin = 22.dp
+// Narrower side margins than before — closer to Instagram's own tab bar, which runs almost the
+// full width of the screen rather than sitting as a compact, clearly-inset pill.
+private val PillOuterMargin = 14.dp
 // Smaller than PillOuterMargin: this sits on top of navigationBarsPadding(), which now (edge-to-
 // edge) already reserves the real gesture/button nav bar inset — the old 22dp added there too made
 // the gap below the pill look oversized.
 private val PillBottomMargin = 10.dp
 private val PillHeight = 72.dp // 16dp vertical padding on each side + 40dp tab height
+
+/** The subtle rounded highlight behind the selected icon, Instagram-style — a soft light wash,
+ * not a solid brand-colored pill. */
+private val SelectedTabHighlight = Color.White.copy(alpha = 0.14f)
 
 /** Strong, real backdrop blur (not just a flat translucent fill) behind the pill bar, tinted with
  * the same glass-card color as every other card in the app. backgroundColor is set explicitly
@@ -95,8 +96,8 @@ private val PillAnimationSpec: AnimationSpec<Float> = PillTweenSpec
  * full-width strip and dim/hide whatever screen content sits behind it), so screens scroll
  * edge-to-edge underneath it; see [bottomNavContentPadding] for the matching scroll clearance.
  *
- * The colored pill is a single element, drawn once behind the [Row] of tabs (not owned by any
- * individual tab). Each tab's real on-screen bounds are measured every layout pass via
+ * The selected highlight is a single element, drawn once behind the [Row] of tabs (not owned by
+ * any individual tab). Each tab's real on-screen bounds are measured every layout pass via
  * [onGloballyPositioned] and kept in [itemBounds]; the pill's target offset/width are read from
  * the currently-selected tab's bounds and animated with [animateFloatAsState] in raw pixels.
  *
@@ -148,7 +149,6 @@ fun FloatingBottomNav(
             .padding(bottom = PillBottomMargin)
             .clip(CircleShape)
             .hazeEffect(state = hazeState, style = PillHazeStyle) { blurEnabled = true }
-            .border(BorderStroke(1.dp, CardBorderDark), CircleShape)
             .consumeTouchesReachingTheBar()
             .onGloballyPositioned { rootCoordinates = it },
     ) {
@@ -163,14 +163,14 @@ fun FloatingBottomNav(
                             placeable.placeRelative(animatedX.value.roundToInt(), selectedBounds.top.roundToInt())
                         }
                     }
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(SelectedTabHighlight),
             )
         }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 12.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -228,15 +228,14 @@ fun bottomNavContentPadding(): Dp = bottomNavClearance(gap = 16.dp)
 fun bottomNavOverlayPadding(): Dp = bottomNavClearance(gap = 0.dp)
 
 /**
- * A tab's icon (plus label once selected) with no background of its own — the shared sliding pill
- * behind it is drawn by the parent (see [FloatingBottomNav]). Layout here (padding, label
- * presence) changes instantly on selection; only the icon's color and scale get their own quick,
- * independent micro-animation, decoupled from the pill's slide.
+ * A tab as a plain icon, Instagram-style — no label, every tab the same width, so the shared
+ * sliding highlight behind it (drawn by the parent, see [FloatingBottomNav]) settles as an even
+ * square under whichever icon is selected. Only the icon's color and scale animate on selection.
  */
 @Composable
 private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val contentColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White.copy(alpha = 0.33f),
+        targetValue = if (selected) Color.White else Color.White.copy(alpha = 0.45f),
         animationSpec = tween(200),
         label = "navPillContentColor",
     )
@@ -251,22 +250,12 @@ private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit, modi
             .height(40.dp)
             .clip(CircleShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = if (selected) 16.dp else 10.dp),
+            .padding(horizontal = 14.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(20.dp).scale(iconScale)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(22.dp).scale(iconScale)) {
             Icon(imageVector = tab.icon, contentDescription = tab.label, tint = contentColor)
-        }
-        if (selected) {
-            Text(
-                text = tab.label,
-                color = contentColor,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 6.dp),
-            )
         }
     }
 }
