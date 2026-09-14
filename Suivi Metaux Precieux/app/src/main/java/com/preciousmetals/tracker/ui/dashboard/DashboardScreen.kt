@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Check
@@ -107,6 +108,7 @@ fun DashboardScreen(
     onEditHolding: (Long) -> Unit,
     onMetalClick: (Metal) -> Unit,
     onViewStorageLocations: () -> Unit,
+    onViewPortfolioHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val container = LocalAppContainer.current
@@ -169,6 +171,7 @@ fun DashboardScreen(
                     onEditHolding = onEditHolding,
                     onMetalClick = onMetalClick,
                     onViewStorageLocations = onViewStorageLocations,
+                    onViewPortfolioHistory = onViewPortfolioHistory,
                     modifier = Modifier.padding(padding),
                 )
             }
@@ -209,6 +212,7 @@ private fun DashboardContent(
     onEditHolding: (Long) -> Unit,
     onMetalClick: (Metal) -> Unit,
     onViewStorageLocations: () -> Unit,
+    onViewPortfolioHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val summary = state.summary
@@ -275,6 +279,7 @@ private fun DashboardContent(
         item {
             QuickActionsRow(
                 onAddHolding = onAddHolding,
+                onViewPortfolioHistory = onViewPortfolioHistory,
                 onViewStorageLocations = onViewStorageLocations,
             )
         }
@@ -693,13 +698,24 @@ private fun BalanceHero(totalUsd: Double, money: (Double) -> String, amountsHidd
 }
 
 @Composable
-private fun QuickActionsRow(onAddHolding: () -> Unit, onViewStorageLocations: () -> Unit) {
+private fun QuickActionsRow(
+    onAddHolding: () -> Unit,
+    onViewPortfolioHistory: () -> Unit,
+    onViewStorageLocations: () -> Unit,
+) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         QuickActionButton(
             icon = Icons.Outlined.Add,
             label = "Ajouter",
             onClick = onAddHolding,
             isPrimary = true,
+            modifier = Modifier.weight(1f),
+        )
+        QuickActionButton(
+            icon = Icons.AutoMirrored.Outlined.ShowChart,
+            label = "Historique",
+            onClick = onViewPortfolioHistory,
+            isPrimary = false,
             modifier = Modifier.weight(1f),
         )
         QuickActionButton(

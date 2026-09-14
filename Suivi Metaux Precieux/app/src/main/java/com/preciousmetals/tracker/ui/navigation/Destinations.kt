@@ -24,6 +24,10 @@ object Destinations {
     // the first location the screen finds — see LocationDetailViewModel.
     const val LOCATION_DETAIL_PATTERN = "location?locationId={$LOCATION_ID_ARG}"
 
+    // No argument — always the whole portfolio's value over time, reached from the "Historique"
+    // quick action between "Ajouter" and "Stockage" on the portfolio tab.
+    const val PORTFOLIO_HISTORY = "portfolioHistory"
+
     fun addHolding(): String = "holding"
     fun editHolding(holdingId: Long): String = "holding?holdingId=$holdingId"
     fun historyForMetal(metal: Metal): String = "history/${metal.name}"

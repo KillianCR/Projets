@@ -39,6 +39,7 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.ui.addholding.AddEditHoldingScreen
 import com.preciousmetals.tracker.ui.alerts.AlertsScreen
 import com.preciousmetals.tracker.ui.dashboard.DashboardScreen
+import com.preciousmetals.tracker.ui.history.PortfolioHistoryScreen
 import com.preciousmetals.tracker.ui.history.PriceHistoryScreen
 import com.preciousmetals.tracker.ui.locationdetail.LocationDetailScreen
 import com.preciousmetals.tracker.ui.settings.SettingsScreen
@@ -62,7 +63,8 @@ fun AppNavHost() {
     val currentRoute = backStackEntry?.destination?.route
     val showBottomBar = currentRoute == Destinations.MAIN ||
         currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN ||
-        currentRoute == Destinations.LOCATION_DETAIL_PATTERN
+        currentRoute == Destinations.LOCATION_DETAIL_PATTERN ||
+        currentRoute == Destinations.PORTFOLIO_HISTORY
 
     // Which of the 5 tabs is showing, inside the single Destinations.MAIN destination — switching
     // tabs is just flipping this, never a real NavHost transaction (see TabHost doc for why).
@@ -103,7 +105,11 @@ fun AppNavHost() {
                             onMetalClick = { metal -> navController.navigate(Destinations.historyForMetal(metal)) },
                             onLocationClick = { locationId -> navController.navigate(Destinations.locationDetail(locationId)) },
                             onViewStorageLocations = { navController.navigate(Destinations.locationDetail()) },
+                            onViewPortfolioHistory = { navController.navigate(Destinations.PORTFOLIO_HISTORY) },
                         )
+                    }
+                    composable(Destinations.PORTFOLIO_HISTORY) {
+                        PortfolioHistoryScreen(onBack = { navController.popBackStack() })
                     }
                     composable(
                         route = Destinations.HISTORY_FOR_METAL_PATTERN,
@@ -158,18 +164,22 @@ fun AppNavHost() {
                     // them first keeps the pill pinned to the one tab that route belongs to,
                     // instead of ALSO matching selectedTab's now-stale tab underneath it.
                     // Lieux de stockage counts as Portefeuille, not Outils — it's reached from,
-                    // and returns to, the portfolio now.
+                    // and returns to, the portfolio now. Historique du portefeuille is the same:
+                    // reached from the portfolio's own quick action, pinned there too.
                     when (currentRoute) {
                         Destinations.HISTORY_FOR_METAL_PATTERN -> tab.route == Destinations.HISTORY
-                        Destinations.LOCATION_DETAIL_PATTERN -> tab.route == Destinations.DASHBOARD
+                        Destinations.LOCATION_DETAIL_PATTERN,
+                        Destinations.PORTFOLIO_HISTORY -> tab.route == Destinations.DASHBOARD
                         else -> selectedTab == tab.route
                     }
                 },
                 onSelect = { tab ->
                     // From an argument-route detail screen (per-metal history, a storage
-                    // location's detail) pushed on top of MAIN, pop back to it first.
+                    // location's detail, the portfolio's own value history) pushed on top of
+                    // MAIN, pop back to it first.
                     if (currentRoute == Destinations.HISTORY_FOR_METAL_PATTERN ||
-                        currentRoute == Destinations.LOCATION_DETAIL_PATTERN
+                        currentRoute == Destinations.LOCATION_DETAIL_PATTERN ||
+                        currentRoute == Destinations.PORTFOLIO_HISTORY
                     ) {
                         navController.popBackStack()
                     }
@@ -202,6 +212,7 @@ private fun TabHost(
     onMetalClick: (Metal) -> Unit,
     onLocationClick: (Long) -> Unit,
     onViewStorageLocations: () -> Unit,
+    onViewPortfolioHistory: () -> Unit,
 ) {
     val saveableStateHolder = rememberSaveableStateHolder()
     Box(modifier = Modifier.fillMaxSize()) {
@@ -221,6 +232,7 @@ private fun TabHost(
                             onEditHolding = onEditHolding,
                             onMetalClick = onMetalClick,
                             onViewStorageLocations = onViewStorageLocations,
+                            onViewPortfolioHistory = onViewPortfolioHistory,
                         )
                         Destinations.HISTORY -> PriceHistoryScreen()
                         Destinations.ALERTS -> AlertsScreen()
