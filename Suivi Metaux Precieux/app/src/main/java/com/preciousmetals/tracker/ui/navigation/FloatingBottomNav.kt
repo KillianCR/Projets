@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -163,7 +162,10 @@ fun FloatingBottomNav(
                             placeable.placeRelative(animatedX.value.roundToInt(), selectedBounds.top.roundToInt())
                         }
                     }
-                    .clip(RoundedCornerShape(14.dp))
+                    // Same shape as the bar itself (CircleShape), not an independent radius — on
+                    // a box this small it rounds all the way, matching the bar's own fully-rounded
+                    // ends.
+                    .clip(CircleShape)
                     .background(SelectedTabHighlight),
             )
         }
@@ -254,7 +256,7 @@ private fun NavPill(tab: BottomTab, selected: Boolean, onClick: () -> Unit, modi
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(22.dp).scale(iconScale)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(26.dp).scale(iconScale)) {
             Icon(imageVector = tab.icon, contentDescription = tab.label, tint = contentColor)
         }
     }
