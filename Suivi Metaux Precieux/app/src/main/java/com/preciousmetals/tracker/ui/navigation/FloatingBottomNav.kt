@@ -68,7 +68,7 @@ private val PillHeight = 56.dp
 // The one gap used on every side between the bar's own edge and each tab's touch/highlight area —
 // same value horizontally and vertically, so the selected pastille hugs the bar identically on
 // all four sides instead of reading closer on the sides than top/bottom (or vice versa).
-private val PillContentInset = 4.dp
+private val PillContentInset = 2.dp
 // Each tab's own touch target height — also the selected highlight's height, since it's sized off
 // the same bounds. Derived from PillHeight so the vertical inset above always equals
 // PillContentInset.
