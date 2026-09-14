@@ -71,7 +71,6 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
                 AlertsViewModel(
                     alertRepository = container.alertRepository,
                     priceRepository = container.priceRepository,
-                    userPreferences = container.userPreferences,
                 )
             }
         }
@@ -122,8 +121,8 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
                     AlertRow(
                         alert = alert,
                         currencyLabel = formatMoney(
-                            (alert.thresholdUsdPerGram * alert.metal.smallUnitGrams).usdTo(state.currency, state.usdToEurRate),
-                            state.currency,
+                            (alert.thresholdUsdPerGram * alert.metal.smallUnitGrams).usdTo(alert.currency, state.usdToEurRate),
+                            alert.currency,
                         ) + "/" + (if (alert.metal.smallUnitLabel == "kilo") "kg" else "g"),
                         onToggle = { viewModel.toggleAlert(alert) },
                         onDelete = { viewModel.deleteAlert(alert) },
@@ -136,11 +135,10 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
     if (showAddDialog) {
         AddAlertDialog(
             livePricesUsdPerGram = state.livePricesUsdPerGram,
-            currency = state.currency,
             usdToEurRate = state.usdToEurRate,
             onDismiss = { showAddDialog = false },
-            onConfirm = { metal, direction, percent ->
-                viewModel.addAlertByPercent(metal, direction, percent)
+            onConfirm = { metal, direction, percent, currency ->
+                viewModel.addAlertByPercent(metal, direction, percent, currency)
                 showAddDialog = false
             },
         )
@@ -182,13 +180,13 @@ private val AlertPercentPresets = listOf(5, 10, 15, 20, 30, 40, 50)
 @Composable
 private fun AddAlertDialog(
     livePricesUsdPerGram: Map<Metal, Double?>,
-    currency: Currency,
     usdToEurRate: Double,
     onDismiss: () -> Unit,
-    onConfirm: (Metal, AlertDirection, Double) -> Unit,
+    onConfirm: (Metal, AlertDirection, Double, Currency) -> Unit,
 ) {
     var metal by remember { mutableStateOf(Metal.GOLD) }
     var direction by remember { mutableStateOf(AlertDirection.ABOVE) }
+    var currency by remember { mutableStateOf(Currency.EUR) }
     var percentText by remember { mutableStateOf(AlertPercentPresets.first().toString()) }
 
     val percent = percentText.replace(',', '.').toDoubleOrNull()
@@ -220,6 +218,17 @@ private fun AddAlertDialog(
                     selected = direction,
                     onSelect = { direction = it },
                     modifier = Modifier.padding(top = 12.dp),
+                )
+                Text(
+                    "Devise de l'alerte",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextMuted44Dark,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                )
+                GlassSegmentedRow(
+                    options = listOf(Currency.EUR to "EUR", Currency.USD to "USD"),
+                    selected = currency,
+                    onSelect = { currency = it },
                 )
                 Text(
                     "Seuil : variation par rapport au cours actuel",
@@ -276,7 +285,7 @@ private fun AddAlertDialog(
             TextButton(
                 onClick = {
                     if (percent != null && percent > 0.0 && currentPriceUsdPerGram != null) {
-                        onConfirm(metal, direction, percent)
+                        onConfirm(metal, direction, percent, currency)
                     }
                 },
             ) { Text("Créer") }

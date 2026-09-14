@@ -6,6 +6,7 @@ import com.preciousmetals.tracker.data.export.DataExporter
 import com.preciousmetals.tracker.data.local.AppDatabase
 import com.preciousmetals.tracker.data.local.MIGRATION_1_2
 import com.preciousmetals.tracker.data.local.MIGRATION_2_3
+import com.preciousmetals.tracker.data.local.MIGRATION_3_4
 import com.preciousmetals.tracker.data.preferences.UserPreferences
 import com.preciousmetals.tracker.data.remote.NetworkModule
 import com.preciousmetals.tracker.data.repository.AlertRepository
@@ -25,7 +26,7 @@ class AppContainer(context: Context) {
         AppDatabase::class.java,
         AppDatabase.DATABASE_NAME,
     )
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
         .build()
 
     val userPreferences = UserPreferences(appContext)

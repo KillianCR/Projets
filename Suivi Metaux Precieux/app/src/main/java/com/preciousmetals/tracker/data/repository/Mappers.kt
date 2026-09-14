@@ -6,6 +6,7 @@ import com.preciousmetals.tracker.data.local.entity.HoldingEntity
 import com.preciousmetals.tracker.data.local.entity.PriceAlertEntity
 import com.preciousmetals.tracker.data.local.entity.StorageLocationEntity
 import com.preciousmetals.tracker.domain.model.AlertDirection
+import com.preciousmetals.tracker.domain.model.Currency
 import com.preciousmetals.tracker.domain.model.Goal
 import com.preciousmetals.tracker.domain.model.GoalTargetType
 import com.preciousmetals.tracker.domain.model.Holding
@@ -95,6 +96,7 @@ fun PriceAlertEntity.toDomain(): PriceAlert = PriceAlert(
     metal = Metal.valueOf(metal),
     direction = AlertDirection.valueOf(direction),
     thresholdUsdPerGram = thresholdUsdPerGram,
+    currency = Currency.valueOf(currency),
     enabled = enabled,
     createdAtEpochMillis = createdAtEpochMillis,
     lastTriggeredAtEpochMillis = lastTriggeredAtEpochMillis,
@@ -105,6 +107,7 @@ fun PriceAlert.toEntity(): PriceAlertEntity = PriceAlertEntity(
     metal = metal.name,
     direction = direction.name,
     thresholdUsdPerGram = thresholdUsdPerGram,
+    currency = currency.name,
     enabled = enabled,
     createdAtEpochMillis = createdAtEpochMillis,
     lastTriggeredAtEpochMillis = lastTriggeredAtEpochMillis,

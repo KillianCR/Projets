@@ -24,7 +24,7 @@ import com.preciousmetals.tracker.data.local.entity.StorageLocationEntity
         HoldingDocumentEntity::class,
         GoalEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {

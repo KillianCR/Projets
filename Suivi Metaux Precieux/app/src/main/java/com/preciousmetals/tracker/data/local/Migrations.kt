@@ -75,3 +75,13 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         )
     }
 }
+
+/**
+ * Adds a per-alert display currency, independent of the app's global display currency setting —
+ * existing alerts default to EUR, matching the new "Nouvelle alerte" dialog's own default.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE price_alerts ADD COLUMN currency TEXT NOT NULL DEFAULT 'EUR'")
+    }
+}
