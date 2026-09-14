@@ -133,6 +133,7 @@ fun PortfolioHistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                                 lineColor = color,
                                 valueFormatter = { formatMoney(it, current.currency) },
                                 modifier = Modifier.padding(top = 12.dp),
+                                showGainAmount = true,
                             )
                         }
                     }

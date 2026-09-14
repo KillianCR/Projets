@@ -3,9 +3,11 @@ package com.preciousmetals.tracker.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,6 +46,11 @@ data class ChartPoint(val date: LocalDate, val value: Double)
  * A real interactive price chart: smooth line, gradient area fill, recessive gridlines, a
  * few axis labels, and a drag/tap crosshair + tooltip (the dataviz skill's "hover layer, by
  * default" — the only form that skips it is a bare stat tile).
+ *
+ * The tooltip always shows the selected point's percent change versus [points]' first entry (the
+ * start of whatever range is currently displayed). When [showGainAmount] is also set, it adds the
+ * absolute gain/loss (also versus that same first entry, run through [valueFormatter]) — used by
+ * the portfolio value history, not the per-metal spot price chart.
  */
 @Composable
 fun AreaChartView(
@@ -51,6 +58,7 @@ fun AreaChartView(
     lineColor: Color,
     valueFormatter: (Double) -> String,
     modifier: Modifier = Modifier,
+    showGainAmount: Boolean = false,
 ) {
     if (points.size < 2) {
         Box(
@@ -190,9 +198,24 @@ fun AreaChartView(
         }
 
         selectedIndex?.let { index ->
+            val referenceValue = points.first().value
+            val point = points[index]
+            val percentChange = if (referenceValue != 0.0) {
+                ((point.value - referenceValue) / referenceValue) * 100.0
+            } else {
+                null
+            }
+            val gainAmountText = if (showGainAmount) {
+                val gain = point.value - referenceValue
+                (if (gain >= 0) "+" else "") + valueFormatter(gain)
+            } else {
+                null
+            }
             ChartTooltip(
-                point = points[index],
-                text = valueFormatter(points[index].value),
+                point = point,
+                text = valueFormatter(point.value),
+                percentChange = percentChange,
+                gainAmountText = gainAmountText,
                 pointCount = points.size,
                 index = index,
                 lineColor = lineColor,
@@ -207,6 +230,8 @@ fun AreaChartView(
 private fun BoxScope.ChartTooltip(
     point: ChartPoint,
     text: String,
+    percentChange: Double?,
+    gainAmountText: String?,
     pointCount: Int,
     index: Int,
     lineColor: Color,
@@ -226,8 +251,26 @@ private fun BoxScope.ChartTooltip(
         shadowElevation = 4.dp,
     ) {
         Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
-            Text(text, color = onSurfaceColor, style = MaterialTheme.typography.labelLarge)
-            Text(point.date.formatFr(), color = lineColor, style = MaterialTheme.typography.labelSmall)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(text, color = onSurfaceColor, style = MaterialTheme.typography.labelLarge)
+                if (percentChange != null) {
+                    PercentPill(percent = percentChange)
+                }
+            }
+            if (gainAmountText != null) {
+                Text(
+                    gainAmountText,
+                    color = onSurfaceColor,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+            Text(
+                point.date.formatFr(),
+                color = lineColor,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(top = 2.dp),
+            )
         }
     }
 }
