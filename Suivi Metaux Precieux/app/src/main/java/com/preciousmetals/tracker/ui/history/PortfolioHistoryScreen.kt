@@ -128,7 +128,15 @@ fun PortfolioHistoryScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
                             AreaChartView(
                                 points = current.history.map {
-                                    ChartPoint(it.date, it.totalValueUsd.usdTo(current.currency, current.usdToEurRate))
+                                    ChartPoint(
+                                        date = it.date,
+                                        value = it.totalValueUsd.usdTo(current.currency, current.usdToEurRate),
+                                        // Gain/loss per day is measured against what was actually
+                                        // paid for the holdings owned that day, not the chart's own
+                                        // first day — otherwise adding a holding mid-range would
+                                        // read as an instant price gain equal to its whole value.
+                                        referenceValue = it.totalCostBasisUsd.usdTo(current.currency, current.usdToEurRate),
+                                    )
                                 },
                                 lineColor = color,
                                 valueFormatter = { formatMoney(it, current.currency) },

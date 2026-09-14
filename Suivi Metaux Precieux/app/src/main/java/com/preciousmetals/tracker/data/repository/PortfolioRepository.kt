@@ -82,8 +82,15 @@ class PortfolioRepository(
      * series in [historyByMetal] is already sorted ascending by date (see
      * [PriceRepository.observeHistoryUsdPerGram]), so a single advancing index per metal is enough
      * to track "latest known price at or before the current date" while scanning dates in order.
+     *
+     * [PortfolioValuePoint.totalCostBasisUsd] is what turns the value series into a real
+     * performance chart: each holding's cost basis is fixed at purchase (same manual-price-or-
+     * historical-spot logic as [observePortfolio]) and computed once per holding, not once per day
+     * — only which holdings have been bought yet changes as the date advances, not what they cost.
+     * Without this, a day where a holding is simply added would otherwise read as a price gain
+     * equal to its whole value, since there'd be nothing to net it against.
      */
-    private fun computeValueHistory(
+    private suspend fun computeValueHistory(
         holdings: List<Holding>,
         historyByMetal: Map<Metal, List<PricePoint>>,
     ): List<PortfolioValuePoint> {
@@ -92,6 +99,14 @@ class PortfolioRepository(
         val relevantHistory = historyByMetal.filterKeys { it in heldMetals }
         val allDates = relevantHistory.values.flatMapTo(sortedSetOf()) { series -> series.map { it.date } }
         if (allDates.isEmpty()) return emptyList()
+
+        val costBasisUsdByHolding = holdings.associateWith { holding ->
+            holding.pricePaidUsd ?: run {
+                val historicalPricePerGram = priceRepository
+                    .getNearestHistoricalPriceUsdPerGram(holding.metal, holding.purchaseDate)
+                (historicalPricePerGram ?: 0.0) * holding.grams
+            }
+        }
 
         val nextIndex = HashMap<Metal, Int>(heldMetals.size)
         val lastKnownPriceUsdPerGram = HashMap<Metal, Double>(heldMetals.size)
@@ -108,15 +123,17 @@ class PortfolioRepository(
             }
 
             var totalUsd = 0.0
+            var totalCostBasisUsd = 0.0
             for (holding in holdings) {
                 if (holding.purchaseDate.isAfter(date)) continue
                 val price = lastKnownPriceUsdPerGram[holding.metal] ?: continue
                 totalUsd += price * holding.grams
+                totalCostBasisUsd += costBasisUsdByHolding.getValue(holding)
             }
-            points += PortfolioValuePoint(date, totalUsd)
+            points += PortfolioValuePoint(date, totalUsd, totalCostBasisUsd)
         }
         return points
     }
 }
 
-data class PortfolioValuePoint(val date: LocalDate, val totalValueUsd: Double)
+data class PortfolioValuePoint(val date: LocalDate, val totalValueUsd: Double, val totalCostBasisUsd: Double)

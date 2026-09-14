@@ -40,17 +40,24 @@ import com.preciousmetals.tracker.util.formatFr
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
-data class ChartPoint(val date: LocalDate, val value: Double)
+/**
+ * [referenceValue], when set, is what the tooltip's percent/gain are measured against for THIS
+ * point specifically — e.g. the portfolio's own cost basis on that exact day, so a deposit doesn't
+ * read as a price gain. Left null (the default), the chart falls back to comparing every point
+ * against [points]' first entry instead — "performance since the start of the displayed range",
+ * which is what a plain spot-price series wants.
+ */
+data class ChartPoint(val date: LocalDate, val value: Double, val referenceValue: Double? = null)
 
 /**
  * A real interactive price chart: smooth line, gradient area fill, recessive gridlines, a
  * few axis labels, and a drag/tap crosshair + tooltip (the dataviz skill's "hover layer, by
  * default" — the only form that skips it is a bare stat tile).
  *
- * The tooltip always shows the selected point's percent change versus [points]' first entry (the
- * start of whatever range is currently displayed). When [showGainAmount] is also set, it adds the
- * absolute gain/loss (also versus that same first entry, run through [valueFormatter]) — used by
- * the portfolio value history, not the per-metal spot price chart.
+ * The tooltip shows the selected point's percent change and, when [showGainAmount] is set (used by
+ * the portfolio value history, not the per-metal spot price chart), its absolute gain/loss too —
+ * both measured against that point's own [ChartPoint.referenceValue] when it has one, or against
+ * [points]' first entry otherwise.
  */
 @Composable
 fun AreaChartView(
@@ -198,8 +205,8 @@ fun AreaChartView(
         }
 
         selectedIndex?.let { index ->
-            val referenceValue = points.first().value
             val point = points[index]
+            val referenceValue = point.referenceValue ?: points.first().value
             val percentChange = if (referenceValue != 0.0) {
                 ((point.value - referenceValue) / referenceValue) * 100.0
             } else {
