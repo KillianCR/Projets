@@ -2,6 +2,8 @@ package com.preciousmetals.tracker.ui.components
 
 import android.os.Build
 import android.view.WindowManager
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
@@ -14,6 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import com.preciousmetals.tracker.ui.theme.CardBorderDark
 import com.preciousmetals.tracker.ui.theme.CardSurfaceDark
 
 /**
@@ -38,9 +41,11 @@ private fun DialogBlurBehind(radius: Dp = 48.dp) {
 }
 
 /**
- * The app's [AlertDialog], restyled to match the floating pill nav: the same glass-card fill
- * ([CardSurfaceDark]) and corner radius as every kanban card, over a blurred view of the real
- * screen behind it instead of the plain dim scrim.
+ * The app's [AlertDialog], restyled to match the floating pill nav and every kanban card: the same
+ * glass-card fill ([CardSurfaceDark]), corner radius and hairline contour ([CardBorderDark]), over
+ * a blurred view of the real screen behind it instead of the plain dim scrim. The border is applied
+ * via [modifier] rather than a `border` parameter on the underlying [AlertDialog] — Material3's
+ * AlertDialog doesn't expose one.
  */
 @Composable
 fun GlassAlertDialog(
@@ -63,7 +68,7 @@ fun GlassAlertDialog(
             DialogBlurBehind()
             confirmButton()
         },
-        modifier = modifier,
+        modifier = modifier.border(BorderStroke(1.dp, CardBorderDark), shape),
         dismissButton = dismissButton,
         icon = icon,
         title = title,
