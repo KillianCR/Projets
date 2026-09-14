@@ -41,6 +41,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -143,6 +145,7 @@ fun FloatingBottomNav(
             .clip(CircleShape)
             .hazeEffect(state = hazeState, style = PillHazeStyle) { blurEnabled = true }
             .border(BorderStroke(1.dp, CardBorderDark), CircleShape)
+            .consumeTouchesReachingTheBar()
             .onGloballyPositioned { rootCoordinates = it },
     ) {
         if (selectedBounds.width > 0f) {
@@ -179,6 +182,25 @@ fun FloatingBottomNav(
                     },
                 )
             }
+        }
+    }
+}
+
+/**
+ * Swallows every touch that lands on the bar itself, so a tap between two tabs (or on the bar's
+ * padding) can't fall through to whatever is scrolled underneath the floating pill — a holding
+ * card, a button — and trigger it. Consuming on [PointerEventPass.Main] is what makes the tabs
+ * still work: that pass runs children-first, so each tab's own `clickable` sees (and handles) the
+ * touch before this reaches it. Consuming on Initial, like a hidden tab does, would run parent-
+ * first and swallow the tabs' own taps too.
+ *
+ * Only the pill's own bounds are covered — the modifier sits after the outer padding — so the
+ * margins around the floating bar stay pass-through, as they look.
+ */
+private fun Modifier.consumeTouchesReachingTheBar(): Modifier = this.pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            awaitPointerEvent(PointerEventPass.Main).changes.forEach { it.consume() }
         }
     }
 }
