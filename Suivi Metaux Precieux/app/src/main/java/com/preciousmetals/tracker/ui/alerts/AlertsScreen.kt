@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -82,6 +83,10 @@ fun AlertsScreen(modifier: Modifier = Modifier) {
         modifier = modifier,
         containerColor = Color.Transparent,
         topBar = { CompactTopBar(title = "Alertes de cours") },
+        // CompactTopBar and bottomNavContentPadding()/bottomNavOverlayPadding() below already own
+        // the top/bottom system-bar insets; leaving Scaffold's own default would double them up
+        // under edge-to-edge.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },

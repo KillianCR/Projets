@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -79,6 +80,9 @@ fun PriceHistoryScreen(modifier: Modifier = Modifier, initialMetal: Metal? = nul
         modifier = modifier,
         containerColor = Color.Transparent,
         topBar = { CompactTopBar(title = "Historique des cours") },
+        // CompactTopBar and bottomNavContentPadding() below already own the top/bottom system-bar
+        // insets; leaving Scaffold's own default would double them up under edge-to-edge.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
         val scrollState = rememberScrollState()
         Column(

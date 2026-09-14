@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -28,6 +29,11 @@ import com.preciousmetals.tracker.ui.theme.SuiviMetauxTheme
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Draws behind both system bars so the ember gradient reaches the true screen edges
+        // instead of the OS painting an opaque strip (in the theme's flat windowBackground color)
+        // below the floating pill nav. Every screen owns its own inset handling from here — see
+        // the contentWindowInsets overrides on each Scaffold.
+        enableEdgeToEdge()
         val container = (application as SuiviMetauxApp).container
 
         setContent {

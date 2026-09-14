@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -79,6 +80,11 @@ fun AppNavHost() {
         EmberGradientBackground(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
             Scaffold(
                 containerColor = Color.Transparent,
+                // Purely a layout container here — every destination it hosts already handles its
+                // own system-bar insets (CompactTopBar's statusBarsPadding, bottomNavContentPadding /
+                // bottomNavOverlayPadding for the floating pill's clearance), so this must not add
+                // any of its own or those would double up now that edge-to-edge is enabled.
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
             ) { innerPadding ->
                 NavHost(
                     navController = navController,
