@@ -16,7 +16,6 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +46,7 @@ import com.preciousmetals.tracker.domain.model.StorageLocation
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.AddStorageLocationDialog
 import com.preciousmetals.tracker.ui.components.CompactTopBar
+import com.preciousmetals.tracker.ui.components.GlassAlertDialog
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
@@ -55,7 +55,6 @@ import com.preciousmetals.tracker.ui.components.glassInputFieldColors
 import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.ui.components.topFadingEdge
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
-import com.preciousmetals.tracker.ui.theme.NearBlackEmber
 import com.preciousmetals.tracker.ui.theme.TextMuted33Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted38Dark
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
@@ -461,9 +460,8 @@ private fun AddGoalDialog(
     var metal by remember { mutableStateOf(Metal.GOLD) }
     var amountText by remember { mutableStateOf("") }
 
-    AlertDialog(
+    GlassAlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = NearBlackEmber,
         title = { Text("Nouvel objectif") },
         text = {
             Column {
@@ -599,9 +597,8 @@ private fun StorageLocationCard(location: StorageLocation, holdingCount: Int, on
     }
 
     if (showDeleteConfirm) {
-        AlertDialog(
+        GlassAlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            containerColor = NearBlackEmber,
             title = { Text("Supprimer « ${location.name} » ?") },
             text = { Text("Cette action est irréversible. Les avoirs associés à ce lieu ne seront pas supprimés.") },
             confirmButton = {

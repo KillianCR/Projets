@@ -22,7 +22,6 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.UploadFile
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -388,7 +387,7 @@ fun AddEditHoldingScreen(
     }
 
     if (showDeleteConfirm) {
-        AlertDialog(
+        com.preciousmetals.tracker.ui.components.GlassAlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text("Supprimer cet avoir ?") },
             text = { Text("Cette action est irréversible.") },

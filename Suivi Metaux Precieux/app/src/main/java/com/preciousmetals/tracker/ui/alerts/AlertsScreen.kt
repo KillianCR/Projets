@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -47,6 +46,7 @@ import com.preciousmetals.tracker.domain.model.Metal
 import com.preciousmetals.tracker.domain.model.PriceAlert
 import com.preciousmetals.tracker.ui.LocalAppContainer
 import com.preciousmetals.tracker.ui.components.CompactTopBar
+import com.preciousmetals.tracker.ui.components.GlassAlertDialog
 import com.preciousmetals.tracker.ui.components.GlassCard
 import com.preciousmetals.tracker.ui.components.GlassChip
 import com.preciousmetals.tracker.ui.components.GlassSegmentedRow
@@ -56,7 +56,6 @@ import com.preciousmetals.tracker.ui.components.horizontalFadingEdges
 import com.preciousmetals.tracker.ui.components.topFadingEdge
 import com.preciousmetals.tracker.ui.navigation.bottomNavContentPadding
 import com.preciousmetals.tracker.ui.navigation.bottomNavOverlayPadding
-import com.preciousmetals.tracker.ui.theme.NearBlackEmber
 import com.preciousmetals.tracker.ui.theme.TextMuted44Dark
 import com.preciousmetals.tracker.util.formatMoney
 import com.preciousmetals.tracker.util.usdTo
@@ -191,9 +190,8 @@ private fun AddAlertDialog(
     val currentPriceUsdPerGram = livePricesUsdPerGram[metal]
     val sign = if (direction == AlertDirection.ABOVE) 1.0 else -1.0
 
-    AlertDialog(
+    GlassAlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = NearBlackEmber,
         title = { Text("Nouvelle alerte") },
         text = {
             Column {
